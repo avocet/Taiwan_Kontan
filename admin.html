@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TWKT 管理系統 - 後台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+            --success-color: #34C759;
+            --error-color: #FF3B30;
+            --warning-color: #FF9500;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: var(--card-background);
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: var(--background-color);
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        /* Content */
+        .content {
+            padding: 20px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Data List */
+        .data-card {
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .data-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .data-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .data-date {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .data-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .data-item {
+            font-size: 0.875rem;
+        }
+
+        .data-label {
+            color: var(--text-secondary);
+            margin-right: 4px;
+        }
+
+        .data-value {
+            color: var(--text-primary);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-delete {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--error-color);
+        }
+
+        .btn-delete:hover {
+            background: rgba(255, 59, 48, 0.2);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-background);
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .detail-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: var(--text-secondary);
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 428px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .tab {
+                padding: 12px 8px;
+                font-size: 0.8125rem;
+            }
+
+            .data-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>TWKT 管理系統</h1>
+        <div class="header-right">
+            <span class="user-info" id="userEmail">載入中...</span>
+            <button class="logout-btn" id="logoutBtn">登出</button>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <div class="tab active" data-tab="customers">客戶資料</div>
+        <div class="tab" data-tab="weight">減肥歷史</div>
+        <div class="tab" data-tab="diet">3日飲食</div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- 客戶資料 -->
+        <div class="tab-content active" id="customers">
+            <div class="loading" id="customersLoading">
+                <div class="loading-spinner"></div>
+                <p>載入中...</p>
+            </div>
+            <div id="customersList"></div>
+        </div>
+
+        <!-- 減肥歷史 -->
+        <div class="tab-content" id="weight">
+            <div class="loading" id="weightLoading">
+                <div class="loading-spinner"></div>
+                <p>載入中...</p>
+            </div>
+            <div id="weightList"></div>
+        </div>
+
+        <!-- 3日飲食 -->
+        <div class="tab-content" id="diet">
+            <div class="loading" id="dietLoading">
+                <div class="loading-spinner"></div>
+                <p>載入中...</p>
+            </div>
+            <div id="dietList"></div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="detailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">詳細資料</h2>
+                <button class="modal-close" id="modalClose">&times;</button>
+            </div>
+            <div class="detail-grid" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
+            authDomain: "twkt-91ddf.firebaseapp.com",
+            projectId: "twkt-91ddf",
+            storageBucket: "twkt-91ddf.firebasestorage.app",
+            messagingSenderId: "754554349532",
+            appId: "1:754554349532:web:d5060ecc92ea9df5309119",
+            measurementId: "G-YYZEYVH1W5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 檢查登入狀態
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // 未登入，跳轉回登入頁
+                window.location.href = 'login.html';
+            } else {
+                // 已登入，顯示用戶資訊
+                document.getElementById('userEmail').textContent = user.email;
+                // 載入資料
+                loadAllData();
+            }
+        });
+
+        // 登出
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error('登出錯誤:', error);
+            });
+        });
+
+        // Tab 切換
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                const tabId = tab.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // 載入所有資料
+        async function loadAllData() {
+            await Promise.all([
+                loadCustomers(),
+                loadWeightHistory(),
+                loadDietRecords()
+            ]);
+        }
+
+        // 載入客戶資料
+        async function loadCustomers() {
+            try {
+                const q = query(collection(db, "客戶資料"), orderBy("建立時間", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                const list = document.getElementById('customersList');
+                document.getElementById('customersLoading').style.display = 'none';
+                
+                if (querySnapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>尚無客戶資料</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    html += createCustomerCard(doc.id, data);
+                });
+                list.innerHTML = html;
+                
+            } catch (error) {
+                console.error('載入客戶資料錯誤:', error);
+                document.getElementById('customersList').innerHTML = '<div class="empty-state"><p>載入失敗</p></div>';
+            }
+        }
+
+        // 載入減肥歷史
+        async function loadWeightHistory() {
+            try {
+                const q = query(collection(db, "減肥歷史"), orderBy("建立時間", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                const list = document.getElementById('weightList');
+                document.getElementById('weightLoading').style.display = 'none';
+                
+                if (querySnapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📈</div><p>尚無減肥歷史記錄</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    html += createWeightCard(doc.id, data);
+                });
+                list.innerHTML = html;
+                
+            } catch (error) {
+                console.error('載入減肥歷史錯誤:', error);
+                document.getElementById('weightList').innerHTML = '<div class="empty-state"><p>載入失敗</p></div>';
+            }
+        }
+
+        // 載入飲食記錄
+        async function loadDietRecords() {
+            try {
+                const q = query(collection(db, "3日飲食記錄"), orderBy("建立時間", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                const list = document.getElementById('dietList');
+                document.getElementById('dietLoading').style.display = 'none';
+                
+                if (querySnapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🥗</div><p>尚無飲食記錄</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    html += createDietCard(doc.id, data);
+                });
+                list.innerHTML = html;
+                
+            } catch (error) {
+                console.error('載入飲食記錄錯誤:', error);
+                document.getElementById('dietList').innerHTML = '<div class="empty-state"><p>載入失敗</p></div>';
+            }
+        }
+
+        // 建立客戶卡片
+        function createCustomerCard(id, data) {
+            const date = data.建立時間 ? new Date(data.建立時間.seconds * 1000).toLocaleDateString('zh-TW') : '-';
+            return `
+                <div class="data-card">
+                    <div class="data-header">
+                        <div>
+                            <div class="data-title">${data.姓名 || '-'}</div>
+                            <div class="data-date">${date}</div>
+                        </div>
+                        <button class="btn btn-delete" onclick="deleteData('客戶資料', '${id}')">刪除</button>
+                    </div>
+                    <div class="data-info">
+                        <div class="data-item"><span class="data-label">電話：</span><span class="data-value">${data.電話 || '-'}</span></div>
+                        <div class="data-item"><span class="data-label">手機：</span><span class="data-value">${data.手機 || '-'}</span></div>
+                        <div class="data-item"><span class="data-label">年齡：</span><span class="data-value">${data.年齡 || '-'}</span></div>
+                        <div class="data-item"><span class="data-label">性別：</span><span class="data-value">${data.性別 === 'female' ? '女性' : data.性別 === 'male' ? '男性' : '-'}</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 建立減肥歷史卡片
+        function createWeightCard(id, data) {
+            const date = data.建立時間 ? new Date(data.建立時間.seconds * 1000).toLocaleDateString('zh-TW') : '-';
+            return `
+                <div class="data-card">
+                    <div class="data-header">
+                        <div>
+                            <div class="data-title">${data.客戶姓名 || '-'}</div>
+                            <div class="data-date">${date}</div>
+                        </div>
+                        <button class="btn btn-delete" onclick="deleteData('減肥歷史', '${id}')">刪除</button>
+                    </div>
+                    <div class="data-info">
+                        <div class="data-item"><span class="data-label">目前體重：</span><span class="data-value">${data.目前體重 || '-'} kg</span></div>
+                        <div class="data-item"><span class="data-label">目標體重：</span><span class="data-value">${data.目標體重 || '-'} kg</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 建立飲食記錄卡片
+        function createDietCard(id, data) {
+            const date = data.建立時間 ? new Date(data.建立時間.seconds * 1000).toLocaleDateString('zh-TW') : '-';
+            return `
+                <div class="data-card">
+                    <div class="data-header">
+                        <div>
+                            <div class="data-title">${data.客戶姓名 || '-'}</div>
+                            <div class="data-date">${date}</div>
+                        </div>
+                        <button class="btn btn-delete" onclick="deleteData('3日飲食記錄', '${id}')">刪除</button>
+                    </div>
+                    <div class="data-info">
+                        <div class="data-item"><span class="data-label">紀錄日期：</span><span class="data-value">${data.紀錄日期 || '-'}</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 刪除資料
+        window.deleteData = async function(collectionName, docId) {
+            if (!confirm('確定要刪除這筆資料嗎？此操作無法復原。')) {
+                return;
+            }
+            
+            try {
+                await deleteDoc(doc(db, collectionName, docId));
+                alert('刪除成功');
+                // 重新載入資料
+                if (collectionName === '客戶資料') loadCustomers();
+                else if (collectionName === '減肥歷史') loadWeightHistory();
+                else if (collectionName === '3日飲食記錄') loadDietRecords();
+            } catch (error) {
+                console.error('刪除錯誤:', error);
+                alert('刪除失敗');
+            }
+        };
+
+        // Modal 關閉
+        document.getElementById('modalClose').addEventListener('click', () => {
+            document.getElementById('detailModal').classList.remove('show');
+        });
+
+        document.getElementById('detailModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('detailModal')) {
+                document.getElementById('detailModal').classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
