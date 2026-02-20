@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客戶基本資料及記錄</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+            --success-color: #34C759;
+            --error-color: #FF3B30;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-card {
+            background: var(--card-background);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+        }
+
+        .form-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .form-header p {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .form-body {
+            padding: 24px 20px;
+        }
+
+        .form-section {
+            margin-bottom: 28px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        label.required::after {
+            content: ' *';
+            color: var(--error-color);
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"],
+        input[type="date"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--card-background);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: var(--text-secondary);
+        }
+
+        select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238E8E93' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        /* 体重输入组 */
+        .weight-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .weight-group input {
+            flex: 1;
+        }
+
+        .weight-group span {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* 单选按钮组 */
+        .radio-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .radio-option:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .radio-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        .radio-option input {
+            display: none;
+        }
+
+        .radio-circle {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .radio-option.selected .radio-circle {
+            border-color: var(--primary-color);
+        }
+
+        .radio-circle::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            transform: scale(0);
+            transition: transform 0.2s;
+        }
+
+        .radio-option.selected .radio-circle::after {
+            transform: scale(1);
+        }
+
+        .radio-label {
+            font-size: 0.9375rem;
+        }
+
+        /* 表单操作按钮 */
+        .form-actions {
+            padding: 20px;
+            background: var(--card-background);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #E5E5EA;
+        }
+
+        /* 设备版本指示器 */
+        .device-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .device-icon {
+            font-size: 1rem;
+        }
+
+        /* ===== iPhone 版本 (≤ 428px) ===== */
+        @media screen and (max-width: 428px) {
+            .container {
+                padding: 12px;
+            }
+
+            .form-card {
+                border-radius: 20px;
+            }
+
+            .form-header {
+                padding: 20px 16px;
+                border-radius: 20px 20px 0 0;
+            }
+
+            .form-header h1 {
+                font-size: 1.25rem;
+            }
+
+            .form-body {
+                padding: 20px 16px;
+            }
+
+            .form-section {
+                margin-bottom: 24px;
+            }
+
+            .section-title {
+                font-size: 0.75rem;
+            }
+
+            .form-group {
+                margin-bottom: 16px;
+            }
+
+            label {
+                font-size: 0.875rem;
+            }
+
+            input[type="text"],
+            input[type="tel"],
+            input[type="email"],
+            input[type="date"],
+            input[type="number"],
+            select,
+            textarea {
+                padding: 12px 14px;
+                font-size: 16px;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .radio-option {
+                min-width: auto;
+                padding: 10px 14px;
+            }
+
+            .form-actions {
+                padding: 16px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 14px 20px;
+            }
+
+            .device-indicator {
+                font-size: 0.6875rem;
+                padding: 6px 12px;
+            }
+        }
+
+        /* ===== iPad 版本 (429px - 1024px) ===== */
+        @media screen and (min-width: 429px) and (max-width: 1024px) {
+            .container {
+                padding: 24px;
+                max-width: 700px;
+            }
+
+            .form-card {
+                border-radius: 20px;
+            }
+
+            .form-header {
+                padding: 28px 24px;
+            }
+
+            .form-header h1 {
+                font-size: 1.625rem;
+            }
+
+            .form-body {
+                padding: 28px 24px;
+            }
+
+            .form-section {
+                margin-bottom: 32px;
+            }
+
+            .form-actions {
+                padding: 24px;
+                gap: 16px;
+            }
+
+            .btn {
+                padding: 16px 28px;
+            }
+
+            .device-indicator {
+                display: flex;
+            }
+        }
+
+        /* ===== 电脑版本 (> 1024px) ===== */
+        @media screen and (min-width: 1025px) {
+            .container {
+                padding: 40px;
+                max-width: 900px;
+            }
+
+            .form-card {
+                border-radius: 24px;
+            }
+
+            .form-header {
+                padding: 36px 32px;
+                border-radius: 24px 24px 0 0;
+            }
+
+            .form-header h1 {
+                font-size: 1.875rem;
+            }
+
+            .form-body {
+                padding: 36px 32px;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+
+            .form-section {
+                margin-bottom: 0;
+            }
+
+            .form-section:first-child {
+                grid-column: 1 / -1;
+            }
+
+            .form-group {
+                margin-bottom: 20px;
+            }
+
+            .form-group.full-width {
+                grid-column: 1 / -1;
+            }
+
+            .form-group.half-width {
+                grid-column: span 1;
+            }
+
+            .radio-group {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+
+            .form-actions {
+                padding: 28px 32px;
+                gap: 16px;
+            }
+
+            .btn {
+                max-width: 200px;
+                margin: 0 auto;
+            }
+
+            .device-indicator {
+                display: flex;
+            }
+        }
+
+        /* 成功提示 */
+        .success-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--success-color);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(52, 199, 89, 0.3);
+            animation: fadeInScale 0.3s ease;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- 设备版本指示器 -->
+    <div class="device-indicator" id="deviceIndicator">
+        <span class="device-icon" id="deviceIcon">💻</span>
+        <span id="deviceText">電腦版</span>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <h1>客戶基本資料及記錄</h1>
+                <p>請填寫以下資料以建立客戶檔案</p>
+            </div>
+            
+            <form class="form-body" id="customerForm">
+                <!-- 第一區塊：合約與日期 -->
+                <div class="form-section">
+                    <div class="section-title">合約資訊</div>
+                    
+                    <div class="form-group half-width">
+                        <label>合約書編號</label>
+                        <input type="text" id="contractNo" name="contractNo" placeholder="例如：CON-2026-0001">
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label class="required">紀錄日期</label>
+                        <input type="date" id="recordDate" name="recordDate" required>
+                    </div>
+                </div>
+                
+                <!-- 第二區塊：基本資料 -->
+                <div class="form-section">
+                    <div class="section-title">基本資料</div>
+                    
+                    <div class="form-group half-width">
+                        <label class="required">姓名</label>
+                        <input type="text" id="name" name="name" placeholder="請輸入姓名" required>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label class="required">電話</label>
+                        <input type="tel" id="phone" name="phone" placeholder="02-XXXX-XXXX" required>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label class="required">年齡</label>
+                        <input type="number" id="age" name="age" placeholder="請輸入年齡" min="1" max="150" required>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label class="required">生日</label>
+                        <input type="date" id="birthday" name="birthday" required>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label class="required">性別</label>
+                        <div class="radio-group" id="gender">
+                            <label class="radio-option" data-value="female">
+                                <input type="radio" name="gender" value="female">
+                                <span class="radio-circle"></span>
+                                <span class="radio-label">女性</span>
+                            </label>
+                            <label class="radio-option" data-value="male">
+                                <input type="radio" name="gender" value="male">
+                                <span class="radio-circle"></span>
+                                <span class="radio-label">男性</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label class="required">手機</label>
+                        <input type="tel" id="mobile" name="mobile" placeholder="09XX-XXX-XXX" required>
+                    </div>
+                </div>
+                
+                <!-- 第三區塊：服務資訊 -->
+                <div class="form-section">
+                    <div class="section-title">服務資訊</div>
+                    
+                    <div class="form-group half-width">
+                        <label>營養師</label>
+                        <input type="text" id="nutritionist" name="nutritionist" placeholder="請輸入營養師姓名">
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label>產前/後體重</label>
+                        <div class="weight-group">
+                            <input type="number" id="preWeight" name="preWeight" placeholder="體重" step="0.1">
+                            <span>kg</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label>上月mc 週期</label>
+                        <input type="text" id="mcCycle" name="mcCycle" placeholder="例如：28天">
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label>E-mail</label>
+                        <input type="email" id="email" name="email" placeholder="example@email.com">
+                    </div>
+                </div>
+            </form>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="resetBtn">清除資料</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">儲存資料</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功提示 -->
+    <div class="overlay" id="overlay"></div>
+    <div class="success-message" id="successMessage">
+        ✓ 資料儲存成功！
+    </div>
+
+    <script>
+        // 设备检测和指示器更新
+        function updateDeviceIndicator() {
+            const width = window.innerWidth;
+            const indicator = document.getElementById('deviceIndicator');
+            const icon = document.getElementById('deviceIcon');
+            const text = document.getElementById('deviceText');
+            
+            if (width <= 428) {
+                icon.textContent = '📱';
+                text.textContent = 'iPhone 版';
+                indicator.style.display = 'flex';
+            } else if (width <= 1024) {
+                icon.textContent = '📱';
+                text.textContent = 'iPad 版';
+                indicator.style.display = 'flex';
+            } else {
+                icon.textContent = '💻';
+                text.textContent = '電腦版';
+                indicator.style.display = 'flex';
+            }
+        }
+
+        // 单选按钮交互
+        const radioOptions = document.querySelectorAll('.radio-option');
+        radioOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const radio = this.querySelector('input[type="radio"]');
+                
+                this.parentElement.querySelectorAll('.radio-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                this.classList.add('selected');
+                radio.checked = true;
+            });
+            
+            const radio = option.querySelector('input[type="radio"]');
+            if (radio.checked) {
+                option.classList.add('selected');
+            }
+        });
+
+        // 设置默认日期为今天
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('recordDate').value = today;
+        });
+
+        // 表单提交
+        const form = document.getElementById('customerForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const successMessage = document.getElementById('successMessage');
+        const overlay = document.getElementById('overlay');
+
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // 验证必填字段
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const age = document.getElementById('age').value.trim();
+            const birthday = document.getElementById('birthday').value;
+            const mobile = document.getElementById('mobile').value.trim();
+            const recordDate = document.getElementById('recordDate').value;
+            
+            if (!name || !phone || !age || !birthday || !mobile || !recordDate) {
+                alert('請填寫所有必填欄位');
+                return;
+            }
+            
+            // 收集表单数据
+            const formData = {
+                contractNo: document.getElementById('contractNo').value.trim(),
+                recordDate: recordDate,
+                name: name,
+                phone: phone,
+                age: age,
+                birthday: birthday,
+                gender: document.querySelector('input[name="gender"]:checked')?.value || '',
+                mobile: mobile,
+                nutritionist: document.getElementById('nutritionist').value.trim(),
+                preWeight: document.getElementById('preWeight').value.trim(),
+                mcCycle: document.getElementById('mcCycle').value.trim(),
+                email: document.getElementById('email').value.trim()
+            };
+            
+            console.log('表單資料：', formData);
+            
+            // 显示成功提示
+            overlay.classList.add('show');
+            successMessage.classList.add('show');
+            
+            setTimeout(() => {
+                overlay.classList.remove('show');
+                successMessage.classList.remove('show');
+            }, 3000);
+        });
+
+        // 重置表单
+        resetBtn.addEventListener('click', function() {
+            if (confirm('確定要清除所有資料嗎？')) {
+                form.reset();
+                
+                radioOptions.forEach(option => {
+                    option.classList.remove('selected');
+                });
+                
+                // 重新设置记录日期为今天
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('recordDate').value = today;
+            }
+        });
+
+        // 页面加载时初始化
+        window.addEventListener('load', updateDeviceIndicator);
+        window.addEventListener('resize', updateDeviceIndicator);
+    </script>
+</body>
+</html>
