@@ -21,6 +21,7 @@
             --border-color: #C6C6C8;
             --success-color: #34C759;
             --error-color: #FF3B30;
+            --loading-color: #FF9500;
         }
 
         body {
@@ -145,7 +146,6 @@
             padding-right: 40px;
         }
 
-        /* 体重输入组 */
         .weight-group {
             display: flex;
             align-items: center;
@@ -161,7 +161,6 @@
             font-size: 0.875rem;
         }
 
-        /* 单选按钮组 */
         .radio-group {
             display: flex;
             flex-wrap: wrap;
@@ -229,7 +228,6 @@
             font-size: 0.9375rem;
         }
 
-        /* 表单操作按钮 */
         .form-actions {
             padding: 20px;
             background: var(--card-background);
@@ -250,12 +248,17 @@
             text-align: center;
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
         }
@@ -269,7 +272,6 @@
             background: #E5E5EA;
         }
 
-        /* 设备版本指示器 */
         .device-indicator {
             position: fixed;
             top: 20px;
@@ -290,192 +292,53 @@
             font-size: 1rem;
         }
 
-        /* ===== iPhone 版本 (≤ 428px) ===== */
         @media screen and (max-width: 428px) {
-            .container {
-                padding: 12px;
-            }
-
-            .form-card {
-                border-radius: 20px;
-            }
-
-            .form-header {
-                padding: 20px 16px;
-                border-radius: 20px 20px 0 0;
-            }
-
-            .form-header h1 {
-                font-size: 1.25rem;
-            }
-
-            .form-body {
-                padding: 20px 16px;
-            }
-
-            .form-section {
-                margin-bottom: 24px;
-            }
-
-            .section-title {
-                font-size: 0.75rem;
-            }
-
-            .form-group {
-                margin-bottom: 16px;
-            }
-
-            label {
-                font-size: 0.875rem;
-            }
-
-            input[type="text"],
-            input[type="tel"],
-            input[type="email"],
-            input[type="date"],
-            input[type="number"],
-            select,
-            textarea {
-                padding: 12px 14px;
-                font-size: 16px;
-            }
-
-            .radio-group {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .radio-option {
-                min-width: auto;
-                padding: 10px 14px;
-            }
-
-            .form-actions {
-                padding: 16px;
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .btn {
-                padding: 14px 20px;
-            }
-
-            .device-indicator {
-                font-size: 0.6875rem;
-                padding: 6px 12px;
-            }
+            .container { padding: 12px; }
+            .form-card { border-radius: 20px; }
+            .form-header { padding: 20px 16px; border-radius: 20px 20px 0 0; }
+            .form-header h1 { font-size: 1.25rem; }
+            .form-body { padding: 20px 16px; }
+            .form-section { margin-bottom: 24px; }
+            .section-title { font-size: 0.75rem; }
+            .form-group { margin-bottom: 16px; }
+            label { font-size: 0.875rem; }
+            input, select, textarea { padding: 12px 14px; font-size: 16px; }
+            .radio-group { flex-direction: column; gap: 8px; }
+            .radio-option { min-width: auto; padding: 10px 14px; }
+            .form-actions { padding: 16px; flex-direction: column; gap: 10px; }
+            .btn { padding: 14px 20px; }
+            .device-indicator { font-size: 0.6875rem; padding: 6px 12px; }
         }
 
-        /* ===== iPad 版本 (429px - 1024px) ===== */
         @media screen and (min-width: 429px) and (max-width: 1024px) {
-            .container {
-                padding: 24px;
-                max-width: 700px;
-            }
-
-            .form-card {
-                border-radius: 20px;
-            }
-
-            .form-header {
-                padding: 28px 24px;
-            }
-
-            .form-header h1 {
-                font-size: 1.625rem;
-            }
-
-            .form-body {
-                padding: 28px 24px;
-            }
-
-            .form-section {
-                margin-bottom: 32px;
-            }
-
-            .form-actions {
-                padding: 24px;
-                gap: 16px;
-            }
-
-            .btn {
-                padding: 16px 28px;
-            }
-
-            .device-indicator {
-                display: flex;
-            }
+            .container { padding: 24px; max-width: 700px; }
+            .form-card { border-radius: 20px; }
+            .form-header { padding: 28px 24px; }
+            .form-header h1 { font-size: 1.625rem; }
+            .form-body { padding: 28px 24px; }
+            .form-section { margin-bottom: 32px; }
+            .form-actions { padding: 24px; gap: 16px; }
+            .btn { padding: 16px 28px; }
+            .device-indicator { display: flex; }
         }
 
-        /* ===== 电脑版本 (> 1024px) ===== */
         @media screen and (min-width: 1025px) {
-            .container {
-                padding: 40px;
-                max-width: 900px;
-            }
-
-            .form-card {
-                border-radius: 24px;
-            }
-
-            .form-header {
-                padding: 36px 32px;
-                border-radius: 24px 24px 0 0;
-            }
-
-            .form-header h1 {
-                font-size: 1.875rem;
-            }
-
-            .form-body {
-                padding: 36px 32px;
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 20px;
-            }
-
-            .form-section {
-                margin-bottom: 0;
-            }
-
-            .form-section:first-child {
-                grid-column: 1 / -1;
-            }
-
-            .form-group {
-                margin-bottom: 20px;
-            }
-
-            .form-group.full-width {
-                grid-column: 1 / -1;
-            }
-
-            .form-group.half-width {
-                grid-column: span 1;
-            }
-
-            .radio-group {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 10px;
-            }
-
-            .form-actions {
-                padding: 28px 32px;
-                gap: 16px;
-            }
-
-            .btn {
-                max-width: 200px;
-                margin: 0 auto;
-            }
-
-            .device-indicator {
-                display: flex;
-            }
+            .container { padding: 40px; max-width: 900px; }
+            .form-card { border-radius: 24px; }
+            .form-header { padding: 36px 32px; border-radius: 24px 24px 0 0; }
+            .form-header h1 { font-size: 1.875rem; }
+            .form-body { padding: 36px 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+            .form-section { margin-bottom: 0; }
+            .form-section:first-child { grid-column: 1 / -1; }
+            .form-group { margin-bottom: 20px; }
+            .form-group.full-width { grid-column: 1 / -1; }
+            .form-group.half-width { grid-column: span 1; }
+            .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .form-actions { padding: 28px 32px; gap: 16px; }
+            .btn { max-width: 200px; margin: 0 auto; }
+            .device-indicator { display: flex; }
         }
 
-        /* 成功提示 */
         .success-message {
             display: none;
             position: fixed;
@@ -493,19 +356,49 @@
             animation: fadeInScale 0.3s ease;
         }
 
-        .success-message.show {
-            display: block;
+        .success-message.show { display: block; }
+
+        .loading-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--loading-color);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(255, 149, 0, 0.3);
         }
 
+        .loading-message.show { display: block; }
+
+        .error-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--error-color);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(255, 59, 48, 0.3);
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .error-message.show { display: block; }
+
         @keyframes fadeInScale {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -50%) scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
 
         .overlay {
@@ -519,13 +412,10 @@
             z-index: 1500;
         }
 
-        .overlay.show {
-            display: block;
-        }
+        .overlay.show { display: block; }
     </style>
 </head>
 <body>
-    <!-- 设备版本指示器 -->
     <div class="device-indicator" id="deviceIndicator">
         <span class="device-icon" id="deviceIcon">💻</span>
         <span id="deviceText">電腦版</span>
@@ -539,7 +429,6 @@
             </div>
             
             <form class="form-body" id="customerForm">
-                <!-- 第一區塊：合約與日期 -->
                 <div class="form-section">
                     <div class="section-title">合約資訊</div>
                     
@@ -554,7 +443,6 @@
                     </div>
                 </div>
                 
-                <!-- 第二區塊：基本資料 -->
                 <div class="form-section">
                     <div class="section-title">基本資料</div>
                     
@@ -600,7 +488,6 @@
                     </div>
                 </div>
                 
-                <!-- 第三區塊：服務資訊 -->
                 <div class="form-section">
                     <div class="section-title">服務資訊</div>
                     
@@ -636,45 +523,39 @@
         </div>
     </div>
 
-    <!-- 成功提示 -->
     <div class="overlay" id="overlay"></div>
-    <div class="success-message" id="successMessage">
-        ✓ 資料儲存成功！
-    </div>
+    <div class="success-message" id="successMessage">✓ 資料儲存成功！</div>
+    <div class="loading-message" id="loadingMessage">儲存中...</div>
+    <div class="error-message" id="errorMessage"></div>
 
-    <script>
-        // 设备检测和指示器更新
-        function updateDeviceIndicator() {
-            const width = window.innerWidth;
-            const indicator = document.getElementById('deviceIndicator');
-            const icon = document.getElementById('deviceIcon');
-            const text = document.getElementById('deviceText');
-            
-            if (width <= 428) {
-                icon.textContent = '📱';
-                text.textContent = 'iPhone 版';
-                indicator.style.display = 'flex';
-            } else if (width <= 1024) {
-                icon.textContent = '📱';
-                text.textContent = 'iPad 版';
-                indicator.style.display = 'flex';
-            } else {
-                icon.textContent = '💻';
-                text.textContent = '電腦版';
-                indicator.style.display = 'flex';
-            }
-        }
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
-        // 单选按钮交互
+        // ====== 請填入你的 Firebase 配置 ======
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "twkt-91ddf.firebaseapp.com",
+            projectId: "twkt-91ddf",
+            storageBucket: "twkt-91ddf.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        // =======================================
+
+        // 初始化 Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 單選按鈕交互
         const radioOptions = document.querySelectorAll('.radio-option');
         radioOptions.forEach(option => {
             option.addEventListener('click', function() {
                 const radio = this.querySelector('input[type="radio"]');
-                
                 this.parentElement.querySelectorAll('.radio-option').forEach(opt => {
                     opt.classList.remove('selected');
                 });
-                
                 this.classList.add('selected');
                 radio.checked = true;
             });
@@ -685,23 +566,57 @@
             }
         });
 
-        // 设置默认日期为今天
+        // 設備檢測
+        function updateDeviceIndicator() {
+            const width = window.innerWidth;
+            const indicator = document.getElementById('deviceIndicator');
+            const icon = document.getElementById('deviceIcon');
+            const text = document.getElementById('deviceText');
+            
+            if (width <= 428) {
+                icon.textContent = '📱';
+                text.textContent = 'iPhone 版';
+            } else if (width <= 1024) {
+                icon.textContent = '📱';
+                text.textContent = 'iPad 版';
+            } else {
+                icon.textContent = '💻';
+                text.textContent = '電腦版';
+            }
+            indicator.style.display = 'flex';
+        }
+
+        // 設備指示器
+        window.addEventListener('load', updateDeviceIndicator);
+        window.addEventListener('resize', updateDeviceIndicator);
+
+        // 設置默認日期
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('recordDate').value = today;
         });
 
-        // 表单提交
+        // 表單提交
         const form = document.getElementById('customerForm');
         const submitBtn = document.getElementById('submitBtn');
         const resetBtn = document.getElementById('resetBtn');
         const successMessage = document.getElementById('successMessage');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
         const overlay = document.getElementById('overlay');
 
-        submitBtn.addEventListener('click', function(e) {
+        function showMessage(element, duration = 3000) {
+            overlay.classList.add('show');
+            element.classList.add('show');
+            setTimeout(() => {
+                overlay.classList.remove('show');
+                element.classList.remove('show');
+            }, duration);
+        }
+
+        submitBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             
-            // 验证必填字段
             const name = document.getElementById('name').value.trim();
             const phone = document.getElementById('phone').value.trim();
             const age = document.getElementById('age').value.trim();
@@ -713,53 +628,64 @@
                 alert('請填寫所有必填欄位');
                 return;
             }
-            
-            // 收集表单数据
+
+            // 收集表單數據
             const formData = {
-                contractNo: document.getElementById('contractNo').value.trim(),
-                recordDate: recordDate,
-                name: name,
-                phone: phone,
-                age: age,
-                birthday: birthday,
-                gender: document.querySelector('input[name="gender"]:checked')?.value || '',
-                mobile: mobile,
-                nutritionist: document.getElementById('nutritionist').value.trim(),
-                preWeight: document.getElementById('preWeight').value.trim(),
-                mcCycle: document.getElementById('mcCycle').value.trim(),
-                email: document.getElementById('email').value.trim()
+                合約書編號: document.getElementById('contractNo').value.trim(),
+                紀錄日期: recordDate,
+                姓名: name,
+                電話: phone,
+                年齡: age,
+                生日: birthday,
+                性別: document.querySelector('input[name="gender"]:checked')?.value || '',
+                手機: mobile,
+                營養師: document.getElementById('nutritionist').value.trim(),
+                產前產後體重: document.getElementById('preWeight').value.trim(),
+                上月mc週期: document.getElementById('mcCycle').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                建立時間: serverTimestamp()
             };
-            
-            console.log('表單資料：', formData);
-            
-            // 显示成功提示
-            overlay.classList.add('show');
-            successMessage.classList.add('show');
-            
-            setTimeout(() => {
-                overlay.classList.remove('show');
-                successMessage.classList.remove('show');
-            }, 3000);
+
+            // 顯示載入中
+            submitBtn.disabled = true;
+            submitBtn.textContent = '儲存中...';
+            showMessage(loadingMessage, 15000);
+
+            try {
+                // 發送到 Firebase Firestore
+                const docRef = await addDoc(collection(db, "客戶資料"), formData);
+                console.log('文檔 ID: ', docRef.id);
+                
+                // 顯示成功訊息
+                loadingMessage.classList.remove('show');
+                showMessage(successMessage);
+                
+                // 重置表單
+                form.reset();
+                radioOptions.forEach(option => option.classList.remove('selected'));
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('recordDate').value = today;
+                
+            } catch (error) {
+                console.error('錯誤: ', error);
+                loadingMessage.classList.remove('show');
+                errorMessage.textContent = '儲存失敗: ' + error.message;
+                showMessage(errorMessage, 5000);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '儲存資料';
+            }
         });
 
-        // 重置表单
+        // 重置表單
         resetBtn.addEventListener('click', function() {
             if (confirm('確定要清除所有資料嗎？')) {
                 form.reset();
-                
-                radioOptions.forEach(option => {
-                    option.classList.remove('selected');
-                });
-                
-                // 重新设置记录日期为今天
+                radioOptions.forEach(option => option.classList.remove('selected'));
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('recordDate').value = today;
             }
         });
-
-        // 页面加载时初始化
-        window.addEventListener('load', updateDeviceIndicator);
-        window.addEventListener('resize', updateDeviceIndicator);
     </script>
 </body>
 </html>
