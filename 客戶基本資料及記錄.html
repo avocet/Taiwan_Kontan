@@ -50,12 +50,31 @@
             color: white;
             padding: 24px 20px;
             text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
         }
 
         .form-header h1 {
             font-size: 1.5rem;
             font-weight: 600;
-            margin-bottom: 4px;
+            flex: 1;
+            text-align: center;
         }
 
         .form-header p {
@@ -424,8 +443,9 @@
     <div class="container">
         <div class="form-card">
             <div class="form-header">
+                <a href="index.html" class="back-btn">← 返回</a>
                 <h1>客戶基本資料及記錄</h1>
-                <p>請填寫以下資料以建立客戶檔案</p>
+                <div style="width: 70px;"></div>
             </div>
             
             <form class="form-body" id="customerForm">
