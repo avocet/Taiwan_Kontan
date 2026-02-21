@@ -327,7 +327,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
@@ -341,19 +342,13 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
         auth.languageCode = 'zh-TW';
 
-        // 顯示訊息
         function showMessage(elementId, text, type) {
             const element = document.getElementById(elementId);
             element.textContent = text;
             element.className = 'message show ' + type;
-        }
-
-        function hideMessage(elementId) {
-            const element = document.getElementById(elementId);
-            element.className = 'message';
-            element.textContent = '';
         }
 
         // ===== 登入 =====
@@ -381,7 +376,21 @@
             }, 10000);
 
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // 檢查是否為管理員
+                const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+                
+                if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                    // 管理員不能登入客戶中心
+                    await signOut(auth);
+                    clearTimeout(timeout);
+                    showMessage('message', '管理員請從後台登入', 'error');
+                    return;
+                }
+                
+                // 一般用戶可以登入客戶中心
                 clearTimeout(timeout);
                 showMessage('message', '登入成功！正在轉跳...', 'success');
                 setTimeout(() => {

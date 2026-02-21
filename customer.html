@@ -122,7 +122,7 @@
 <body>
     <div class="header">
         <h1>TWKT 客戶中心</h1>
-        <a href="index.html" class="logout-btn">登出</a>
+        <a href="index.html" class="logout-btn" id="logoutBtn">登出</a>
     </div>
 
     <div class="menu-grid">
@@ -144,5 +144,51 @@
             <div class="menu-desc">飲食日誌</div>
         </a>
     </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
+            authDomain: "twkt-91ddf.firebaseapp.com",
+            projectId: "twkt-91ddf",
+            storageBucket: "twkt-91ddf.firebasestorage.app",
+            messagingSenderId: "754554349532",
+            appId: "1:754554349532:web:d5060ecc92ea9df5309119",
+            measurementId: "G-YYZEYVH1W5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // 檢查用戶是否為管理員
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                // 未登入，跳轉回登入頁
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // 檢查是否為管理員
+            const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+            
+            if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                // 管理員不能使用客戶中心，強制登出
+                await signOut(auth);
+                alert('管理員請從後台登入');
+                window.location.href = 'index.html';
+            }
+        });
+
+        // 登出按鈕
+        document.getElementById('logoutBtn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await signOut(auth);
+            window.location.href = 'index.html';
+        });
+    </script>
 </body>
 </html>
