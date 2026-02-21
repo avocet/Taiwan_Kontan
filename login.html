@@ -197,17 +197,21 @@
 
         .loading-spinner {
             display: none;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             border: 2px solid rgba(255,255,255,0.3);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin: 0 auto;
+            margin-right: 8px;
         }
 
-        .btn .loading-spinner {
+        .btn.loading .loading-spinner {
             display: inline-block;
+        }
+
+        .btn.loading .btn-text {
+            display: none;
         }
 
         @keyframes spin {
@@ -397,12 +401,12 @@
             }
 
             loginBtn.disabled = true;
-            loginBtn.querySelector('.btn-text').textContent = '登入中...';
+            loginBtn.classList.add('loading');
 
             // 10秒超時
             const timeout = setTimeout(() => {
                 loginBtn.disabled = false;
-                loginBtn.querySelector('.btn-text').textContent = '登 入';
+                loginBtn.classList.remove('loading');
                 showMessage('message', '網路連接超時，請檢查網絡', 'error');
             }, 10000);
 
@@ -444,7 +448,7 @@
                 showMessage('message', errorMessage, 'error');
             } finally {
                 loginBtn.disabled = false;
-                loginBtn.querySelector('.btn-text').textContent = '登 入';
+                loginBtn.classList.remove('loading');
             }
         });
 
@@ -462,12 +466,12 @@
             }
 
             resetBtn.disabled = true;
-            resetBtn.querySelector('.btn-text').textContent = '發送中...';
+            resetBtn.classList.add('loading');
 
             // 10秒超時
             const timeout = setTimeout(() => {
                 resetBtn.disabled = false;
-                resetBtn.querySelector('.btn-text').textContent = '發送重設連結';
+                resetBtn.classList.remove('loading');
                 showMessage('resetMessage', '網路連接超時，請檢查網絡', 'error');
             }, 10000);
 
@@ -508,7 +512,7 @@
                 showMessage('resetMessage', errorMessage, 'error');
             } finally {
                 resetBtn.disabled = false;
-                resetBtn.querySelector('.btn-text').textContent = '發送重設連結';
+                resetBtn.classList.remove('loading');
             }
         });
     </script>
