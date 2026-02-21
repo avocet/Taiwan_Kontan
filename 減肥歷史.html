@@ -423,7 +423,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
@@ -440,17 +440,40 @@
         const db = getFirestore(app);
 
         // 檢查登入狀態
+        let currentUser = null;
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.replace('login.html');
                 return;
             }
+            currentUser = user;
             const adminDoc = await getDoc(doc(db, "管理員", user.uid));
             if (adminDoc.exists() && adminDoc.data().role === 'admin') {
                 await signOut(auth);
                 window.location.replace('index.html');
+                return;
             }
+            
+            // 載入用戶姓名
+            loadUserName(user.uid);
         });
+
+        // 載入用戶姓名
+        async function loadUserName(userId) {
+            try {
+                const q = query(collection(db, "客戶資料"), where("userId", "==", userId));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    const data = querySnapshot.docs[0].data();
+                    if (data.姓名) {
+                        document.getElementById('customerName').value = data.姓名;
+                    }
+                }
+            } catch (error) {
+                console.error('載入姓名失敗:', error);
+            }
+        }
 
         // 每次頁面顯示時都檢查
         window.onpageshow = function(event) {
@@ -524,6 +547,7 @@
             }
 
             const formData = {
+                userId: currentUser.uid,
                 客戶姓名: customerName,
                 紀錄日期: recordDate,
                 目前體重: parseFloat(currentWeight),
