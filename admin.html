@@ -538,47 +538,41 @@
             const list = document.getElementById('customersList');
             
             try {
+                let querySnapshot;
+                
                 if (currentCustomerUserId) {
-                    const docRef = doc(db, "客戶資料", currentCustomerUserId);
-                    const docSnap = await getDoc(docRef);
-                    
-                    loadingEl.style.display = 'none';
-                    
-                    if (!docSnap.exists()) {
-                        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>尚無客戶資料</p></div>';
-                        return;
-                    }
-                    
-                    const data = docSnap.data();
-                    list.innerHTML = createCustomerCard(docSnap.id, data);
+                    const q = query(collection(db, "客戶資料"), where("userId", "==", currentCustomerUserId));
+                    querySnapshot = await getDocs(q);
                 } else {
                     const q = query(collection(db, "客戶資料"));
-                    const querySnapshot = await getDocs(q);
-                    
-                    loadingEl.style.display = 'none';
-                    
-                    if (querySnapshot.empty) {
-                        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>尚無客戶資料</p></div>';
-                        return;
-                    }
-                    
-                    let docsArray = [];
-                    querySnapshot.forEach((d) => {
-                        docsArray.push({ id: d.id, data: d.data() });
-                    });
-                    
+                    querySnapshot = await getDocs(q);
+                }
+                
+                loadingEl.style.display = 'none';
+                
+                if (querySnapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>尚無客戶資料</p></div>';
+                    return;
+                }
+                
+                let docsArray = [];
+                querySnapshot.forEach((d) => {
+                    docsArray.push({ id: d.id, data: d.data() });
+                });
+                
+                if (!currentCustomerUserId) {
                     docsArray.sort((a, b) => {
                         const timeA = a.data.建立時間?.seconds || 0;
                         const timeB = b.data.建立時間?.seconds || 0;
                         return timeB - timeA;
                     });
-                    
-                    let html = '';
-                    docsArray.forEach((item) => {
-                        html += createCustomerCard(item.id, item.data);
-                    });
-                    list.innerHTML = html;
                 }
+                
+                let html = '';
+                docsArray.forEach((item) => {
+                    html += createCustomerCard(item.id, item.data);
+                });
+                list.innerHTML = html;
                 
             } catch (error) {
                 console.error('載入客戶資料錯誤:', error);
