@@ -472,12 +472,10 @@
             try {
                 await createUserWithEmailAndPassword(auth, email, password);
                 clearTimeout(timeout);
-                showMessage('registerMessage', '帳戶建立成功！', 'success');
+                showMessage('registerMessage', '帳戶建立成功！正在轉跳...', 'success');
                 setTimeout(() => {
-                    registerModal.style.display = 'none';
-                    hideMessage('registerMessage');
-                    registerForm.reset();
-                }, 2000);
+                    window.location.href = 'customer.html';
+                }, 1500);
             } catch (error) {
                 clearTimeout(timeout);
                 let errorMessage = '建立帳戶失敗，請稍後再試';
