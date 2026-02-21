@@ -82,7 +82,8 @@
         }
 
         input[type="email"],
-        input[type="password"] {
+        input[type="password"],
+        input[type="text"] {
             width: 100%;
             padding: 14px 16px;
             font-size: 1rem;
@@ -213,6 +214,41 @@
             to { transform: rotate(360deg); }
         }
 
+        /* 重設密碼表單 */
+        #resetPasswordForm {
+            display: none;
+        }
+
+        #resetPasswordForm.show {
+            display: block;
+        }
+
+        #loginForm.hide {
+            display: none;
+        }
+
+        .login-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .login-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .login-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
         @media screen and (max-width: 428px) {
             .login-container {
                 border-radius: 20px;
@@ -240,9 +276,10 @@
         </div>
         
         <div class="login-body">
-            <div class="message" id="message"></div>
-            
+            <!-- 登入表單 -->
             <form id="loginForm">
+                <div class="message" id="message"></div>
+                
                 <div class="form-group">
                     <label for="email">電子郵件</label>
                     <input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
@@ -259,25 +296,14 @@
                 </button>
             </form>
             
-            <div class="forgot-password">
-                <a href="#" id="forgotPasswordLink">忘記密碼？</a>
-            </div>
-            
-            <div class="back-home">
-                <a href="index.html">← 返回主頁</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- 忘記密碼 Modal -->
-    <div id="forgotPasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
-        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 400px; width: 90%; margin: 20px;">
-            <h2 style="font-size: 1.25rem; margin-bottom: 16px; text-align: center;">重設密碼</h2>
-            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 20px; text-align: center;">請輸入您的電子郵件，我們會寄送密碼重設連結給您。</p>
-            
-            <div class="message" id="resetMessage"></div>
-            
-            <form id="forgotPasswordForm">
+            <!-- 忘記密碼表單 -->
+            <form id="resetPasswordForm">
+                <div class="message" id="resetMessage"></div>
+                
+                <p style="margin-bottom: 20px; color: var(--text-secondary); font-size: 0.875rem;">
+                    請輸入您的電子郵件，我們會發送密碼重設連結給您。
+                </p>
+                
                 <div class="form-group">
                     <label for="resetEmail">電子郵件</label>
                     <input type="email" id="resetEmail" name="resetEmail" placeholder="請輸入電子郵件" required>
@@ -288,10 +314,20 @@
                     <span class="loading-spinner"></span>
                 </button>
                 
-                <button type="button" class="btn" id="closeModalBtn" style="background: var(--background-color); color: var(--text-primary);">
-                    取 消
+                <button type="button" class="btn" id="backToLoginBtn" style="background: var(--background-color); color: var(--text-primary);">
+                    返回登入
                 </button>
             </form>
+            
+            <!-- 忘記密碼連結 -->
+            <div class="forgot-password" id="forgotPasswordLink">
+                <a href="#">忘記密碼？</a>
+            </div>
+            
+            <!-- 返回主頁 -->
+            <div class="back-home" id="backHomeLink">
+                <a href="index.html">← 返回主頁</a>
+            </div>
         </div>
     </div>
 
@@ -322,14 +358,30 @@
             element.className = 'message show ' + type;
         }
 
-        function hideMessage(elementId) {
-            const element = document.getElementById(elementId);
-            element.className = 'message';
-            element.textContent = '';
-        }
+        // 登入表單切換
+        const loginForm = document.getElementById('loginForm');
+        const resetPasswordForm = document.getElementById('resetPasswordForm');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const backToLoginBtn = document.getElementById('backToLoginBtn');
+        const backHomeLink = document.getElementById('backHomeLink');
+
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.add('hide');
+            forgotPasswordLink.style.display = 'none';
+            backHomeLink.style.display = 'none';
+            resetPasswordForm.classList.add('show');
+        });
+
+        backToLoginBtn.addEventListener('click', () => {
+            resetPasswordForm.classList.remove('show');
+            loginForm.classList.remove('hide');
+            forgotPasswordLink.style.display = 'block';
+            backHomeLink.style.display = 'block';
+            document.getElementById('resetMessage').className = 'message';
+        });
 
         // 登入
-        const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
         const message = document.getElementById('message');
 
@@ -353,7 +405,6 @@
                 
                 showMessage('message', '登入成功！正在轉跳...', 'success');
                 
-                // 轉跳到管理頁面
                 setTimeout(() => {
                     window.location.href = 'admin.html';
                 }, 1000);
@@ -388,35 +439,10 @@
             }
         });
 
-        // 忘記密碼 Modal
-        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-
-        forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            forgotPasswordModal.style.display = 'flex';
-        });
-
-        closeModalBtn.addEventListener('click', () => {
-            forgotPasswordModal.style.display = 'none';
-            hideMessage('resetMessage');
-            document.getElementById('forgotPasswordForm').reset();
-        });
-
-        // 點擊 Modal 外部關閉
-        forgotPasswordModal.addEventListener('click', (e) => {
-            if (e.target === forgotPasswordModal) {
-                forgotPasswordModal.style.display = 'none';
-                hideMessage('resetMessage');
-            }
-        });
-
         // 發送密碼重設郵件
-        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
         const resetBtn = document.getElementById('resetBtn');
 
-        forgotPasswordForm.addEventListener('submit', async (e) => {
+        resetPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const email = document.getElementById('resetEmail').value.trim();
@@ -430,14 +456,23 @@
             resetBtn.querySelector('.btn-text').textContent = '發送中...';
 
             try {
-                await sendPasswordResetEmail(auth, email);
+                // 使用自定義的 continue URL
+                const actionCodeSettings = {
+                    url: 'https://avocet.github.io/Taiwan_Kontan/login.html',
+                    handleCodeInApp: false
+                };
+                
+                await sendPasswordResetEmail(auth, email, actionCodeSettings);
                 showMessage('resetMessage', '密碼重設連結已發送到您的電子郵件！', 'success');
                 
-                // 3秒後關閉 Modal
+                // 3秒後返回登入
                 setTimeout(() => {
-                    forgotPasswordModal.style.display = 'none';
-                    hideMessage('resetMessage');
-                    document.getElementById('forgotPasswordForm').reset();
+                    resetPasswordForm.classList.remove('show');
+                    loginForm.classList.remove('hide');
+                    forgotPasswordLink.style.display = 'block';
+                    backHomeLink.style.display = 'block';
+                    document.getElementById('resetMessage').className = 'message';
+                    document.getElementById('resetEmail').value = '';
                 }, 3000);
                 
             } catch (error) {
@@ -451,6 +486,9 @@
                         break;
                     case 'auth/user-not-found':
                         errorMessage = '找不到此帳號';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = '嘗試次數過多，請稍後再試';
                         break;
                 }
                 
