@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TWKT 管理系統 - 登入</title>
+    <title>TWKT 客戶登入</title>
     <style>
         * {
             margin: 0;
@@ -21,7 +21,6 @@
             --border-color: #C6C6C8;
             --success-color: #34C759;
             --error-color: #FF3B30;
-            --warning-color: #FF9500;
         }
 
         body {
@@ -69,10 +68,6 @@
             margin-bottom: 20px;
         }
 
-        .form-group:last-of-type {
-            margin-bottom: 24px;
-        }
-
         label {
             display: block;
             font-size: 0.875rem;
@@ -114,6 +109,7 @@
             cursor: pointer;
             transition: all 0.2s;
             text-align: center;
+            margin-bottom: 12px;
         }
 
         .btn-primary {
@@ -131,25 +127,35 @@
             cursor: not-allowed;
         }
 
-        .forgot-password {
-            text-align: center;
+        .btn-secondary {
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #E5E5EA;
+        }
+
+        .link-buttons {
+            display: flex;
+            justify-content: space-between;
             margin-top: 16px;
         }
 
-        .forgot-password a {
+        .link-buttons a {
             color: var(--primary-color);
             text-decoration: none;
             font-size: 0.875rem;
         }
 
-        .forgot-password a:hover {
+        .link-buttons a:hover {
             text-decoration: underline;
         }
 
         .back-home {
             text-align: center;
-            margin-top: 24px;
-            padding-top: 24px;
+            margin-top: 20px;
+            padding-top: 20px;
             border-top: 1px solid var(--border-color);
         }
 
@@ -163,7 +169,6 @@
             color: var(--primary-color);
         }
 
-        /* 提示訊息 */
         .message {
             display: none;
             padding: 14px 16px;
@@ -189,12 +194,6 @@
             border: 1px solid var(--error-color);
         }
 
-        .message.info {
-            background: rgba(0, 122, 255, 0.1);
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-        }
-
         .loading-spinner {
             display: none;
             width: 16px;
@@ -218,72 +217,26 @@
             to { transform: rotate(360deg); }
         }
 
-        /* 重設密碼表單 */
-        #resetPasswordForm {
-            display: none;
-        }
-
-        #resetPasswordForm.show {
-            display: block;
-        }
-
-        #loginForm.hide {
-            display: none;
-        }
-
-        .login-tabs {
-            display: flex;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .login-tab {
-            flex: 1;
-            padding: 12px;
-            text-align: center;
-            cursor: pointer;
-            font-weight: 500;
-            color: var(--text-secondary);
-            border-bottom: 2px solid transparent;
-            margin-bottom: -2px;
-        }
-
-        .login-tab.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
-        }
-
         @media screen and (max-width: 428px) {
-            .login-container {
-                border-radius: 20px;
-            }
-
-            .login-header {
-                padding: 30px 20px;
-            }
-
-            .login-header h1 {
-                font-size: 1.5rem;
-            }
-
-            .login-body {
-                padding: 24px 20px;
-            }
+            .login-container { border-radius: 20px; }
+            .login-header { padding: 30px 20px; }
+            .login-header h1 { font-size: 1.5rem; }
+            .login-body { padding: 24px 20px; }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
         <div class="login-header">
-            <h1>TWKT 管理系統</h1>
+            <h1>TWKT 客戶登入</h1>
             <p>請登入以繼續</p>
         </div>
         
         <div class="login-body">
+            <div class="message" id="message"></div>
+            
             <!-- 登入表單 -->
             <form id="loginForm">
-                <div class="message" id="message"></div>
-                
                 <div class="form-group">
                     <label for="email">電子郵件</label>
                     <input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
@@ -295,49 +248,86 @@
                 </div>
                 
                 <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span class="loading-spinner"></span>
                     <span class="btn-text">登 入</span>
-                    <span class="loading-spinner"></span>
                 </button>
             </form>
             
-            <!-- 忘記密碼表單 -->
-            <form id="resetPasswordForm">
-                <div class="message" id="resetMessage"></div>
-                
-                <p style="margin-bottom: 20px; color: var(--text-secondary); font-size: 0.875rem;">
-                    請輸入您的電子郵件，我們會發送密碼重設連結給您。
-                </p>
-                
-                <div class="form-group">
-                    <label for="resetEmail">電子郵件</label>
-                    <input type="email" id="resetEmail" name="resetEmail" placeholder="請輸入電子郵件" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" id="resetBtn" style="margin-bottom: 12px;">
-                    <span class="btn-text">發送重設連結</span>
-                    <span class="loading-spinner"></span>
-                </button>
-                
-                <button type="button" class="btn" id="backToLoginBtn" style="background: var(--background-color); color: var(--text-primary);">
-                    返回登入
-                </button>
-            </form>
-            
-            <!-- 忘記密碼連結 -->
-            <div class="forgot-password" id="forgotPasswordLink">
-                <a href="#">忘記密碼？</a>
+            <div class="link-buttons">
+                <a href="#" id="forgotPasswordLink">忘記密碼？</a>
+                <a href="#" id="registerLink">建立新帳戶</a>
             </div>
             
-            <!-- 返回主頁 -->
-            <div class="back-home" id="backHomeLink">
+            <div class="back-home">
                 <a href="index.html">← 返回主頁</a>
             </div>
         </div>
     </div>
 
+    <!-- 註冊 Modal -->
+    <div id="registerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 400px; width: 90%; margin: 20px;">
+            <h2 style="font-size: 1.25rem; margin-bottom: 16px; text-align: center;">建立新帳戶</h2>
+            
+            <div class="message" id="registerMessage"></div>
+            
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="registerEmail">電子郵件</label>
+                    <input type="email" id="registerEmail" name="registerEmail" placeholder="請輸入電子郵件" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPassword">設定密碼</label>
+                    <input type="password" id="registerPassword" name="registerPassword" placeholder="請設定密碼（至少6個字元）" minlength="6" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerConfirmPassword">確認密碼</label>
+                    <input type="password" id="registerConfirmPassword" name="registerConfirmPassword" placeholder="請再次輸入密碼" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="registerBtn">
+                    <span class="loading-spinner"></span>
+                    <span class="btn-text">建立帳戶</span>
+                </button>
+                
+                <button type="button" class="btn btn-secondary" id="closeRegisterModal">
+                    取 消
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 忘記密碼 Modal -->
+    <div id="forgotPasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 400px; width: 90%; margin: 20px;">
+            <h2 style="font-size: 1.25rem; margin-bottom: 16px; text-align: center;">重設密碼</h2>
+            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 20px; text-align: center;">請輸入您的電子郵件，我們會寄送密碼重設連結給您。</p>
+            
+            <div class="message" id="resetMessage"></div>
+            
+            <form id="forgotPasswordForm">
+                <div class="form-group">
+                    <label for="resetEmail">電子郵件</label>
+                    <input type="email" id="resetEmail" name="resetEmail" placeholder="請輸入電子郵件" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="resetBtn">
+                    <span class="loading-spinner"></span>
+                    <span class="btn-text">發送重設連結</span>
+                </button>
+                
+                <button type="button" class="btn btn-secondary" id="closeForgotModal">
+                    取 消
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
@@ -351,8 +341,6 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        
-        // 設定 Firebase Auth 語言為中文
         auth.languageCode = 'zh-TW';
 
         // 顯示訊息
@@ -362,32 +350,15 @@
             element.className = 'message show ' + type;
         }
 
-        // 登入表單切換
+        function hideMessage(elementId) {
+            const element = document.getElementById(elementId);
+            element.className = 'message';
+            element.textContent = '';
+        }
+
+        // ===== 登入 =====
         const loginForm = document.getElementById('loginForm');
-        const resetPasswordForm = document.getElementById('resetPasswordForm');
-        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-        const backToLoginBtn = document.getElementById('backToLoginBtn');
-        const backHomeLink = document.getElementById('backHomeLink');
-
-        forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginForm.classList.add('hide');
-            forgotPasswordLink.style.display = 'none';
-            backHomeLink.style.display = 'none';
-            resetPasswordForm.classList.add('show');
-        });
-
-        backToLoginBtn.addEventListener('click', () => {
-            resetPasswordForm.classList.remove('show');
-            loginForm.classList.remove('hide');
-            forgotPasswordLink.style.display = 'block';
-            backHomeLink.style.display = 'block';
-            document.getElementById('resetMessage').className = 'message';
-        });
-
-        // 登入
         const loginBtn = document.getElementById('loginBtn');
-        const message = document.getElementById('message');
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -403,7 +374,6 @@
             loginBtn.disabled = true;
             loginBtn.classList.add('loading');
 
-            // 10秒超時
             const timeout = setTimeout(() => {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
@@ -411,40 +381,22 @@
             }, 10000);
 
             try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                await signInWithEmailAndPassword(auth, email, password);
                 clearTimeout(timeout);
-                console.log('登入成功:', userCredential.user);
-                
                 showMessage('message', '登入成功！正在轉跳...', 'success');
-                
                 setTimeout(() => {
-                    window.location.href = 'admin.html';
+                    window.location.href = 'index.html';
                 }, 1000);
-                
             } catch (error) {
                 clearTimeout(timeout);
-                console.error('登入錯誤:', error);
-                
                 let errorMessage = '登入失敗，請稍後再試';
-                
                 switch (error.code) {
-                    case 'auth/invalid-email':
-                        errorMessage = '電子郵件格式錯誤';
-                        break;
-                    case 'auth/user-disabled':
-                        errorMessage = '此帳號已被停用';
-                        break;
-                    case 'auth/user-not-found':
-                        errorMessage = '找不到此帳號';
-                        break;
-                    case 'auth/wrong-password':
-                        errorMessage = '密碼錯誤';
-                        break;
-                    case 'auth/invalid-credential':
-                        errorMessage = '電子郵件或密碼錯誤';
-                        break;
+                    case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
+                    case 'auth/user-disabled': errorMessage = '此帳號已被停用'; break;
+                    case 'auth/user-not-found': errorMessage = '找不到此帳號'; break;
+                    case 'auth/wrong-password': errorMessage = '密碼錯誤'; break;
+                    case 'auth/invalid-credential': errorMessage = '電子郵件或密碼錯誤'; break;
                 }
-                
                 showMessage('message', errorMessage, 'error');
             } finally {
                 loginBtn.disabled = false;
@@ -452,10 +404,112 @@
             }
         });
 
-        // 發送密碼重設郵件
+        // ===== 註冊 =====
+        const registerModal = document.getElementById('registerModal');
+        const registerLink = document.getElementById('registerLink');
+        const closeRegisterModal = document.getElementById('closeRegisterModal');
+        const registerForm = document.getElementById('registerForm');
+        const registerBtn = document.getElementById('registerBtn');
+
+        registerLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerModal.style.display = 'flex';
+        });
+
+        closeRegisterModal.addEventListener('click', () => {
+            registerModal.style.display = 'none';
+            hideMessage('registerMessage');
+            registerForm.reset();
+        });
+
+        registerModal.addEventListener('click', (e) => {
+            if (e.target === registerModal) {
+                registerModal.style.display = 'none';
+                hideMessage('registerMessage');
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+            if (!email || !password || !confirmPassword) {
+                showMessage('registerMessage', '請填寫所有欄位', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('registerMessage', '密碼至少需要6個字元', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage('registerMessage', '兩次輸入的密碼不一致', 'error');
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerBtn.classList.add('loading');
+
+            const timeout = setTimeout(() => {
+                registerBtn.disabled = false;
+                registerBtn.classList.remove('loading');
+                showMessage('registerMessage', '網路連接超時，請檢查網絡', 'error');
+            }, 10000);
+
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                clearTimeout(timeout);
+                showMessage('registerMessage', '帳戶建立成功！', 'success');
+                setTimeout(() => {
+                    registerModal.style.display = 'none';
+                    hideMessage('registerMessage');
+                    registerForm.reset();
+                }, 2000);
+            } catch (error) {
+                clearTimeout(timeout);
+                let errorMessage = '建立帳戶失敗，請稍後再試';
+                switch (error.code) {
+                    case 'auth/email-already-in-use': errorMessage = '此電子郵件已被註冊'; break;
+                    case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
+                    case 'auth/weak-password': errorMessage = '密碼強度不足'; break;
+                }
+                showMessage('registerMessage', errorMessage, 'error');
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.classList.remove('loading');
+            }
+        });
+
+        // ===== 忘記密碼 =====
+        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const closeForgotModal = document.getElementById('closeForgotModal');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
         const resetBtn = document.getElementById('resetBtn');
 
-        resetPasswordForm.addEventListener('submit', async (e) => {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotPasswordModal.style.display = 'flex';
+        });
+
+        closeForgotModal.addEventListener('click', () => {
+            forgotPasswordModal.style.display = 'none';
+            hideMessage('resetMessage');
+            forgotPasswordForm.reset();
+        });
+
+        forgotPasswordModal.addEventListener('click', (e) => {
+            if (e.target === forgotPasswordModal) {
+                forgotPasswordModal.style.display = 'none';
+                hideMessage('resetMessage');
+            }
+        });
+
+        forgotPasswordForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const email = document.getElementById('resetEmail').value.trim();
@@ -468,7 +522,6 @@
             resetBtn.disabled = true;
             resetBtn.classList.add('loading');
 
-            // 10秒超時
             const timeout = setTimeout(() => {
                 resetBtn.disabled = false;
                 resetBtn.classList.remove('loading');
@@ -476,39 +529,21 @@
             }, 10000);
 
             try {
-                // 發送密碼重設郵件
                 await sendPasswordResetEmail(auth, email);
                 clearTimeout(timeout);
                 showMessage('resetMessage', '密碼重設連結已發送到您的電子郵件！', 'success');
-                
-                // 3秒後返回登入
                 setTimeout(() => {
-                    resetPasswordForm.classList.remove('show');
-                    loginForm.classList.remove('hide');
-                    forgotPasswordLink.style.display = 'block';
-                    backHomeLink.style.display = 'block';
-                    document.getElementById('resetMessage').className = 'message';
-                    document.getElementById('resetEmail').value = '';
+                    forgotPasswordModal.style.display = 'none';
+                    hideMessage('resetMessage');
+                    forgotPasswordForm.reset();
                 }, 3000);
-                
             } catch (error) {
                 clearTimeout(timeout);
-                console.error('發送錯誤:', error);
-                
                 let errorMessage = '發送失敗，請稍後再試';
-                
                 switch (error.code) {
-                    case 'auth/invalid-email':
-                        errorMessage = '電子郵件格式錯誤';
-                        break;
-                    case 'auth/user-not-found':
-                        errorMessage = '找不到此帳號';
-                        break;
-                    case 'auth/too-many-requests':
-                        errorMessage = '嘗試次數過多，請稍後再試';
-                        break;
+                    case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
+                    case 'auth/user-not-found': errorMessage = '找不到此帳號'; break;
                 }
-                
                 showMessage('resetMessage', errorMessage, 'error');
             } finally {
                 resetBtn.disabled = false;
