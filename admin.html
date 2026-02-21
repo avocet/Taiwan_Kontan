@@ -725,21 +725,37 @@
         // 建立客戶卡片
         function createCustomerCard(id, data) {
             const date = data.建立時間 ? new Date(data.建立時間.seconds * 1000).toLocaleDateString('zh-TW') : '-';
+            const gender = data.性別 === 'female' ? '女性' : data.性別 === 'male' ? '男性' : '-';
             return `
                 <div class="data-card">
                     <div class="data-header">
                         <div>
                             <div class="data-title">${data.姓名 || '-'}</div>
-                            <div class="data-date">${date}</div>
+                            <div class="data-date">建立日期：${date}</div>
                         </div>
                         <button class="btn btn-delete" onclick="deleteData('客戶資料', '${id}')">刪除</button>
                     </div>
                     <div class="data-info">
+                        <div class="data-item"><span class="data-label">合約編號：</span><span class="data-value">${data.合約編號 || '-'}</span></div>
+                        <div class="data-item"><span class="data-label">紀錄日期：</span><span class="data-value">${data.紀錄日期 || '-'}</span></div>
                         <div class="data-item"><span class="data-label">電話：</span><span class="data-value">${data.電話 || '-'}</span></div>
                         <div class="data-item"><span class="data-label">手機：</span><span class="data-value">${data.手機 || '-'}</span></div>
                         <div class="data-item"><span class="data-label">年齡：</span><span class="data-value">${data.年齡 || '-'}</span></div>
-                        <div class="data-item"><span class="data-label">性別：</span><span class="data-value">${data.性別 === 'female' ? '女性' : data.性別 === 'male' ? '男性' : '-'}</span></div>
+                        <div class="data-item"><span class="data-label">生日：</span><span class="data-value">${data.生日 || '-'}</span></div>
+                        <div class="data-item"><span class="data-label">性別：</span><span class="data-value">${gender}</span></div>
+                        <div class="data-item"><span class="data-label">Email：</span><span class="data-value">${data.Email || '-'}</span></div>
+                        <div class="data-item"><span class="data-label">營養師：</span><span class="data-value">${data.營養師 || '-'}</span></div>
                     </div>
+                    ${data.孕前體重 || data.產後體重 ? `
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">
+                        <div style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">體重資訊</div>
+                        <div class="data-info">
+                            <div class="data-item"><span class="data-label">孕前體重：</span><span class="data-value">${data.孕前體重 || '-'} kg</span></div>
+                            <div class="data-item"><span class="data-label">產後體重：</span><span class="data-value">${data.產後體重 || '-'} kg</span></div>
+                        </div>
+                    </div>
+                    ` : ''}
+                    ${data.月經週期 ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);font-size:0.8125rem;"><span class="data-label">月經週期：</span>${data.月經週期}</div>` : ''}
                 </div>
             `;
         }
@@ -757,8 +773,11 @@
                         <button class="btn btn-delete" onclick="deleteData('減肥歷史', '${id}')">刪除</button>
                     </div>
                     <div class="data-info">
+                        <div class="data-item"><span class="data-label">紀錄日期：</span><span class="data-value">${data.紀錄日期 || '-'}</span></div>
                         <div class="data-item"><span class="data-label">目前體重：</span><span class="data-value">${data.目前體重 || '-'} kg</span></div>
                         <div class="data-item"><span class="data-label">目標體重：</span><span class="data-value">${data.目標體重 || '-'} kg</span></div>
+                        <div class="data-item"><span class="data-label">體重變化：</span><span class="data-value">${data.體重變化 || '-'} kg</span></div>
+                        <div class="data-item" style="grid-column: 1 / -1;"><span class="data-label">備註：</span><span class="data-value">${data.備註 || '-'}</span></div>
                     </div>
                 </div>
             `;
@@ -779,6 +798,28 @@
                     <div class="data-info">
                         <div class="data-item"><span class="data-label">紀錄日期：</span><span class="data-value">${data.紀錄日期 || '-'}</span></div>
                     </div>
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">
+                        <div style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">第1天</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">早餐：</span>${data.day1_breakfast || '-'}</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">午餐：</span>${data.day1_lunch || '-'}</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">晚餐：</span>${data.day1_dinner || '-'}</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">點心：</span>${data.day1_snack || '-'}</div>
+                    </div>
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">
+                        <div style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">第2天</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">早餐：</span>${data.day2_breakfast || '-'}</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">午餐：</span>${data.day2_lunch || '-'}</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">晚餐：</span>${data.day2_dinner || '-'}</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">點心：</span>${data.day2_snack || '-'}</div>
+                    </div>
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">
+                        <div style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">第3天</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">早餐：</span>${data.day3_breakfast || '-'}</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">午餐：</span>${data.day3_lunch || '-'}</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">晚餐：</span>${data.day3_dinner || '-'}</div>
+                        <div style="font-size:0.8125rem;"><span class="data-label">點心：</span>${data.day3_snack || '-'}</div>
+                    </div>
+                    ${data.備註 ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);font-size:0.8125rem;"><span class="data-label">備註：</span>${data.備註}</div>` : ''}
                 </div>
             `;
         }
