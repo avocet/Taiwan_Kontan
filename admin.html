@@ -537,7 +537,7 @@
                     const data = docSnap.data();
                     list.innerHTML = createCustomerCard(docSnap.id, data);
                 } else {
-                    const q = query(collection(db, "客戶資料"), orderBy("建立時間", "desc"));
+                    const q = query(collection(db, "客戶資料"));
                     const querySnapshot = await getDocs(q);
                     
                     loadingEl.style.display = 'none';
@@ -547,10 +547,20 @@
                         return;
                     }
                     
-                    let html = '';
+                    let docsArray = [];
                     querySnapshot.forEach((d) => {
-                        const data = d.data();
-                        html += createCustomerCard(d.id, data);
+                        docsArray.push({ id: d.id, data: d.data() });
+                    });
+                    
+                    docsArray.sort((a, b) => {
+                        const timeA = a.data.建立時間?.seconds || 0;
+                        const timeB = b.data.建立時間?.seconds || 0;
+                        return timeB - timeA;
+                    });
+                    
+                    let html = '';
+                    docsArray.forEach((item) => {
+                        html += createCustomerCard(item.id, item.data);
                     });
                     list.innerHTML = html;
                 }
@@ -570,9 +580,9 @@
             try {
                 let q;
                 if (currentCustomerUserId) {
-                    q = query(collection(db, "減肥歷史"), where("userId", "==", currentCustomerUserId), orderBy("建立時間", "desc"));
+                    q = query(collection(db, "減肥歷史"), where("userId", "==", currentCustomerUserId));
                 } else {
-                    q = query(collection(db, "減肥歷史"), orderBy("建立時間", "desc"));
+                    q = query(collection(db, "減肥歷史"));
                 }
                 const querySnapshot = await getDocs(q);
                 
@@ -583,10 +593,20 @@
                     return;
                 }
                 
-                let html = '';
+                let docsArray = [];
                 querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    html += createWeightCard(doc.id, data);
+                    docsArray.push({ id: doc.id, data: doc.data() });
+                });
+                
+                docsArray.sort((a, b) => {
+                    const timeA = a.data.建立時間?.seconds || 0;
+                    const timeB = b.data.建立時間?.seconds || 0;
+                    return timeB - timeA;
+                });
+                
+                let html = '';
+                docsArray.forEach((item) => {
+                    html += createWeightCard(item.id, item.data);
                 });
                 list.innerHTML = html;
                 
@@ -605,9 +625,9 @@
             try {
                 let q;
                 if (currentCustomerUserId) {
-                    q = query(collection(db, "3日飲食記錄"), where("userId", "==", currentCustomerUserId), orderBy("建立時間", "desc"));
+                    q = query(collection(db, "3日飲食記錄"), where("userId", "==", currentCustomerUserId));
                 } else {
-                    q = query(collection(db, "3日飲食記錄"), orderBy("建立時間", "desc"));
+                    q = query(collection(db, "3日飲食記錄"));
                 }
                 const querySnapshot = await getDocs(q);
                 
@@ -618,10 +638,20 @@
                     return;
                 }
                 
-                let html = '';
+                let docsArray = [];
                 querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    html += createDietCard(doc.id, data);
+                    docsArray.push({ id: doc.id, data: doc.data() });
+                });
+                
+                docsArray.sort((a, b) => {
+                    const timeA = a.data.建立時間?.seconds || 0;
+                    const timeB = b.data.建立時間?.seconds || 0;
+                    return timeB - timeA;
+                });
+                
+                let html = '';
+                docsArray.forEach((item) => {
+                    html += createDietCard(item.id, item.data);
                 });
                 list.innerHTML = html;
                 
@@ -640,9 +670,9 @@
             try {
                 let q;
                 if (currentCustomerUserId) {
-                    q = query(collection(db, "每日體重三圍"), where("userId", "==", currentCustomerUserId), orderBy("紀錄日期", "desc"));
+                    q = query(collection(db, "每日體重三圍"), where("userId", "==", currentCustomerUserId));
                 } else {
-                    q = query(collection(db, "每日體重三圍"), orderBy("紀錄日期", "desc"));
+                    q = query(collection(db, "每日體重三圍"));
                 }
                 const querySnapshot = await getDocs(q);
                 
@@ -653,10 +683,20 @@
                     return;
                 }
                 
-                let html = '';
+                let docsArray = [];
                 querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    html += createMeasurementCard(doc.id, data);
+                    docsArray.push({ id: doc.id, data: doc.data() });
+                });
+                
+                docsArray.sort((a, b) => {
+                    const dateA = a.data.紀錄日期 || '';
+                    const dateB = b.data.紀錄日期 || '';
+                    return dateB.localeCompare(dateA);
+                });
+                
+                let html = '';
+                docsArray.forEach((item) => {
+                    html += createMeasurementCard(item.id, item.data);
                 });
                 list.innerHTML = html;
                 
