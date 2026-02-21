@@ -318,6 +318,13 @@
             color: var(--text-primary);
         }
 
+        /* Photo Modal */
+        .modal img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+
         /* Responsive */
         @media screen and (max-width: 428px) {
             .header {
@@ -412,6 +419,14 @@
             </div>
             <div class="detail-grid" id="modalBody"></div>
         </div>
+    </div>
+
+    <!-- Photo Modal -->
+    <div class="modal" id="photoModal" style="background:rgba(0,0,0,0.9);">
+        <div style="position:absolute;top:20px;right:20px;">
+            <button class="modal-close" id="photoModalClose" style="color:white;font-size:2rem;background:none;border:none;cursor:pointer;">&times;</button>
+        </div>
+        <img id="modalImg" style="max-width:90%;max-height:90%;border-radius:8px;" src="" alt="照片">
     </div>
 
     <script type="module">
@@ -770,12 +785,16 @@
 
         // 建立體重三圍卡片
         function createMeasurementCard(id, data) {
+            const photoHtml = data.照片 ? `<img class="data-photo" src="${data.照片}" onclick="showPhoto('${data.照片}')" alt="照片" style="width:80px;height:80px;border-radius:8px;object-fit:cover;cursor:pointer;margin-left:12px;">` : '';
             return `
                 <div class="data-card">
                     <div class="data-header">
-                        <div>
-                            <div class="data-title">${data.客戶姓名 || '-'}</div>
-                            <div class="data-date">${data.紀錄日期 || '-'}</div>
+                        <div style="display:flex;align-items:center;">
+                            <div>
+                                <div class="data-title">${data.客戶姓名 || '-'}</div>
+                                <div class="data-date">${data.紀錄日期 || '-'}</div>
+                            </div>
+                            ${photoHtml}
                         </div>
                         <button class="btn btn-delete" onclick="deleteData('每日體重三圍', '${id}')">刪除</button>
                     </div>
@@ -790,6 +809,12 @@
                 </div>
             `;
         }
+
+        // 顯示照片
+        window.showPhoto = function(url) {
+            document.getElementById('modalImg').src = url;
+            document.getElementById('detailModal').classList.add('show');
+        };
 
         // 刪除資料
         window.deleteData = async function(collectionName, docId) {
@@ -819,6 +844,17 @@
         document.getElementById('detailModal').addEventListener('click', (e) => {
             if (e.target === document.getElementById('detailModal')) {
                 document.getElementById('detailModal').classList.remove('show');
+            }
+        });
+
+        // Photo Modal 關閉
+        document.getElementById('photoModalClose').addEventListener('click', () => {
+            document.getElementById('photoModal').classList.remove('show');
+        });
+
+        document.getElementById('photoModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('photoModal')) {
+                document.getElementById('photoModal').classList.remove('show');
             }
         });
     </script>
