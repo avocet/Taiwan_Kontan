@@ -250,6 +250,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
@@ -263,6 +264,7 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        const db = getFirestore(app);
         auth.languageCode = 'zh-TW';
 
         function showMessage(text, type) {
@@ -295,12 +297,25 @@
             }, 10000);
 
             try {
-                await signInWithEmailAndPassword(auth, email, password);
-                clearTimeout(timeout);
-                showMessage('登入成功！正在轉跳...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'admin.html';
-                }, 1000);
+                // 先登入
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // 檢查是否為管理員
+                const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+                
+                if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                    clearTimeout(timeout);
+                    showMessage('登入成功！正在轉跳...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 1000);
+                } else {
+                    // 不是管理員，強制登出
+                    await auth.signOut();
+                    clearTimeout(timeout);
+                    showMessage('您沒有後台管理權限', 'error');
+                }
             } catch (error) {
                 clearTimeout(timeout);
                 let errorMessage = '登入失敗，請稍後再試';
