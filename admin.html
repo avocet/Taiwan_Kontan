@@ -519,41 +519,54 @@
 
         // 載入客戶資料
         async function loadCustomers() {
+            const loadingEl = document.getElementById('customersLoading');
+            const list = document.getElementById('customersList');
+            
             try {
-                let querySnapshot;
-                
                 if (currentCustomerUserId) {
                     const docRef = doc(db, "客戶資料", currentCustomerUserId);
                     const docSnap = await getDoc(docRef);
-                    querySnapshot = { empty: !docSnap.exists(), docs: docSnap.exists() ? [{ id: docSnap.id, data: () => docSnap.data() }] : [] };
+                    
+                    loadingEl.style.display = 'none';
+                    
+                    if (!docSnap.exists()) {
+                        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>尚無客戶資料</p></div>';
+                        return;
+                    }
+                    
+                    const data = docSnap.data();
+                    list.innerHTML = createCustomerCard(docSnap.id, data);
                 } else {
                     const q = query(collection(db, "客戶資料"), orderBy("建立時間", "desc"));
-                    querySnapshot = await getDocs(q);
+                    const querySnapshot = await getDocs(q);
+                    
+                    loadingEl.style.display = 'none';
+                    
+                    if (querySnapshot.empty) {
+                        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>尚無客戶資料</p></div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    querySnapshot.forEach((d) => {
+                        const data = d.data();
+                        html += createCustomerCard(d.id, data);
+                    });
+                    list.innerHTML = html;
                 }
-                
-                const list = document.getElementById('customersList');
-                document.getElementById('customersLoading').style.display = 'none';
-                
-                if (querySnapshot.empty) {
-                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📋</div><p>尚無客戶資料</p></div>';
-                    return;
-                }
-                
-                let html = '';
-                querySnapshot.docs.forEach((d) => {
-                    const data = d.data();
-                    html += createCustomerCard(d.id, data);
-                });
-                list.innerHTML = html;
                 
             } catch (error) {
                 console.error('載入客戶資料錯誤:', error);
-                document.getElementById('customersList').innerHTML = '<div class="empty-state"><p>載入失敗</p></div>';
+                loadingEl.style.display = 'none';
+                list.innerHTML = '<div class="empty-state"><p>載入失敗: ' + error.message + '</p></div>';
             }
         }
 
         // 載入減肥歷史
         async function loadWeightHistory() {
+            const loadingEl = document.getElementById('weightLoading');
+            const list = document.getElementById('weightList');
+            
             try {
                 let q;
                 if (currentCustomerUserId) {
@@ -563,8 +576,7 @@
                 }
                 const querySnapshot = await getDocs(q);
                 
-                const list = document.getElementById('weightList');
-                document.getElementById('weightLoading').style.display = 'none';
+                loadingEl.style.display = 'none';
                 
                 if (querySnapshot.empty) {
                     list.innerHTML = '<div class="empty-state"><div class="empty-icon">📈</div><p>尚無減肥歷史記錄</p></div>';
@@ -580,12 +592,16 @@
                 
             } catch (error) {
                 console.error('載入減肥歷史錯誤:', error);
-                document.getElementById('weightList').innerHTML = '<div class="empty-state"><p>載入失敗</p></div>';
+                loadingEl.style.display = 'none';
+                list.innerHTML = '<div class="empty-state"><p>載入失敗: ' + error.message + '</p></div>';
             }
         }
 
         // 載入飲食記錄
         async function loadDietRecords() {
+            const loadingEl = document.getElementById('dietLoading');
+            const list = document.getElementById('dietList');
+            
             try {
                 let q;
                 if (currentCustomerUserId) {
@@ -595,8 +611,7 @@
                 }
                 const querySnapshot = await getDocs(q);
                 
-                const list = document.getElementById('dietList');
-                document.getElementById('dietLoading').style.display = 'none';
+                loadingEl.style.display = 'none';
                 
                 if (querySnapshot.empty) {
                     list.innerHTML = '<div class="empty-state"><div class="empty-icon">🥗</div><p>尚無飲食記錄</p></div>';
@@ -612,12 +627,16 @@
                 
             } catch (error) {
                 console.error('載入飲食記錄錯誤:', error);
-                document.getElementById('dietList').innerHTML = '<div class="empty-state"><p>載入失敗</p></div>';
+                loadingEl.style.display = 'none';
+                list.innerHTML = '<div class="empty-state"><p>載入失敗: ' + error.message + '</p></div>';
             }
         }
 
         // 載入每日體重三圍
         async function loadMeasurements() {
+            const loadingEl = document.getElementById('measurementsLoading');
+            const list = document.getElementById('measurementsList');
+            
             try {
                 let q;
                 if (currentCustomerUserId) {
@@ -627,8 +646,7 @@
                 }
                 const querySnapshot = await getDocs(q);
                 
-                const list = document.getElementById('measurementsList');
-                document.getElementById('measurementsLoading').style.display = 'none';
+                loadingEl.style.display = 'none';
                 
                 if (querySnapshot.empty) {
                     list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚖️</div><p>尚無體重三圍記錄</p></div>';
@@ -644,7 +662,8 @@
                 
             } catch (error) {
                 console.error('載入體重三圍錯誤:', error);
-                document.getElementById('measurementsList').innerHTML = '<div class="empty-state"><p>載入失敗</p></div>';
+                loadingEl.style.display = 'none';
+                list.innerHTML = '<div class="empty-state"><p>載入失敗: ' + error.message + '</p></div>';
             }
         }
 
