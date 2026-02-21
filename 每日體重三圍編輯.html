@@ -473,7 +473,10 @@
                             <div class="upload-text">點擊上傳新照片</div>
                             <img class="photo-preview" id="photoPreview">
                         </div>
-                        <img class="existing-photo" id="existingPhoto">
+                        <div id="existingPhotoContainer" style="display:none;position:relative;">
+                            <img class="existing-photo" id="existingPhoto">
+                            <button type="button" id="deletePhotoBtn" style="position:absolute;top:8px;right:8px;background:rgba(255,59,48,0.9);color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:0.75rem;">✕ 刪除</button>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -584,8 +587,15 @@
                     existingPhotoUrl = data.照片;
                     const existingPhoto = document.getElementById('existingPhoto');
                     existingPhoto.src = data.照片;
-                    existingPhoto.style.display = 'block';
+                    document.getElementById('existingPhotoContainer').style.display = 'block';
                 }
+
+                document.getElementById('deletePhotoBtn').addEventListener('click', () => {
+                    if (confirm('確定要刪除這張照片嗎？')) {
+                        existingPhotoUrl = null;
+                        document.getElementById('existingPhotoContainer').style.display = 'none';
+                    }
+                });
 
             } catch (error) {
                 console.error('載入資料失敗:', error);
@@ -629,7 +639,7 @@
                 reader.onload = (e) => {
                     photoPreview.src = e.target.result;
                     photoPreview.classList.add('show');
-                    document.getElementById('existingPhoto').style.display = 'none';
+                    document.getElementById('existingPhotoContainer').style.display = 'none';
                 };
                 reader.readAsDataURL(file);
             }
