@@ -422,11 +422,11 @@
     </div>
 
     <!-- Photo Modal -->
-    <div class="modal" id="photoModal" style="background:rgba(0,0,0,0.9);">
+    <div class="modal" id="photoModal" style="background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;">
         <div style="position:absolute;top:20px;right:20px;">
             <button class="modal-close" id="photoModalClose" style="color:white;font-size:2rem;background:none;border:none;cursor:pointer;">&times;</button>
         </div>
-        <img id="modalImg" style="max-width:90%;max-height:90%;border-radius:8px;" src="" alt="照片">
+        <img id="modalImg" style="max-width:90%;max-height:90%;border-radius:8px;display:block;" src="" alt="照片">
     </div>
 
     <script type="module">
@@ -813,7 +813,7 @@
         // 顯示照片
         window.showPhoto = function(url) {
             document.getElementById('modalImg').src = url;
-            document.getElementById('detailModal').classList.add('show');
+            document.getElementById('photoModal').classList.add('show');
         };
 
         // 刪除資料
