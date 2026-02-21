@@ -444,7 +444,7 @@
         <div class="form-card">
             <div class="form-header">
                 <a href="customer.html" class="back-btn">← 返回</a>
-                <h1>客戶基本資料及記錄</h1>
+                <h1 id="formTitle">客戶基本資料及記錄</h1>
                 <div style="width: 70px;"></div>
             </div>
             
@@ -560,7 +560,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         // ====== Firebase 配置 ======
         const firebaseConfig = {
@@ -632,6 +632,9 @@
                     if (data.產後體重) document.getElementById('postPregnancyWeight').value = data.產後體重;
                     if (data.上月mc週期) document.getElementById('mcCycle').value = data.上月mc週期;
                     if (data.email) document.getElementById('email').value = data.email;
+                    
+                    document.getElementById('submitBtn').textContent = '更新資料';
+                    document.getElementById('formTitle').textContent = '更新客戶基本資料';
                 }
             } catch (error) {
                 console.error('載入資料失敗:', error);
@@ -773,11 +776,8 @@
                 loadingMessage.classList.remove('show');
                 showMessage(successMessage);
                 
-                // 重置表單
-                form.reset();
-                radioOptions.forEach(option => option.classList.remove('selected'));
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('recordDate').value = today;
+                // 更新按鈕文字
+                submitBtn.textContent = '更新資料';
                 
             } catch (error) {
                 console.error('錯誤: ', error);
@@ -786,7 +786,6 @@
                 showMessage(errorMessage, 5000);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = '儲存資料';
             }
         });
 
