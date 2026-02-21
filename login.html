@@ -456,13 +456,8 @@
             resetBtn.querySelector('.btn-text').textContent = '發送中...';
 
             try {
-                // 使用自定義的 continue URL
-                const actionCodeSettings = {
-                    url: 'https://avocet.github.io/Taiwan_Kontan/login.html',
-                    handleCodeInApp: false
-                };
-                
-                await sendPasswordResetEmail(auth, email, actionCodeSettings);
+                // 發送密碼重設郵件
+                await sendPasswordResetEmail(auth, email);
                 showMessage('resetMessage', '密碼重設連結已發送到您的電子郵件！', 'success');
                 
                 // 3秒後返回登入
