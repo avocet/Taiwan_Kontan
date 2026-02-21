@@ -311,6 +311,9 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        
+        // 設定 Firebase Auth 語言為中文
+        auth.languageCode = 'zh-TW';
 
         // 顯示訊息
         function showMessage(elementId, text, type) {
