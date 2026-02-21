@@ -376,7 +376,7 @@
         <div class="form-card">
             <div class="form-header">
                 <a href="customer.html" class="back-btn">← 返回</a>
-                <h1>3日飲食記錄</h1>
+                <h1 id="formTitle">3日飲食記錄</h1>
                 <div style="width: 70px;"></div>
             </div>
             
@@ -504,7 +504,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
@@ -522,6 +522,8 @@
 
         // 檢查登入狀態
         let currentUser = null;
+        let existingDocId = null;
+
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.replace('login.html');
@@ -537,6 +539,9 @@
             
             // 載入用戶姓名
             loadUserName(user.uid);
+            
+            // 載入現有飲食記錄資料
+            loadExistingData(user.uid);
         });
 
         // 載入用戶姓名
@@ -553,6 +558,44 @@
                 }
             } catch (error) {
                 console.error('載入姓名失敗:', error);
+            }
+        }
+
+        // 載入現有飲食記錄資料
+        async function loadExistingData(userId) {
+            try {
+                const q = query(collection(db, "3日飲食記錄"), where("userId", "==", userId));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    existingDocId = querySnapshot.docs[0].id;
+                    const data = querySnapshot.docs[0].data();
+                    
+                    document.getElementById('recordDate').value = data.紀錄日期 || '';
+                    
+                    // Day 1
+                    document.getElementById('day1_breakfast').value = data.day1_breakfast || '';
+                    document.getElementById('day1_lunch').value = data.day1_lunch || '';
+                    document.getElementById('day1_dinner').value = data.day1_dinner || '';
+                    document.getElementById('day1_snack').value = data.day1_snack || '';
+                    
+                    // Day 2
+                    document.getElementById('day2_breakfast').value = data.day2_breakfast || '';
+                    document.getElementById('day2_lunch').value = data.day2_lunch || '';
+                    document.getElementById('day2_dinner').value = data.day2_dinner || '';
+                    document.getElementById('day2_snack').value = data.day2_snack || '';
+                    
+                    // Day 3
+                    document.getElementById('day3_breakfast').value = data.day3_breakfast || '';
+                    document.getElementById('day3_lunch').value = data.day3_lunch || '';
+                    document.getElementById('day3_dinner').value = data.day3_dinner || '';
+                    document.getElementById('day3_snack').value = data.day3_snack || '';
+                    
+                    document.getElementById('submitBtn').textContent = '更新資料';
+                    document.getElementById('formTitle').textContent = '更新3日飲食記錄';
+                }
+            } catch (error) {
+                console.error('載入現有資料失敗:', error);
             }
         }
 
@@ -630,26 +673,19 @@
                 userId: currentUser.uid,
                 客戶姓名: customerName,
                 紀錄日期: recordDate,
-                第1天: {
-                    早餐: document.getElementById('day1_breakfast').value.trim(),
-                    午餐: document.getElementById('day1_lunch').value.trim(),
-                    晚餐: document.getElementById('day1_dinner').value.trim(),
-                    點心宵夜: document.getElementById('day1_snack').value.trim()
-                },
-                第2天: {
-                    早餐: document.getElementById('day2_breakfast').value.trim(),
-                    午餐: document.getElementById('day2_lunch').value.trim(),
-                    晚餐: document.getElementById('day2_dinner').value.trim(),
-                    點心宵夜: document.getElementById('day2_snack').value.trim()
-                },
-                第3天: {
-                    早餐: document.getElementById('day3_breakfast').value.trim(),
-                    午餐: document.getElementById('day3_lunch').value.trim(),
-                    晚餐: document.getElementById('day3_dinner').value.trim(),
-                    點心宵夜: document.getElementById('day3_snack').value.trim()
-                },
-                備註: document.getElementById('notes').value.trim(),
-                建立時間: serverTimestamp()
+                day1_breakfast: document.getElementById('day1_breakfast').value.trim(),
+                day1_lunch: document.getElementById('day1_lunch').value.trim(),
+                day1_dinner: document.getElementById('day1_dinner').value.trim(),
+                day1_snack: document.getElementById('day1_snack').value.trim(),
+                day2_breakfast: document.getElementById('day2_breakfast').value.trim(),
+                day2_lunch: document.getElementById('day2_lunch').value.trim(),
+                day2_dinner: document.getElementById('day2_dinner').value.trim(),
+                day2_snack: document.getElementById('day2_snack').value.trim(),
+                day3_breakfast: document.getElementById('day3_breakfast').value.trim(),
+                day3_lunch: document.getElementById('day3_lunch').value.trim(),
+                day3_dinner: document.getElementById('day3_dinner').value.trim(),
+                day3_snack: document.getElementById('day3_snack').value.trim(),
+                備註: document.getElementById('notes').value.trim()
             };
 
             submitBtn.disabled = true;
@@ -657,15 +693,17 @@
             showMessage(loadingMessage, 15000);
 
             try {
-                const docRef = await addDoc(collection(db, "3日飲食記錄"), formData);
-                console.log('文檔 ID: ', docRef.id);
+                if (existingDocId) {
+                    await updateDoc(doc(db, "3日飲食記錄", existingDocId), formData);
+                } else {
+                    await addDoc(collection(db, "3日飲食記錄"), {
+                        ...formData,
+                        建立時間: serverTimestamp()
+                    });
+                }
                 
                 loadingMessage.classList.remove('show');
                 showMessage(successMessage);
-                
-                form.reset();
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('recordDate').value = today;
                 
             } catch (error) {
                 console.error('錯誤: ', error);
@@ -674,7 +712,7 @@
                 showMessage(errorMessage, 5000);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = '儲存資料';
+                submitBtn.textContent = '更新資料';
             }
         });
 
