@@ -412,16 +412,13 @@
             window.location.replace('index.html');
         });
 
-        // 防止頁面被緩存
+        // 防止頁面被緩存 - 每次頁面顯示時都檢查
         window.onpageshow = function(event) {
-            if (event.persisted) {
-                // 頁面從緩存加載，檢查登入狀態
-                onAuthStateChanged(auth, (user) => {
-                    if (!user) {
-                        window.location.replace('admin-login.html');
-                    }
-                });
-            }
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    window.location.replace('admin-login.html');
+                }
+            });
         };
 
         // 頁面可見性變化時重新檢查
