@@ -746,11 +746,11 @@
                         <div class="data-item"><span class="data-label">Email：</span><span class="data-value">${data.Email || '-'}</span></div>
                         <div class="data-item"><span class="data-label">營養師：</span><span class="data-value">${data.營養師 || '-'}</span></div>
                     </div>
-                    ${data.孕前體重 || data.產後體重 ? `
+                    ${data.產前體重 || data.產後體重 ? `
                     <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">
                         <div style="font-size:0.8125rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">體重資訊</div>
                         <div class="data-info">
-                            <div class="data-item"><span class="data-label">孕前體重：</span><span class="data-value">${data.孕前體重 || '-'} kg</span></div>
+                            <div class="data-item"><span class="data-label">產前體重：</span><span class="data-value">${data.產前體重 || '-'} kg</span></div>
                             <div class="data-item"><span class="data-label">產後體重：</span><span class="data-value">${data.產後體重 || '-'} kg</span></div>
                         </div>
                     </div>
