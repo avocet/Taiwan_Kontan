@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>新增每日體重與三圍</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+            --success-color: #34C759;
+            --error-color: #FF3B30;
+            --loading-color: #FF9500;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-card {
+            background: var(--card-background);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #FF2D55, #FF6B6B);
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .form-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .form-body {
+            padding: 24px 20px;
+        }
+
+        .form-section {
+            margin-bottom: 28px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        label.required::after {
+            content: ' *';
+            color: var(--error-color);
+        }
+
+        input[type="date"],
+        input[type="number"] {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--card-background);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group input {
+            flex: 1;
+        }
+
+        .input-group span {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .form-row .form-group {
+            margin-bottom: 0;
+        }
+
+        /* 照片上傳 */
+        .photo-upload {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .photo-upload input[type="file"] {
+            display: none;
+        }
+
+        .photo-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .photo-preview.show {
+            display: block;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .form-actions {
+            padding: 20px;
+            background: var(--card-background);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF2D55, #FF6B6B);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 45, 85, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #E5E5EA;
+        }
+
+        .device-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .success-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--success-color);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(52, 199, 89, 0.3);
+        }
+
+        .success-message.show { display: block; }
+
+        .loading-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--loading-color);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            z-index: 2000;
+        }
+
+        .loading-message.show { display: block; }
+
+        .error-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--error-color);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            z-index: 2000;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .error-message.show { display: block; }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+        }
+
+        .overlay.show { display: block; }
+
+        @media screen and (max-width: 428px) {
+            .container { padding: 12px; }
+            .form-card { border-radius: 20px; }
+            .form-header { padding: 16px; flex-wrap: wrap; gap: 10px; }
+            .form-header h1 { font-size: 1.25rem; }
+            .form-body { padding: 20px 16px; }
+            .form-section { margin-bottom: 24px; }
+            .form-row { grid-template-columns: 1fr; }
+            .form-group { margin-bottom: 16px; }
+            input { padding: 12px 14px; font-size: 16px; }
+            .form-actions { padding: 16px; flex-direction: column; gap: 10px; }
+            .btn { padding: 14px 20px; }
+        }
+
+        @media screen and (min-width: 429px) and (max-width: 1024px) {
+            .container { padding: 24px; max-width: 700px; }
+            .form-card { border-radius: 20px; }
+            .form-header { padding: 28px 24px; }
+            .form-header h1 { font-size: 1.625rem; }
+            .form-body { padding: 28px 24px; }
+            .form-section { margin-bottom: 32px; }
+            .form-actions { padding: 24px; gap: 16px; }
+            .btn { padding: 16px 28px; }
+        }
+
+        @media screen and (min-width: 1025px) {
+            .container { padding: 40px; max-width: 800px; }
+            .form-card { border-radius: 24px; }
+            .form-header { padding: 36px 32px; border-radius: 24px 24px 0 0; }
+            .form-header h1 { font-size: 1.875rem; }
+            .form-body { padding: 36px 32px; }
+            .form-actions { padding: 28px 32px; gap: 16px; }
+            .btn { max-width: 200px; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="device-indicator" id="deviceIndicator">
+        <span class="device-icon" id="deviceIcon">💻</span>
+        <span id="deviceText">電腦版</span>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <a href="每日體重三圍.html" class="back-btn">← 返回</a>
+                <h1>新增每日體重與三圍</h1>
+                <div style="width: 70px;"></div>
+            </div>
+            
+            <form class="form-body" id="weightForm">
+                <div class="form-section">
+                    <div class="section-title">基本資訊</div>
+                    
+                    <div class="form-group">
+                        <label class="required">紀錄日期</label>
+                        <input type="date" id="recordDate" name="recordDate" required>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="section-title">體重紀錄</div>
+                    
+                    <div class="form-group">
+                        <label class="required">體重</label>
+                        <div class="input-group">
+                            <input type="number" id="weight" name="weight" placeholder="請輸入體重" step="0.1" required>
+                            <span>kg</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="section-title">身體三圍</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>胸圍</label>
+                            <div class="input-group">
+                                <input type="number" id="chest" name="chest" placeholder="胸圍" step="0.1">
+                                <span>cm</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>腰圍</label>
+                            <div class="input-group">
+                                <input type="number" id="waist" name="waist" placeholder="腰圍" step="0.1">
+                                <span>cm</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>臀圍</label>
+                            <div class="input-group">
+                                <input type="number" id="hip" name="hip" placeholder="臀圍" step="0.1">
+                                <span>cm</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 12px;">
+                        <div class="form-group">
+                            <label>大腿圍</label>
+                            <div class="input-group">
+                                <input type="number" id="thigh" name="thigh" placeholder="大腿圍" step="0.1">
+                                <span>cm</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>手臂圍</label>
+                            <div class="input-group">
+                                <input type="number" id="arm" name="arm" placeholder="手臂圍" step="0.1">
+                                <span>cm</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <div class="section-title">照片上傳</div>
+                    
+                    <div class="form-group">
+                        <label>上傳照片</label>
+                        <div class="photo-upload" id="photoUpload">
+                            <input type="file" id="photo" name="photo" accept="image/*">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">點擊上傳照片</div>
+                            <img class="photo-preview" id="photoPreview">
+                        </div>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="resetBtn">清除資料</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">儲存資料</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="success-message" id="successMessage">✓ 資料儲存成功！</div>
+    <div class="loading-message" id="loadingMessage">儲存中...</div>
+    <div class="error-message" id="errorMessage"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
+            authDomain: "twkt-91ddf.firebaseapp.com",
+            projectId: "twkt-91ddf",
+            storageBucket: "twkt-91ddf.firebasestorage.app",
+            messagingSenderId: "754554349532",
+            appId: "1:754554349532:web:d5060ecc92ea9df5309119",
+            measurementId: "G-YYZEYVH1W5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        let currentUser = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.replace('login.html');
+                return;
+            }
+            currentUser = user;
+            const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+            if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                await signOut(auth);
+                window.location.replace('index.html');
+            }
+        });
+
+        window.onpageshow = function(event) {
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    window.location.replace('login.html');
+                } else {
+                    const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+                    if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                        await signOut(auth);
+                        window.location.replace('index.html');
+                    }
+                }
+            });
+        };
+
+        function updateDeviceIndicator() {
+            const width = window.innerWidth;
+            const indicator = document.getElementById('deviceIndicator');
+            const icon = document.getElementById('deviceIcon');
+            const text = document.getElementById('deviceText');
+            
+            if (width <= 428) {
+                icon.textContent = '📱';
+                text.textContent = 'iPhone 版';
+            } else if (width <= 1024) {
+                icon.textContent = '📱';
+                text.textContent = 'iPad 版';
+            } else {
+                icon.textContent = '💻';
+                text.textContent = '電腦版';
+            }
+            indicator.style.display = 'flex';
+        }
+
+        window.addEventListener('load', updateDeviceIndicator);
+        window.addEventListener('resize', updateDeviceIndicator);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('recordDate').value = today;
+        });
+
+        // 照片上傳預覽
+        const photoUpload = document.getElementById('photoUpload');
+        const photoInput = document.getElementById('photo');
+        const photoPreview = document.getElementById('photoPreview');
+
+        photoUpload.addEventListener('click', () => photoInput.click());
+
+        photoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    photoPreview.src = e.target.result;
+                    photoPreview.classList.add('show');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function showMessage(element, duration = 3000) {
+            overlay.classList.add('show');
+            element.classList.add('show');
+            setTimeout(() => {
+                overlay.classList.remove('show');
+                element.classList.remove('show');
+            }, duration);
+        }
+
+        const form = document.getElementById('weightForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const successMessage = document.getElementById('successMessage');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const overlay = document.getElementById('overlay');
+
+        submitBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const recordDate = document.getElementById('recordDate').value;
+            const weight = document.getElementById('weight').value.trim();
+            
+            if (!recordDate || !weight) {
+                alert('請填寫必填欄位');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            showMessage(loadingMessage, 15000);
+
+            try {
+                const q = query(collection(db, "客戶資料"), where("userId", "==", currentUser.uid));
+                const querySnapshot = await getDocs(q);
+                let customerName = '';
+                if (!querySnapshot.empty) {
+                    customerName = querySnapshot.docs[0].data().姓名 || '';
+                }
+
+                let photoUrl = '';
+                const photoFile = photoInput.files[0];
+                if (photoFile) {
+                    const photoRef = ref(storage, `photos/${currentUser.uid}/${Date.now()}_${photoFile.name}`);
+                    await uploadBytes(photoRef, photoFile);
+                    photoUrl = await getDownloadURL(photoRef);
+                }
+
+                const formData = {
+                    userId: currentUser.uid,
+                    客戶姓名: customerName,
+                    紀錄日期: recordDate,
+                    體重: parseFloat(weight),
+                    胸圍: document.getElementById('chest').value ? parseFloat(document.getElementById('chest').value) : null,
+                    腰圍: document.getElementById('waist').value ? parseFloat(document.getElementById('waist').value) : null,
+                    臀圍: document.getElementById('hip').value ? parseFloat(document.getElementById('hip').value) : null,
+                    大腿圍: document.getElementById('thigh').value ? parseFloat(document.getElementById('thigh').value) : null,
+                    手臂圍: document.getElementById('arm').value ? parseFloat(document.getElementById('arm').value) : null,
+                    照片: photoUrl,
+                    建立時間: serverTimestamp()
+                };
+
+                await addDoc(collection(db, "每日體重三圍"), formData);
+                
+                showMessage(successMessage);
+                
+                setTimeout(() => {
+                    window.location.href = '每日體重三圍.html';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('錯誤: ', error);
+                errorMessage.textContent = '儲存失敗: ' + error.message;
+                showMessage(errorMessage, 5000);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        resetBtn.addEventListener('click', function() {
+            if (confirm('確定要清除所有資料嗎？')) {
+                form.reset();
+                photoPreview.src = '';
+                photoPreview.classList.remove('show');
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('recordDate').value = today;
+            }
+        });
+    </script>
+</body>
+</html>
