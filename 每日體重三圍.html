@@ -341,8 +341,8 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('dataList').innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-icon">⚖️</div>
-                        <p>尚無資料</p>
+                        <p>載入失敗</p>
+                        <p style="font-size: 0.8125rem; margin-top: 8px; color: var(--error-color);">${error.message}</p>
                     </div>
                 `;
             }
