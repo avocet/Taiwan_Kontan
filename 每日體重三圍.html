@@ -339,7 +339,12 @@
             } catch (error) {
                 console.error('載入資料失敗:', error);
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('dataList').innerHTML = '<div class="empty-state"><p>載入失敗</p></div>';
+                document.getElementById('dataList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚖️</div>
+                        <p>尚無資料</p>
+                    </div>
+                `;
             }
         }
 
