@@ -399,8 +399,16 @@
             loginBtn.disabled = true;
             loginBtn.querySelector('.btn-text').textContent = '登入中...';
 
+            // 10秒超時
+            const timeout = setTimeout(() => {
+                loginBtn.disabled = false;
+                loginBtn.querySelector('.btn-text').textContent = '登 入';
+                showMessage('message', '網路連接超時，請檢查網絡', 'error');
+            }, 10000);
+
             try {
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                clearTimeout(timeout);
                 console.log('登入成功:', userCredential.user);
                 
                 showMessage('message', '登入成功！正在轉跳...', 'success');
@@ -410,6 +418,7 @@
                 }, 1000);
                 
             } catch (error) {
+                clearTimeout(timeout);
                 console.error('登入錯誤:', error);
                 
                 let errorMessage = '登入失敗，請稍後再試';
@@ -455,9 +464,17 @@
             resetBtn.disabled = true;
             resetBtn.querySelector('.btn-text').textContent = '發送中...';
 
+            // 10秒超時
+            const timeout = setTimeout(() => {
+                resetBtn.disabled = false;
+                resetBtn.querySelector('.btn-text').textContent = '發送重設連結';
+                showMessage('resetMessage', '網路連接超時，請檢查網絡', 'error');
+            }, 10000);
+
             try {
                 // 發送密碼重設郵件
                 await sendPasswordResetEmail(auth, email);
+                clearTimeout(timeout);
                 showMessage('resetMessage', '密碼重設連結已發送到您的電子郵件！', 'success');
                 
                 // 3秒後返回登入
@@ -471,6 +488,7 @@
                 }, 3000);
                 
             } catch (error) {
+                clearTimeout(timeout);
                 console.error('發送錯誤:', error);
                 
                 let errorMessage = '發送失敗，請稍後再試';
