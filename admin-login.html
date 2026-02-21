@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TWKT 管理系統 - 登入</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+            --success-color: #34C759;
+            --error-color: #FF3B30;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: var(--card-background);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            font-size: 0.9375rem;
+            opacity: 0.9;
+        }
+
+        .login-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--card-background);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        }
+
+        input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .forgot-password {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .forgot-password a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .back-home a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .back-home a:hover {
+            color: var(--primary-color);
+        }
+
+        .message {
+            display: none;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(52, 199, 89, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+
+        .message.error {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        .btn.loading .loading-spinner {
+            display: inline-block;
+        }
+
+        .btn.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media screen and (max-width: 428px) {
+            .login-container { border-radius: 20px; }
+            .login-header { padding: 30px 20px; }
+            .login-header h1 { font-size: 1.5rem; }
+            .login-body { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>TWKT 管理系統</h1>
+            <p>請登入以繼續</p>
+        </div>
+        
+        <div class="login-body">
+            <div class="message" id="message"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">電子郵件</label>
+                    <input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">密碼</label>
+                    <input type="password" id="password" name="password" placeholder="請輸入密碼" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span class="loading-spinner"></span>
+                    <span class="btn-text">登 入</span>
+                </button>
+            </form>
+            
+            <div class="back-home">
+                <a href="index.html">← 返回首頁</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
+            authDomain: "twkt-91ddf.firebaseapp.com",
+            projectId: "twkt-91ddf",
+            storageBucket: "twkt-91ddf.firebasestorage.app",
+            messagingSenderId: "754554349532",
+            appId: "1:754554349532:web:d5060ecc92ea9df5309119",
+            measurementId: "G-YYZEYVH1W5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        auth.languageCode = 'zh-TW';
+
+        function showMessage(text, type) {
+            const element = document.getElementById('message');
+            element.textContent = text;
+            element.className = 'message show ' + type;
+        }
+
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showMessage('請填寫所有欄位', 'error');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+
+            const timeout = setTimeout(() => {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+                showMessage('網路連接超時，請檢查網絡', 'error');
+            }, 10000);
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                clearTimeout(timeout);
+                showMessage('登入成功！正在轉跳...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'admin.html';
+                }, 1000);
+            } catch (error) {
+                clearTimeout(timeout);
+                let errorMessage = '登入失敗，請稍後再試';
+                switch (error.code) {
+                    case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
+                    case 'auth/user-disabled': errorMessage = '此帳號已被停用'; break;
+                    case 'auth/user-not-found': errorMessage = '找不到此帳號'; break;
+                    case 'auth/wrong-password': errorMessage = '密碼錯誤'; break;
+                    case 'auth/invalid-credential': errorMessage = '電子郵件或密碼錯誤'; break;
+                }
+                showMessage(errorMessage, 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -14,161 +14,143 @@
         :root {
             --primary-color: #007AFF;
             --secondary-color: #5856D6;
-            --accent-color: #FF9500;
-            --success-color: #34C759;
             --background-color: #F2F2F7;
             --card-background: #FFFFFF;
             --text-primary: #000000;
             --text-secondary: #8E8E93;
-            --border-color: #C6C6C8;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-primary);
-            line-height: 1.5;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             min-height: 100vh;
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
         }
 
-        .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 40px 20px;
-            text-align: center;
-            border-radius: 0 0 24px 24px;
+        .login-container {
+            background: var(--card-background);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            overflow: hidden;
         }
 
-        .header h1 {
+        .login-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .login-header h1 {
             font-size: 1.75rem;
             font-weight: 700;
             margin-bottom: 8px;
         }
 
-        .header p {
-            font-size: 1rem;
+        .login-header p {
+            font-size: 0.9375rem;
             opacity: 0.9;
         }
 
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            padding: 30px 20px;
-            max-width: 800px;
-            margin: 0 auto;
+        .login-body {
+            padding: 30px;
         }
 
-        .menu-card {
-            background: var(--card-background);
-            border-radius: 20px;
-            padding: 30px 20px;
-            text-align: center;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-            cursor: pointer;
-            transition: all 0.3s ease;
+        .login-option {
+            display: block;
+            width: 100%;
+            padding: 20px;
+            margin-bottom: 16px;
+            background: var(--background-color);
+            border: 2px solid transparent;
+            border-radius: 16px;
             text-decoration: none;
-            color: var(--text-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
+            text-align: center;
+            transition: all 0.2s;
         }
 
-        .menu-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 12px 32px rgba(0, 122, 255, 0.2);
+        .login-option:last-child {
+            margin-bottom: 0;
         }
 
-        .menu-card:nth-child(1) .menu-icon { background: linear-gradient(135deg, #007AFF, #5856D6); }
-        .menu-card:nth-child(2) .menu-icon { background: linear-gradient(135deg, #FF9500, #FF3B30); }
-        .menu-card:nth-child(3) .menu-icon { background: linear-gradient(135deg, #34C759, #30D158); }
-
-        .menu-icon {
-            width: 70px;
-            height: 70px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
+        .login-option:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
         }
 
-        .menu-title {
+        .login-option-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .login-option-title {
             font-size: 1.125rem;
             font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
         }
 
-        .menu-desc {
+        .login-option-desc {
             font-size: 0.8125rem;
             color: var(--text-secondary);
         }
 
-        .footer {
-            text-align: center;
-            padding: 30px 20px;
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
             color: var(--text-secondary);
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
         }
 
-        @media screen and (max-width: 768px) {
-            .menu-grid {
-                grid-template-columns: 1fr;
-                padding: 20px;
-            }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--text-secondary);
+            opacity: 0.3;
+        }
 
-            .header h1 {
-                font-size: 1.5rem;
-            }
+        .divider span {
+            padding: 0 16px;
+        }
+
+        @media screen and (max-width: 428px) {
+            .login-container { border-radius: 20px; }
+            .login-header { padding: 30px 20px; }
+            .login-header h1 { font-size: 1.5rem; }
+            .login-body { padding: 24px 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>TWKT 客戶管理系統</h1>
-        <p>選擇您要使用的功能</p>
-    </div>
-
-    <div class="menu-grid">
-        <a href="客戶基本資料及記錄.html" class="menu-card">
-            <div class="menu-icon">📋</div>
-            <div class="menu-title">基本資料</div>
-            <div class="menu-desc">客戶基本資料及記錄</div>
-        </a>
-
-        <a href="減肥歷史.html" class="menu-card">
-            <div class="menu-icon">📈</div>
-            <div class="menu-title">減肥歷史</div>
-            <div class="menu-desc">體重變化紀錄</div>
-        </a>
-
-        <a href="3日飲食記錄.html" class="menu-card">
-            <div class="menu-icon">🥗</div>
-            <div class="menu-title">3日飲食記錄</div>
-            <div class="menu-desc">飲食日誌</div>
-        </a>
-
-        <a href="login.html" class="menu-card">
-            <div class="menu-icon">👤</div>
-            <div class="menu-title">客戶登入</div>
-            <div class="menu-desc">登入/註冊</div>
-        </a>
-
-        <a href="admin.html" class="menu-card">
-            <div class="menu-icon">⚙️</div>
-            <div class="menu-title">後台管理</div>
-            <div class="menu-desc">管理系統登入</div>
-        </a>
-    </div>
-
-    <div class="footer">
-        <p>© 2026 TWKT</p>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>TWKT</h1>
+            <p>請選擇登入方式</p>
+        </div>
+        
+        <div class="login-body">
+            <a href="login.html" class="login-option">
+                <div class="login-option-icon">👤</div>
+                <div class="login-option-title">客戶登入</div>
+                <div class="login-option-desc">基本資料、減肥歷史、飲食記錄</div>
+            </a>
+            
+            <div class="divider"><span>或</span></div>
+            
+            <a href="admin-login.html" class="login-option">
+                <div class="login-option-icon">⚙️</div>
+                <div class="login-option-title">後台管理</div>
+                <div class="login-option-desc">管理系統</div>
+            </a>
+        </div>
     </div>
 </body>
 </html>

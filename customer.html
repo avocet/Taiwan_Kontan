@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TWKT 客戶中心</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 30px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .menu-card {
+            background: var(--card-background);
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0, 122, 255, 0.2);
+        }
+
+        .menu-card:nth-child(1) .menu-icon { background: linear-gradient(135deg, #007AFF, #5856D6); }
+        .menu-card:nth-child(2) .menu-icon { background: linear-gradient(135deg, #FF9500, #FF3B30); }
+        .menu-card:nth-child(3) .menu-icon { background: linear-gradient(135deg, #34C759, #30D158); }
+
+        .menu-icon {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .menu-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .menu-desc {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        @media screen and (max-width: 768px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TWKT 客戶中心</h1>
+        <a href="index.html" class="logout-btn">登出</a>
+    </div>
+
+    <div class="menu-grid">
+        <a href="客戶基本資料及記錄.html" class="menu-card">
+            <div class="menu-icon">📋</div>
+            <div class="menu-title">基本資料</div>
+            <div class="menu-desc">客戶基本資料及記錄</div>
+        </a>
+
+        <a href="減肥歷史.html" class="menu-card">
+            <div class="menu-icon">📈</div>
+            <div class="menu-title">減肥歷史</div>
+            <div class="menu-desc">體重變化紀錄</div>
+        </a>
+
+        <a href="3日飲食記錄.html" class="menu-card">
+            <div class="menu-icon">🥗</div>
+            <div class="menu-title">3日飲食記錄</div>
+            <div class="menu-desc">飲食日誌</div>
+        </a>
+    </div>
+</body>
+</html>
