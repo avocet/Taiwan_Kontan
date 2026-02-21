@@ -1,0 +1,22 @@
+# GitHub Pages 配置
+title: TWKT 客戶管理系統
+description: TWKT 客戶管理系統
+
+# 禁用 Jekyll
+plugins:
+  - jekyll-coffeescript
+  - jekyll-relative_links
+  - jekyll-optional_front_matter
+  - jekyll-readme_index
+  - jekyll_default_layout
+  - jekyll_titles_from_headings
+  - jekyll_paginate
+  - jekyll_seo_tag
+  - jekyll_sitemap
+  - jekyll_github_metadata
+
+# 排除不需要的文件
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
