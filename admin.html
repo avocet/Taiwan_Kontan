@@ -330,6 +330,7 @@
         <div class="tab active" data-tab="customers">客戶資料</div>
         <div class="tab" data-tab="weight">減肥歷史</div>
         <div class="tab" data-tab="diet">3日飲食</div>
+        <div class="tab" data-tab="measurements">每日體重三圍</div>
     </div>
 
     <!-- Content -->
@@ -360,6 +361,15 @@
             </div>
             <div id="dietList"></div>
         </div>
+
+        <!-- 每日體重三圍 -->
+        <div class="tab-content" id="measurements">
+            <div class="loading" id="measurementsLoading">
+                <div class="loading-spinner"></div>
+                <p>載入中...</p>
+            </div>
+            <div id="measurementsList"></div>
+        </div>
     </div>
 
     <!-- Detail Modal -->
@@ -374,9 +384,9 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
@@ -453,7 +463,8 @@
             await Promise.all([
                 loadCustomers(),
                 loadWeightHistory(),
-                loadDietRecords()
+                loadDietRecords(),
+                loadMeasurements()
             ]);
         }
 
@@ -538,6 +549,33 @@
             }
         }
 
+        // 載入每日體重三圍
+        async function loadMeasurements() {
+            try {
+                const q = query(collection(db, "每日體重三圍"), orderBy("紀錄日期", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                const list = document.getElementById('measurementsList');
+                document.getElementById('measurementsLoading').style.display = 'none';
+                
+                if (querySnapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">⚖️</div><p>尚無體重三圍記錄</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    html += createMeasurementCard(doc.id, data);
+                });
+                list.innerHTML = html;
+                
+            } catch (error) {
+                console.error('載入體重三圍錯誤:', error);
+                document.getElementById('measurementsList').innerHTML = '<div class="empty-state"><p>載入失敗</p></div>';
+            }
+        }
+
         // 建立客戶卡片
         function createCustomerCard(id, data) {
             const date = data.建立時間 ? new Date(data.建立時間.seconds * 1000).toLocaleDateString('zh-TW') : '-';
@@ -599,6 +637,29 @@
             `;
         }
 
+        // 建立體重三圍卡片
+        function createMeasurementCard(id, data) {
+            return `
+                <div class="data-card">
+                    <div class="data-header">
+                        <div>
+                            <div class="data-title">${data.客戶姓名 || '-'}</div>
+                            <div class="data-date">${data.紀錄日期 || '-'}</div>
+                        </div>
+                        <button class="btn btn-delete" onclick="deleteData('每日體重三圍', '${id}')">刪除</button>
+                    </div>
+                    <div class="data-info">
+                        <div class="data-item"><span class="data-label">體重：</span><span class="data-value">${data.體重 || '-'} kg</span></div>
+                        <div class="data-item"><span class="data-label">胸圍：</span><span class="data-value">${data.胸圍 || '-'} cm</span></div>
+                        <div class="data-item"><span class="data-label">腰圍：</span><span class="data-value">${data.腰圍 || '-'} cm</span></div>
+                        <div class="data-item"><span class="data-label">臀圍：</span><span class="data-value">${data.臀圍 || '-'} cm</span></div>
+                        <div class="data-item"><span class="data-label">大腿圍：</span><span class="data-value">${data.大腿圍 || '-'} cm</span></div>
+                        <div class="data-item"><span class="data-label">手臂圍：</span><span class="data-value">${data.手臂圍 || '-'} cm</span></div>
+                    </div>
+                </div>
+            `;
+        }
+
         // 刪除資料
         window.deleteData = async function(collectionName, docId) {
             if (!confirm('確定要刪除這筆資料嗎？此操作無法復原。')) {
@@ -612,6 +673,7 @@
                 if (collectionName === '客戶資料') loadCustomers();
                 else if (collectionName === '減肥歷史') loadWeightHistory();
                 else if (collectionName === '3日飲食記錄') loadDietRecords();
+                else if (collectionName === '每日體重三圍') loadMeasurements();
             } catch (error) {
                 console.error('刪除錯誤:', error);
                 alert('刪除失敗');
