@@ -351,6 +351,12 @@
             element.className = 'message show ' + type;
         }
 
+        function hideMessage(elementId) {
+            const element = document.getElementById(elementId);
+            element.textContent = '';
+            element.className = 'message';
+        }
+
         // ===== 登入 =====
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
