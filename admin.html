@@ -408,8 +408,31 @@
         // 登出
         document.getElementById('logoutBtn').addEventListener('click', async () => {
             await signOut(auth);
-            // 清除緩存並跳回首頁
-            window.location.href = 'index.html';
+            // 使用 location.replace 防止後退
+            window.location.replace('index.html');
+        });
+
+        // 防止頁面被緩存
+        window.onpageshow = function(event) {
+            if (event.persisted) {
+                // 頁面從緩存加載，檢查登入狀態
+                onAuthStateChanged(auth, (user) => {
+                    if (!user) {
+                        window.location.replace('admin-login.html');
+                    }
+                });
+            }
+        };
+
+        // 頁面可見性變化時重新檢查
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                onAuthStateChanged(auth, (user) => {
+                    if (!user) {
+                        window.location.replace('admin-login.html');
+                    }
+                });
+            }
         });
 
         // Tab 切換
