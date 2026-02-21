@@ -560,7 +560,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         // ====== Firebase 配置 ======
         const firebaseConfig = {
@@ -581,6 +581,8 @@
 
         // 檢查登入狀態
         let currentUser = null;
+        let customerDocId = null;
+        
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.replace('login.html');
@@ -606,7 +608,9 @@
                 const querySnapshot = await getDocs(q);
                 
                 if (!querySnapshot.empty) {
-                    const data = querySnapshot.docs[0].data();
+                    const doc = querySnapshot.docs[0];
+                    const data = doc.data();
+                    customerDocId = doc.id; // 保存文檔 ID
                     
                     // 自動填充表單
                     if (data.姓名) document.getElementById('name').value = data.姓名;
@@ -755,9 +759,15 @@
             showMessage(loadingMessage, 15000);
 
             try {
-                // 發送到 Firebase Firestore
-                const docRef = await addDoc(collection(db, "客戶資料"), formData);
-                console.log('文檔 ID: ', docRef.id);
+                // 如果已有文檔 ID，使用 setDoc 覆蓋；否則新增
+                if (customerDocId) {
+                    await setDoc(doc(db, "客戶資料", customerDocId), formData);
+                    console.log('文檔已更新: ', customerDocId);
+                } else {
+                    const docRef = await addDoc(collection(db, "客戶資料"), formData);
+                    customerDocId = docRef.id; // 保存新文檔 ID
+                    console.log('文檔 ID: ', docRef.id);
+                }
                 
                 // 顯示成功訊息
                 loadingMessage.classList.remove('show');
