@@ -64,6 +64,33 @@
             opacity: 0.9;
         }
 
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .current-customer {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.875rem;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
         .logout-btn {
             background: rgba(255,255,255,0.2);
             border: none;
@@ -318,8 +345,12 @@
 <body>
     <!-- Header -->
     <div class="header">
-        <h1>TWKT 管理系統</h1>
+        <div class="header-left">
+            <h1>TWKT 管理系統</h1>
+            <span class="current-customer" id="currentCustomer"></span>
+        </div>
         <div class="header-right">
+            <button class="back-btn" id="backBtn">← 客戶列表</button>
             <span class="user-info" id="userEmail">載入中...</span>
             <button class="logout-btn" id="logoutBtn">登出</button>
         </div>
@@ -386,7 +417,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, deleteDoc, doc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
@@ -401,6 +432,24 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        let currentCustomerUserId = null;
+        let currentCustomerName = null;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        currentCustomerUserId = urlParams.get('userId');
+        currentCustomerName = urlParams.get('name') || '未知客戶';
+
+        if (currentCustomerUserId) {
+            document.getElementById('currentCustomer').textContent = `👤 ${currentCustomerName}`;
+            document.getElementById('backBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('backBtn').style.display = 'none';
+        }
+
+        document.getElementById('backBtn').addEventListener('click', () => {
+            window.location.href = 'customer-list.html';
+        });
 
         // 檢查登入狀態
         onAuthStateChanged(auth, (user) => {
@@ -471,8 +520,16 @@
         // 載入客戶資料
         async function loadCustomers() {
             try {
-                const q = query(collection(db, "客戶資料"), orderBy("建立時間", "desc"));
-                const querySnapshot = await getDocs(q);
+                let querySnapshot;
+                
+                if (currentCustomerUserId) {
+                    const docRef = doc(db, "客戶資料", currentCustomerUserId);
+                    const docSnap = await getDoc(docRef);
+                    querySnapshot = { empty: !docSnap.exists(), docs: docSnap.exists() ? [{ id: docSnap.id, data: () => docSnap.data() }] : [] };
+                } else {
+                    const q = query(collection(db, "客戶資料"), orderBy("建立時間", "desc"));
+                    querySnapshot = await getDocs(q);
+                }
                 
                 const list = document.getElementById('customersList');
                 document.getElementById('customersLoading').style.display = 'none';
@@ -483,9 +540,9 @@
                 }
                 
                 let html = '';
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    html += createCustomerCard(doc.id, data);
+                querySnapshot.docs.forEach((d) => {
+                    const data = d.data();
+                    html += createCustomerCard(d.id, data);
                 });
                 list.innerHTML = html;
                 
@@ -498,7 +555,12 @@
         // 載入減肥歷史
         async function loadWeightHistory() {
             try {
-                const q = query(collection(db, "減肥歷史"), orderBy("建立時間", "desc"));
+                let q;
+                if (currentCustomerUserId) {
+                    q = query(collection(db, "減肥歷史"), where("userId", "==", currentCustomerUserId), orderBy("建立時間", "desc"));
+                } else {
+                    q = query(collection(db, "減肥歷史"), orderBy("建立時間", "desc"));
+                }
                 const querySnapshot = await getDocs(q);
                 
                 const list = document.getElementById('weightList');
@@ -525,7 +587,12 @@
         // 載入飲食記錄
         async function loadDietRecords() {
             try {
-                const q = query(collection(db, "3日飲食記錄"), orderBy("建立時間", "desc"));
+                let q;
+                if (currentCustomerUserId) {
+                    q = query(collection(db, "3日飲食記錄"), where("userId", "==", currentCustomerUserId), orderBy("建立時間", "desc"));
+                } else {
+                    q = query(collection(db, "3日飲食記錄"), orderBy("建立時間", "desc"));
+                }
                 const querySnapshot = await getDocs(q);
                 
                 const list = document.getElementById('dietList');
@@ -552,7 +619,12 @@
         // 載入每日體重三圍
         async function loadMeasurements() {
             try {
-                const q = query(collection(db, "每日體重三圍"), orderBy("紀錄日期", "desc"));
+                let q;
+                if (currentCustomerUserId) {
+                    q = query(collection(db, "每日體重三圍"), where("userId", "==", currentCustomerUserId), orderBy("紀錄日期", "desc"));
+                } else {
+                    q = query(collection(db, "每日體重三圍"), orderBy("紀錄日期", "desc"));
+                }
                 const querySnapshot = await getDocs(q);
                 
                 const list = document.getElementById('measurementsList');

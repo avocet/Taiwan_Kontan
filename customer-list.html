@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>TWKT 客戶列表 - 管理系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .search-box {
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .search-box input {
+            width: 100%;
+            border: none;
+            font-size: 1rem;
+            outline: none;
+            background: transparent;
+        }
+
+        .customer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .customer-card {
+            background: var(--card-background);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .customer-card:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .customer-info {
+            flex: 1;
+        }
+
+        .customer-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .customer-detail {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .customer-arrow {
+            color: var(--text-secondary);
+            font-size: 1.25rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        @media screen and (max-width: 428px) {
+            .header {
+                padding: 16px;
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .customer-card {
+                padding: 14px;
+            }
+
+            .customer-name {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TWKT 客戶列表</h1>
+        <div class="header-right">
+            <button class="logout-btn" id="logoutBtn">登出</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="搜尋客戶姓名或電話...">
+        </div>
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>載入中...</p>
+        </div>
+        <div class="customer-list" id="customerList"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
+            authDomain: "twkt-91ddf.firebaseapp.com",
+            projectId: "twkt-91ddf",
+            storageBucket: "twkt-91ddf.firebasestorage.app",
+            messagingSenderId: "754554349532",
+            appId: "1:754554349532:web:d5060ecc92ea9df5309119",
+            measurementId: "G-YYZEYVH1W5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let allCustomers = [];
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'admin-login.html';
+            } else {
+                loadCustomers();
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await signOut(auth);
+            window.location.replace('index.html');
+        });
+
+        window.onpageshow = function(event) {
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    window.location.replace('admin-login.html');
+                }
+            });
+        };
+
+        async function loadCustomers() {
+            try {
+                const q = query(collection(db, "客戶資料"), orderBy("建立時間", "desc"));
+                const querySnapshot = await getDocs(q);
+                
+                document.getElementById('loading').style.display = 'none';
+                
+                if (querySnapshot.empty) {
+                    document.getElementById('customerList').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">👥</div>
+                            <p>尚無客戶資料</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                allCustomers = [];
+                querySnapshot.forEach((doc) => {
+                    allCustomers.push({ id: doc.id, ...doc.data() });
+                });
+                
+                renderCustomers(allCustomers);
+                
+            } catch (error) {
+                console.error('載入客戶資料錯誤:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('customerList').innerHTML = `
+                    <div class="empty-state">
+                        <p>載入失敗: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderCustomers(customers) {
+            if (customers.length === 0) {
+                document.getElementById('customerList').innerHTML = `
+                    <div class="empty-state">
+                        <p>找不到符合的客戶</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            customers.forEach((customer) => {
+                const date = customer.建立時間 ? new Date(customer.建立時間.seconds * 1000).toLocaleDateString('zh-TW') : '-';
+                html += `
+                    <div class="customer-card" onclick="goToAdmin('${customer.userId}', '${customer.姓名 || ''}')">
+                        <div class="customer-info">
+                            <div class="customer-name">${customer.姓名 || '-'}</div>
+                            <div class="customer-detail">電話：${customer.電話 || '-'} | 手機：${customer.手機 || '-'} | 建立日期：${date}</div>
+                        </div>
+                        <div class="customer-arrow">›</div>
+                    </div>
+                `;
+            });
+            document.getElementById('customerList').innerHTML = html;
+        }
+
+        window.goToAdmin = function(userId, customerName) {
+            window.location.href = `admin.html?userId=${userId}&name=${encodeURIComponent(customerName)}`;
+        };
+
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allCustomers.filter(customer => {
+                const name = (customer.姓名 || '').toLowerCase();
+                const phone = (customer.電話 || '').toLowerCase();
+                const mobile = (customer.手機 || '').toLowerCase();
+                return name.includes(searchTerm) || phone.includes(searchTerm) || mobile.includes(searchTerm);
+            });
+            renderCustomers(filtered);
+        });
+    </script>
+</body>
+</html>
