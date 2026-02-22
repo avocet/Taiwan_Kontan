@@ -588,7 +588,7 @@
                     <div class="option-grid" data-question-id="${item.id}">
                         ${item.options.map((option, optIndex) => `
                             <label class="option-item" data-value="${optIndex}">
-                                <input type="radio"item.id}" value name="q${="${optIndex}">
+                                <input type="radio" name="q${item.id}" value="${optIndex}">
                                 <span>${option}</span>
                             </label>
                         `).join('')}
