@@ -374,6 +374,7 @@
         <div class="tab active" data-tab="customers">客戶資料</div>
         <div class="tab" data-tab="weight">減肥歷史</div>
         <div class="tab" data-tab="diet">3日飲食</div>
+        <div class="tab" data-tab="constitution">中醫體質</div>
         <div class="tab" data-tab="measurements">每日體重三圍</div>
     </div>
 
@@ -404,6 +405,15 @@
                 <p>載入中...</p>
             </div>
             <div id="dietList"></div>
+        </div>
+
+        <!-- 中醫體質 -->
+        <div class="tab-content" id="constitution">
+            <div class="loading" id="constitutionLoading">
+                <div class="loading-spinner"></div>
+                <p>載入中...</p>
+            </div>
+            <div id="constitutionList"></div>
         </div>
 
         <!-- 每日體重三圍 -->
@@ -534,6 +544,7 @@
                 loadCustomers(),
                 loadWeightHistory(),
                 loadDietRecords(),
+                loadConstitution(),
                 loadMeasurements()
             ]);
         }
@@ -672,6 +683,51 @@
                 
             } catch (error) {
                 console.error('載入飲食記錄錯誤:', error);
+                loadingEl.style.display = 'none';
+                list.innerHTML = '<div class="empty-state"><p>載入失敗: ' + error.message + '</p></div>';
+            }
+        }
+
+        // 載入中醫體質
+        async function loadConstitution() {
+            const loadingEl = document.getElementById('constitutionLoading');
+            const list = document.getElementById('constitutionList');
+            
+            try {
+                let q;
+                if (currentCustomerUserId) {
+                    q = query(collection(db, "中醫體質四象限"), where("userId", "==", currentCustomerUserId));
+                } else {
+                    q = query(collection(db, "中醫體質四象限"));
+                }
+                const querySnapshot = await getDocs(q);
+                
+                loadingEl.style.display = 'none';
+                
+                if (querySnapshot.empty) {
+                    list.innerHTML = '<div class="empty-state"><div class="empty-icon">🔮</div><p>尚無中醫體質檢測記錄</p></div>';
+                    return;
+                }
+                
+                let docsArray = [];
+                querySnapshot.forEach((doc) => {
+                    docsArray.push({ id: doc.id, data: doc.data() });
+                });
+                
+                docsArray.sort((a, b) => {
+                    const timeA = a.data.建立時間?.seconds || 0;
+                    const timeB = b.data.建立時間?.seconds || 0;
+                    return timeB - timeA;
+                });
+                
+                let html = '';
+                docsArray.forEach((item) => {
+                    html += createConstitutionCard(item.id, item.data);
+                });
+                list.innerHTML = html;
+                
+            } catch (error) {
+                console.error('載入中醫體質錯誤:', error);
                 loadingEl.style.display = 'none';
                 list.innerHTML = '<div class="empty-state"><p>載入失敗: ' + error.message + '</p></div>';
             }
@@ -824,6 +880,53 @@
             `;
         }
 
+        // 建立中醫體質卡片
+        function createConstitutionCard(id, data) {
+            const coldHotScore = data.冷熱體質分數 || 0;
+            const wetDryScore = data.濕乾體質分數 || 0;
+            
+            // 計算體質分類
+            const coldHotQuestions = 10;
+            const wetDryQuestions = 17;
+            const coldHotAvg = coldHotScore / coldHotQuestions;
+            const wetDryAvg = wetDryScore / wetDryQuestions;
+            
+            let quadrant = '';
+            let resultText = '';
+            
+            if (coldHotAvg < 1.5 && wetDryAvg < 1.5) {
+                quadrant = '陽虛';
+            } else if (coldHotAvg < 1.5 && wetDryAvg >= 1.5) {
+                quadrant = '痰濕';
+            } else if (coldHotAvg >= 1.5 && wetDryAvg < 1.5) {
+                quadrant = '陰虛';
+            } else {
+                quadrant = '陽盛';
+            }
+            
+            const date = data.建立時間 ? new Date(data.建立時間.seconds * 1000).toLocaleDateString('zh-TW') : '-';
+            
+            return `
+                <div class="data-card">
+                    <div class="data-header">
+                        <div>
+                            <div class="data-title">${data.客戶姓名 || '-'}</div>
+                            <div class="data-date">${date}</div>
+                        </div>
+                        <button class="btn btn-delete" onclick="deleteData('中醫體質四象限', '${id}')">刪除</button>
+                    </div>
+                    <div class="data-info">
+                        <div class="data-item"><span class="data-label">冷熱體質分數：</span><span class="data-value">${coldHotScore} 分</span></div>
+                        <div class="data-item"><span class="data-label">濕乾體質分數：</span><span class="data-value">${wetDryScore} 分</span></div>
+                    </div>
+                    <div style="margin-top:12px;padding:12px;background:var(--background-color);border-radius:8px;text-align:center;">
+                        <div style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:8px;">體質分類</div>
+                        <div style="font-size:1.25rem;font-weight:bold;color:var(--primary-color);">${quadrant}</div>
+                    </div>
+                </div>
+            `;
+        }
+
         // 建立體重三圍卡片
         function createMeasurementCard(id, data) {
             const photoHtml = data.照片 ? `<img class="data-photo" src="${data.照片}" onclick="showPhoto('${data.照片}')" alt="照片" style="width:80px;height:80px;border-radius:8px;object-fit:cover;cursor:pointer;margin-left:12px;">` : '';
@@ -870,6 +973,7 @@
                 if (collectionName === '客戶資料') loadCustomers();
                 else if (collectionName === '減肥歷史') loadWeightHistory();
                 else if (collectionName === '3日飲食記錄') loadDietRecords();
+                else if (collectionName === '中醫體質四象限') loadConstitution();
                 else if (collectionName === '每日體重三圍') loadMeasurements();
             } catch (error) {
                 console.error('刪除錯誤:', error);
