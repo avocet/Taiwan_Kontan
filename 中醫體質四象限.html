@@ -730,7 +730,7 @@
                 if (!querySnapshot.empty) {
                     const data = querySnapshot.docs[0].data();
                     if (data.姓名) {
-                        document.getElementById('formTitle').textContent = data.姓名 + ' - 中醫體質檢測';
+                        document.getElementById('formTitle').textContent = '中醫體質檢測';
                     }
                 }
             } catch (error) {
@@ -759,7 +759,7 @@
                     }
                     
                     document.getElementById('submitBtn').textContent = '更新資料';
-                    document.getElementById('formTitle').textContent = '更新中醫體質檢測';
+                    document.getElementById('formTitle').textContent = '中醫體質檢測';
                     updateProgress();
                 }
             } catch (error) {
