@@ -238,8 +238,8 @@
             <!-- 登入表單 -->
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="email">電子郵件</label>
-                    <input type="email" id="email" name="email" placeholder="請輸入電子郵件" required>
+                    <label for="email">使用者名稱</label>
+                    <input type="text" id="email" name="email" placeholder="請輸入使用者名稱" required>
                 </div>
                 
                 <div class="form-group">
@@ -328,7 +328,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
@@ -364,10 +364,10 @@
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const email = document.getElementById('email').value.trim();
+            const username = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
 
-            if (!email || !password) {
+            if (!username || !password) {
                 showMessage('message', '請填寫所有欄位', 'error');
                 return;
             }
@@ -382,6 +382,20 @@
             }, 10000);
 
             try {
+                // 先根據使用者名稱查詢對應的 email
+                const usersRef = collection(db, "使用者");
+                const q = query(usersRef, where("使用者名稱", "==", username));
+                const querySnapshot = await getDocs(q);
+                
+                let email;
+                if (!querySnapshot.empty) {
+                    // 找到對應的 email
+                    email = querySnapshot.docs[0].data().email;
+                } else {
+                    // 沒找到，嘗試直接用輸入作為 email
+                    email = username;
+                }
+                
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
