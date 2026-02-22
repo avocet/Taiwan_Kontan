@@ -479,6 +479,7 @@
                     return;
                 }
                 
+                // 建立 Firebase Auth 帳戶
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
@@ -496,7 +497,8 @@
                 }, 1500);
             } catch (error) {
                 clearTimeout(timeout);
-                let errorMessage = '建立帳戶失敗，請稍後再試';
+                console.error('註冊錯誤:', error);
+                let errorMessage = '建立帳戶失敗：' + error.message;
                 switch (error.code) {
                     case 'auth/email-already-in-use': errorMessage = '此電子郵件已被註冊'; break;
                     case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
