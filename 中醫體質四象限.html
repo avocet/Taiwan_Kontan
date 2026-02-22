@@ -581,6 +581,45 @@
                 `;
                 form.appendChild(questionGroup);
             });
+            
+            // 顯示結果
+            const resultSection = document.createElement('div');
+            resultSection.className = 'question-group';
+            resultSection.innerHTML = `
+                <div class="result-display" style="text-align:center;padding:20px;background:var(--card-background);border-radius:12px;">
+                    <div style="display:flex;justify-content:space-around;margin-bottom:20px;">
+                        <div>
+                            <div style="font-size:0.875rem;color:var(--text-secondary);">冷熱體質分數</div>
+                            <div id="coldHotScore" style="font-size:2rem;font-weight:bold;color:#FF6B6B;">-</div>
+                        </div>
+                        <div>
+                            <div style="font-size:0.875rem;color:var(--text-secondary);">濕乾體質分數</div>
+                            <div id="wetDryScore" style="font-size:2rem;font-weight:bold;color:#5856D6;">-</div>
+                        </div>
+                    </div>
+                    <div style="font-size:1rem;font-weight:600;margin-bottom:16px;">體質分類結果</div>
+                    <div class="quadrant-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:280px;margin:0 auto;">
+                        <div class="quadrant" id="q1" style="padding:16px;background:#FFE5B4;border-radius:8px;">
+                            <div style="font-weight:600;">陽虛</div>
+                            <div style="font-size:0.75rem;">怕冷+偏乾</div>
+                        </div>
+                        <div class="quadrant" id="q2" style="padding:16px;background:#E5B4FF;border-radius:8px;">
+                            <div style="font-weight:600;">痰濕</div>
+                            <div style="font-size:0.75rem;">怕冷+偏濕</div>
+                        </div>
+                        <div class="quadrant" id="q3" style="padding:16px;background:#B4E5FF;border-radius:8px;">
+                            <div style="font-weight:600;">陰虛</div>
+                            <div style="font-size:0.75rem;">怕熱+偏乾</div>
+                        </div>
+                        <div class="quadrant" id="q4" style="padding:16px;background:#B4FFB4;border-radius:8px;">
+                            <div style="font-weight:600;">陽盛</div>
+                            <div style="font-size:0.75rem;">怕熱+偏濕</div>
+                        </div>
+                    </div>
+                    <div id="resultText" style="margin-top:16px;font-size:1.125rem;font-weight:bold;color:var(--primary-color);">-</div>
+                </div>
+            `;
+            form.appendChild(resultSection);
 
             document.querySelectorAll('.option-item').forEach(item => {
                 item.addEventListener('click', function() {
@@ -622,6 +661,48 @@
             
             const progress = (answered / questionsData.total) * 100;
             document.getElementById('progressBar').style.width = progress + '%';
+            
+            if (answered === questionsData.total) {
+                document.getElementById('coldHotScore').textContent = coldHotScore + ' 分';
+                document.getElementById('wetDryScore').textContent = wetDryScore + ' 分';
+                
+                // 計算平均分數
+                const coldHotAvg = coldHotScore / coldHotQuestions.length;
+                const wetDryAvg = wetDryScore / wetDryQuestions.length;
+                
+                // 判斷落在哪個象限
+                let quadrant = '';
+                let resultText = '';
+                
+                // 較低分數 = 怕冷/偏乾，較高分數 = 怕熱/偏濕
+                if (coldHotAvg < 1.5 && wetDryAvg < 1.5) {
+                    quadrant = 'q1';
+                    resultText = '陽虛體質';
+                } else if (coldHotAvg < 1.5 && wetDryAvg >= 1.5) {
+                    quadrant = 'q2';
+                    resultText = '痰濕體質';
+                } else if (coldHotAvg >= 1.5 && wetDryAvg < 1.5) {
+                    quadrant = 'q3';
+                    resultText = '陰虛體質';
+                } else {
+                    quadrant = 'q4';
+                    resultText = '陽盛體質';
+                }
+                
+                // 重置所有象限樣式
+                ['q1', 'q2', 'q3', 'q4'].forEach(id => {
+                    const el = document.getElementById(id);
+                    el.style.border = 'none';
+                    el.style.transform = 'scale(1)';
+                });
+                
+                // 標記選中的象限
+                const selectedEl = document.getElementById(quadrant);
+                selectedEl.style.border = '3px solid var(--primary-color)';
+                selectedEl.style.transform = 'scale(1.05)';
+                
+                document.getElementById('resultText').textContent = resultText;
+            }
         }
 
         onAuthStateChanged(auth, async (user) => {
@@ -803,6 +884,14 @@
                 form.reset();
                 document.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
                 document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('coldHotScore').textContent = '-';
+                document.getElementById('wetDryScore').textContent = '-';
+                document.getElementById('resultText').textContent = '-';
+                ['q1', 'q2', 'q3', 'q4'].forEach(id => {
+                    const el = document.getElementById(id);
+                    el.style.border = 'none';
+                    el.style.transform = 'scale(1)';
+                });
             }
         });
     </script>
