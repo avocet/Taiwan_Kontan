@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>中醫體質四象限檢測</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+            --success-color: #34C759;
+            --error-color: #FF3B30;
+            --loading-color: #FF9500;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .form-card {
+            background: var(--card-background);
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #FF2D55, #FF6B6B);
+            color: white;
+            padding: 24px 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .form-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .form-body {
+            padding: 24px 20px;
+        }
+
+        .form-section {
+            margin-bottom: 28px;
+        }
+
+        .form-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .question-group {
+            margin-bottom: 20px;
+        }
+
+        .question-label {
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-item:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .option-item.selected {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.1);
+        }
+
+        .option-item input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .quadrant-chart {
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--background-color);
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .quadrant-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .quadrant-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .quadrant {
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .quadrant.q1 { background: #FFE5B4; color: #8B4513; }
+        .quadrant.q2 { background: #E5B4FF; color: #4B0082; }
+        .quadrant.q3 { background: #B4E5FF; color: #006400; }
+        .quadrant.q4 { background: #B4FFB4; color: #00008B; }
+
+        .form-actions {
+            padding: 20px;
+            background: var(--card-background);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #FF2D55, #FF6B6B);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 45, 85, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #E5E5EA;
+        }
+
+        .device-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .success-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--success-color);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            z-index: 2000;
+            box-shadow: 0 8px 32px rgba(52, 199, 89, 0.3);
+        }
+
+        .success-message.show { display: block; }
+
+        .loading-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--loading-color);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            z-index: 2000;
+        }
+
+        .loading-message.show { display: block; }
+
+        .error-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--error-color);
+            color: white;
+            padding: 24px 32px;
+            border-radius: 16px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            z-index: 2000;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .error-message.show { display: block; }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1500;
+        }
+
+        .overlay.show { display: block; }
+
+        @media screen and (max-width: 428px) {
+            .container { padding: 12px; }
+            .form-card { border-radius: 20px; }
+            .form-header { padding: 16px; flex-wrap: wrap; gap: 10px; }
+            .form-header h1 { font-size: 1.25rem; }
+            .form-body { padding: 20px 16px; }
+            .form-section { margin-bottom: 24px; }
+            .option-grid { grid-template-columns: 1fr; }
+            .form-actions { padding: 16px; flex-direction: column; gap: 10px; }
+            .btn { padding: 14px 20px; }
+        }
+
+        @media screen and (min-width: 429px) and (max-width: 1024px) {
+            .container { padding: 24px; max-width: 700px; }
+            .form-card { border-radius: 20px; }
+            .form-header { padding: 28px 24px; }
+            .form-header h1 { font-size: 1.625rem; }
+            .form-body { padding: 28px 24px; }
+            .form-actions { padding: 24px; gap: 16px; }
+            .btn { padding: 16px 28px; }
+        }
+
+        @media screen and (min-width: 1025px) {
+            .container { padding: 40px; max-width: 800px; }
+            .form-card { border-radius: 24px; }
+            .form-header { padding: 36px 32px; border-radius: 24px 24px 0 0; }
+            .form-header h1 { font-size: 1.875rem; }
+            .form-body { padding: 36px 32px; }
+            .form-actions { padding: 28px 32px; gap: 16px; }
+            .btn { max-width: 200px; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="device-indicator" id="deviceIndicator">
+        <span class="device-icon" id="deviceIcon">💻</span>
+        <span id="deviceText">電腦版</span>
+    </div>
+
+    <div class="container">
+        <div class="form-card">
+            <div class="form-header">
+                <a href="customer.html" class="back-btn">← 返回</a>
+                <h1 id="formTitle">中醫體質四象限檢測</h1>
+                <div style="width: 70px;"></div>
+            </div>
+            
+            <form class="form-body" id="constitutionForm">
+                <div class="form-section">
+                    <div class="section-title">陰陽虛實檢測</div>
+                    
+                    <div class="question-group">
+                        <label class="question-label">1. 您平時容易感到怕冷或怕熱？</label>
+                        <div class="option-grid">
+                            <label class="option-item">
+                                <input type="radio" name="q1" value="1">
+                                <span>很怕冷</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q1" value="2">
+                                <span>有點怕冷</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q1" value="3">
+                                <span>有點怕熱</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q1" value="4">
+                                <span>很怕熱</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">2. 您的睡眠品質如何？</label>
+                        <div class="option-grid">
+                            <label class="option-item">
+                                <input type="radio" name="q2" value="1">
+                                <span>很難入睡</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q2" value="2">
+                                <span>淺眠易醒</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q2" value="3">
+                                <span>還不錯</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q2" value="4">
+                                <span>很好</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">3. 您的體力容易疲勞嗎？</label>
+                        <div class="option-grid">
+                            <label class="option-item">
+                                <input type="radio" name="q3" value="1">
+                                <span>很容易疲勞</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q3" value="2">
+                                <span>容易疲勞</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q3" value="3">
+                                <span>還好</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q3" value="4">
+                                <span>体力充沛</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">4. 您的消化系統如何？</label>
+                        <div class="option-grid">
+                            <label class="option-item">
+                                <input type="radio" name="q4" value="1">
+                                <span>常常腹瀉</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q4" value="2">
+                                <span>容易脹氣</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q4" value="3">
+                                <span>還算正常</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q4" value="4">
+                                <span>消化良好</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">5. 您的情緒狀態？</label>
+                        <div class="option-grid">
+                            <label class="option-item">
+                                <input type="radio" name="q5" value="1">
+                                <span>容易焦慮</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q5" value="2">
+                                <span>容易緊張</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q5" value="3">
+                                <span>還算穩定</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q5" value="4">
+                                <span>很穩定</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">6. 您的皮膚狀況？</label>
+                        <div class="option-grid">
+                            <label class="option-item">
+                                <input type="radio" name="q6" value="1">
+                                <span>乾燥脫皮</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q6" value="2">
+                                <span>容易過敏</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q6" value="3">
+                                <span>還算正常</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q6" value="4">
+                                <span>光滑紅潤</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">7. 您的口乾情況？</label>
+                        <div class="option-grid">
+                            <label class="option-item">
+                                <input type="radio" name="q7" value="1">
+                                <span>經常口乾</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q7" value="2">
+                                <span>有時口乾</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q7" value="3">
+                                <span>還好</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q7" value="4">
+                                <span>不會</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label class="question-label">8. 您的排便情況？</label>
+                        <div class="option-grid">
+                            <label class="option-item">
+                                <input type="radio" name="q8" value="1">
+                                <span>便祕</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q8" value="2">
+                                <span>時而便祕</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q8" value="3">
+                                <span>還算正常</span>
+                            </label>
+                            <label class="option-item">
+                                <input type="radio" name="q8" value="4">
+                                <span>很正常</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quadrant-chart">
+                    <div class="quadrant-title">四象限體質分類說明</div>
+                    <div class="quadrant-grid">
+                        <div class="quadrant q2">陽虛<br>怕冷+疲勞</div>
+                        <div class="quadrant q1">陰虛<br>怕熱+失眠</div>
+                        <div class="quadrant q3">氣虛<br>怕冷+失眠</div>
+                        <div class="quadrant q4">陽盛<br>怕熱+精力旺</div>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="resetBtn">清除資料</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn">儲存資料</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="success-message" id="successMessage">✓ 資料儲存成功！</div>
+    <div class="loading-message" id="loadingMessage">儲存中...</div>
+    <div class="error-message" id="errorMessage"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDChC0rBbTgAqB_me8_Jw6BgQY_WyV9GN0",
+            authDomain: "twkt-91ddf.firebaseapp.com",
+            projectId: "twkt-91ddf",
+            storageBucket: "twkt-91ddf.firebasestorage.app",
+            messagingSenderId: "754554349532",
+            appId: "1:754554349532:web:d5060ecc92ea9df5309119",
+            measurementId: "G-YYZEYVH1W5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let existingDocId = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.replace('login.html');
+                return;
+            }
+            currentUser = user;
+            const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+            if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                await signOut(auth);
+                window.location.replace('index.html');
+            }
+            
+            loadUserName(user.uid);
+            loadExistingData(user.uid);
+        });
+
+        async function loadUserName(userId) {
+            try {
+                const q = query(collection(db, "客戶資料"), where("userId", "==", userId));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    const data = querySnapshot.docs[0].data();
+                    if (data.姓名) {
+                        document.getElementById('formTitle').textContent = data.姓名 + ' - 中醫體質檢測';
+                    }
+                }
+            } catch (error) {
+                console.error('載入姓名失敗:', error);
+            }
+        }
+
+        async function loadExistingData(userId) {
+            try {
+                const q = query(collection(db, "中醫體質四象限"), where("userId", "==", userId));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    existingDocId = querySnapshot.docs[0].id;
+                    const data = querySnapshot.docs[0].data();
+                    
+                    if (data.回答) {
+                        Object.keys(data.回答).forEach(key => {
+                            const radios = document.querySelectorAll(`input[name="${key}"]`);
+                            radios.forEach(radio => {
+                                if (radio.value === String(data.回答[key])) {
+                                    radio.checked = true;
+                                    radio.closest('.option-item').classList.add('selected');
+                                }
+                            });
+                        });
+                    }
+                    
+                    document.getElementById('submitBtn').textContent = '更新資料';
+                    document.getElementById('formTitle').textContent = '更新中醫體質檢測';
+                }
+            } catch (error) {
+                console.error('載入現有資料失敗:', error);
+            }
+        }
+
+        function updateDeviceIndicator() {
+            const width = window.innerWidth;
+            const indicator = document.getElementById('deviceIndicator');
+            const icon = document.getElementById('deviceIcon');
+            const text = document.getElementById('deviceText');
+            
+            if (width <= 428) {
+                icon.textContent = '📱';
+                text.textContent = 'iPhone 版';
+            } else if (width <= 1024) {
+                icon.textContent = '📱';
+                text.textContent = 'iPad 版';
+            } else {
+                icon.textContent = '💻';
+                text.textContent = '電腦版';
+            }
+            indicator.style.display = 'flex';
+        }
+
+        window.addEventListener('load', updateDeviceIndicator);
+        window.addEventListener('resize', updateDeviceIndicator);
+
+        document.querySelectorAll('.option-item').forEach(item => {
+            item.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        const form = document.getElementById('constitutionForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const successMessage = document.getElementById('successMessage');
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const overlay = document.getElementById('overlay');
+
+        function showMessage(element, duration = 3000) {
+            overlay.classList.add('show');
+            element.classList.add('show');
+            setTimeout(() => {
+                overlay.classList.remove('show');
+                element.classList.remove('show');
+            }, duration);
+        }
+
+        submitBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            
+            const answers = {};
+            for (let i = 1; i <= 8; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (!selected) {
+                    alert('請回答所有問題');
+                    return;
+                }
+                answers[`q${i}`] = parseInt(selected.value);
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = '儲存中...';
+            showMessage(loadingMessage, 15000);
+
+            try {
+                const q = query(collection(db, "客戶資料"), where("userId", "==", currentUser.uid));
+                const querySnapshot = await getDocs(q);
+                let customerName = '';
+                if (!querySnapshot.empty) {
+                    customerName = querySnapshot.docs[0].data().姓名 || '';
+                }
+
+                const formData = {
+                    userId: currentUser.uid,
+                    客戶姓名: customerName,
+                    回答: answers,
+                    建立時間: serverTimestamp()
+                };
+
+                if (existingDocId) {
+                    await updateDoc(doc(db, "中醫體質四象限", existingDocId), formData);
+                } else {
+                    await addDoc(collection(db, "中醫體質四象限"), formData);
+                }
+                
+                showMessage(successMessage);
+                submitBtn.textContent = '更新資料';
+                
+            } catch (error) {
+                console.error('錯誤: ', error);
+                errorMessage.textContent = '儲存失敗: ' + error.message;
+                showMessage(errorMessage, 5000);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        resetBtn.addEventListener('click', function() {
+            if (confirm('確定要清除所有資料嗎？')) {
+                form.reset();
+                document.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
+            }
+        });
+    </script>
+</body>
+</html>
