@@ -469,8 +469,17 @@
             }, 10000);
 
             try {
-                // 建立 Firebase Auth 帳戶（不檢查 username 是否已存在）
+                // 建立 Firebase Auth 帳戶
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // 儲存使用者名稱到 Firestore（使用 uid 作為文檔 ID）
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    username: username,
+                    email: email,
+                    createdAt: serverTimestamp()
+                });
                 
                 clearTimeout(timeout);
                 showMessage('registerMessage', '帳戶建立成功！正在轉跳...', 'success');
