@@ -91,6 +91,17 @@
             border-radius: 12px;
         }
 
+        .section-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
         .question-label {
             font-size: 1rem;
             font-weight: 600;
@@ -561,7 +572,38 @@
             const form = document.getElementById('constitutionForm');
             form.innerHTML = '';
             
-            questionsData.items.forEach((item, index) => {
+            const coldHotQuestions = questionsData.items.filter(item => item.filename.startsWith('ch'));
+            const wetDryQuestions = questionsData.items.filter(item => item.filename.startsWith('wdq'));
+            
+            // 冷熱體質題目
+            const coldHotSection = document.createElement('div');
+            coldHotSection.className = 'form-section';
+            coldHotSection.innerHTML = `<div class="section-title">冷熱體質檢測（共${coldHotQuestions.length}題）</div>`;
+            
+            coldHotQuestions.forEach((item, index) => {
+                const questionGroup = document.createElement('div');
+                questionGroup.className = 'question-group';
+                questionGroup.innerHTML = `
+                    <label class="question-label">${index + 1}. ${item.question}</label>
+                    <div class="option-grid" data-question-id="${item.id}">
+                        ${item.options.map((option, optIndex) => `
+                            <label class="option-item" data-value="${optIndex}">
+                                <input type="radio"item.id}" value name="q${="${optIndex}">
+                                <span>${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                `;
+                coldHotSection.appendChild(questionGroup);
+            });
+            form.appendChild(coldHotSection);
+            
+            // 濕乾體質題目
+            const wetDrySection = document.createElement('div');
+            wetDrySection.className = 'form-section';
+            wetDrySection.innerHTML = `<div class="section-title">濕乾體質檢測（共${wetDryQuestions.length}題）</div>`;
+            
+            wetDryQuestions.forEach((item, index) => {
                 const questionGroup = document.createElement('div');
                 questionGroup.className = 'question-group';
                 questionGroup.innerHTML = `
@@ -575,8 +617,27 @@
                         `).join('')}
                     </div>
                 `;
-                form.appendChild(questionGroup);
+                wetDrySection.appendChild(questionGroup);
             });
+            form.appendChild(wetDrySection);
+            
+            // 顯示結果
+            const resultSection = document.createElement('div');
+            resultSection.className = 'form-section';
+            resultSection.innerHTML = `
+                <div class="section-title">體質檢測結果</div>
+                <div class="result-display" style="text-align:center;padding:20px;background:var(--background-color);border-radius:12px;">
+                    <div style="margin-bottom:16px;">
+                        <div style="font-size:0.875rem;color:var(--text-secondary);">冷熱體質分數</div>
+                        <div id="coldHotScore" style="font-size:2rem;font-weight:bold;color:var(--primary-color);">-</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.875rem;color:var(--text-secondary);">濕乾體質分數</div>
+                        <div id="wetDryScore" style="font-size:2rem;font-weight:bold;color:var(--secondary-color);">-</div>
+                    </div>
+                </div>
+            `;
+            form.appendChild(resultSection);
 
             document.querySelectorAll('.option-item').forEach(item => {
                 item.addEventListener('click', function() {
@@ -590,14 +651,39 @@
         }
 
         function updateProgress() {
+            const coldHotQuestions = questionsData.items.filter(item => item.filename.startsWith('ch'));
+            const wetDryQuestions = questionsData.items.filter(item => item.filename.startsWith('wdq'));
+            
+            let coldHotAnswered = 0;
+            let wetDryAnswered = 0;
+            let coldHotScore = 0;
+            let wetDryScore = 0;
+            
+            coldHotQuestions.forEach(item => {
+                const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
+                if (selected) {
+                    coldHotAnswered++;
+                    coldHotScore += parseInt(selected.value);
+                }
+            });
+            
+            wetDryQuestions.forEach(item => {
+                const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
+                if (selected) {
+                    wetDryAnswered++;
+                    wetDryScore += parseInt(selected.value);
+                }
+            });
+            
+            const totalAnswered = coldHotAnswered + wetDryAnswered;
             const total = questionsData.total;
-            let answered = 0;
-            for (let i = 1; i <= total; i++) {
-                const selected = document.querySelector(`input[name="q${i}"]:checked`);
-                if (selected) answered++;
-            }
-            const progress = (answered / total) * 100;
+            const progress = (totalAnswered / total) * 100;
             document.getElementById('progressBar').style.width = progress + '%';
+            
+            if (totalAnswered === total) {
+                document.getElementById('coldHotScore').textContent = coldHotScore + ' 分';
+                document.getElementById('wetDryScore').textContent = wetDryScore + ' 分';
+            }
         }
 
         onAuthStateChanged(auth, async (user) => {
@@ -704,14 +790,35 @@
         submitBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             
+            const coldHotQuestions = questionsData.items.filter(item => item.filename.startsWith('ch'));
+            const wetDryQuestions = questionsData.items.filter(item => item.filename.startsWith('wdq'));
+            
             const answers = {};
-            for (let i = 1; i <= questionsData.total; i++) {
-                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            let coldHotScore = 0;
+            let wetDryScore = 0;
+            
+            // 驗證並計算冷熱體質分數
+            for (let i = 0; i < coldHotQuestions.length; i++) {
+                const item = coldHotQuestions[i];
+                const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
                 if (!selected) {
-                    alert('請回答所有問題（第 ' + i + ' 題未作答）');
+                    alert('請回答所有冷熱體質題目');
                     return;
                 }
-                answers[`q${i}`] = parseInt(selected.value);
+                answers[`q${item.id}`] = parseInt(selected.value);
+                coldHotScore += parseInt(selected.value);
+            }
+            
+            // 驗證並計算濕乾體質分數
+            for (let i = 0; i < wetDryQuestions.length; i++) {
+                const item = wetDryQuestions[i];
+                const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
+                if (!selected) {
+                    alert('請回答所有濕乾體質題目');
+                    return;
+                }
+                answers[`q${item.id}`] = parseInt(selected.value);
+                wetDryScore += parseInt(selected.value);
             }
 
             submitBtn.disabled = true;
@@ -730,6 +837,8 @@
                     userId: currentUser.uid,
                     客戶姓名: customerName,
                     回答: answers,
+                    冷熱體質分數: coldHotScore,
+                    濕乾體質分數: wetDryScore,
                     建立時間: serverTimestamp()
                 };
 
@@ -756,6 +865,8 @@
                 form.reset();
                 document.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
                 document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('coldHotScore').textContent = '-';
+                document.getElementById('wetDryScore').textContent = '-';
             }
         });
     </script>
