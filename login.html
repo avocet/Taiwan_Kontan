@@ -359,23 +359,29 @@
             try {
                 // 嘗試直接登入（如果輸入的是 email）
                 let userCredential;
+                let loginMethod = 'email';
                 try {
                     userCredential = await signInWithEmailAndPassword(auth, username, password);
                 } catch (authError) {
                     // 如果失敗，嘗試用 username 查詢
+                    loginMethod = 'username';
                     const usersRef = collection(db, "users");
                     const q = query(usersRef, where("username", "==", username.toLowerCase()));
+                    console.log('Querying for username:', username.toLowerCase());
                     const querySnapshot = await getDocs(q);
+                    console.log('Query result:', querySnapshot.size);
                     
                     if (querySnapshot.empty) {
                         throw new Error('找不到此使用者名稱');
                     }
                     
-                    const userEmail = querySnapshot.docs[0].data().email;
-                    userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
+                    const userData = querySnapshot.docs[0].data();
+                    console.log('Found user:', userData);
+                    userCredential = await signInWithEmailAndPassword(auth, userData.email, password);
                 }
                 
                 const user = userCredential.user;
+                console.log('Login successful via:', loginMethod);
                 
                 // 檢查是否為管理員
                 const adminDoc = await getDoc(doc(db, "管理員", user.uid));
@@ -396,7 +402,8 @@
                 }, 1000);
             } catch (error) {
                 clearTimeout(timeout);
-                let errorMessage = '登入失敗，請稍後再試';
+                console.error('登入錯誤:', error);
+                let errorMessage = '登入失敗：' + error.message;
                 switch (error.code) {
                     case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
                     case 'auth/user-disabled': errorMessage = '此帳號已被停用'; break;
