@@ -357,21 +357,24 @@
             }, 10000);
 
             try {
-                // 先根據使用者名稱查詢對應的 email
-                const usersRef = collection(db, "使用者");
-                const q = query(usersRef, where("使用者名稱", "==", username));
-                const querySnapshot = await getDocs(q);
-                
-                let email;
-                if (!querySnapshot.empty) {
-                    // 找到對應的 email
-                    email = querySnapshot.docs[0].data().email;
-                } else {
-                    // 沒找到，嘗試直接用輸入作為 email
-                    email = username;
+                // 嘗試直接登入（如果輸入的是 email）
+                let userCredential;
+                try {
+                    userCredential = await signInWithEmailAndPassword(auth, username, password);
+                } catch (authError) {
+                    // 如果失敗，嘗試用 username 查詢
+                    const usersRef = collection(db, "users");
+                    const q = query(usersRef, where("username", "==", username.toLowerCase()));
+                    const querySnapshot = await getDocs(q);
+                    
+                    if (querySnapshot.empty) {
+                        throw new Error('找不到此使用者名稱');
+                    }
+                    
+                    const userEmail = querySnapshot.docs[0].data().email;
+                    userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
                 }
                 
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
                 // 檢查是否為管理員
@@ -466,29 +469,8 @@
             }, 10000);
 
             try {
-                // 先檢查使用者名稱是否已被使用
-                const usersRef = collection(db, "使用者");
-                const q = query(usersRef, where("使用者名稱", "==", username));
-                const querySnapshot = await getDocs(q);
-                
-                if (!querySnapshot.empty) {
-                    clearTimeout(timeout);
-                    showMessage('registerMessage', '此使用者名稱已被使用', 'error');
-                    registerBtn.disabled = false;
-                    registerBtn.classList.remove('loading');
-                    return;
-                }
-                
-                // 建立 Firebase Auth 帳戶
+                // 建立 Firebase Auth 帳戶（不檢查 username 是否已存在）
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
-                
-                // 儲存使用者名稱到 Firestore
-                await setDoc(doc(db, "使用者", user.uid), {
-                    使用者名稱: username,
-                    email: email,
-                    建立時間: serverTimestamp()
-                });
                 
                 clearTimeout(timeout);
                 showMessage('registerMessage', '帳戶建立成功！正在轉跳...', 'success');
