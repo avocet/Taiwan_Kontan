@@ -74,41 +74,26 @@
         }
 
         .form-header h1 {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 600;
             flex: 1;
+            text-align: center;
         }
 
         .form-body {
             padding: 24px 20px;
         }
 
-        .form-section {
-            margin-bottom: 28px;
-        }
-
-        .form-section:last-child {
-            margin-bottom: 0;
-        }
-
-        .section-title {
-            font-size: 0.8125rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
         .question-group {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: var(--background-color);
+            border-radius: 12px;
         }
 
         .question-label {
-            font-size: 0.9375rem;
-            font-weight: 500;
+            font-size: 1rem;
+            font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 12px;
             display: block;
@@ -123,11 +108,12 @@
         .option-item {
             display: flex;
             align-items: center;
-            padding: 12px;
-            border: 1px solid var(--border-color);
+            padding: 14px 16px;
+            border: 2px solid var(--border-color);
             border-radius: 10px;
             cursor: pointer;
             transition: all 0.2s;
+            text-align: center;
         }
 
         .option-item:hover {
@@ -141,43 +127,24 @@
         }
 
         .option-item input[type="radio"] {
-            margin-right: 10px;
+            display: none;
         }
 
-        .quadrant-chart {
-            margin: 20px 0;
-            padding: 20px;
-            background: var(--background-color);
-            border-radius: 12px;
+        .option-item span {
+            width: 100%;
             text-align: center;
+            font-size: 0.9375rem;
         }
 
-        .quadrant-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 16px;
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #FF2D55, #FF6B6B);
+            transition: width 0.3s;
+            z-index: 1000;
         }
-
-        .quadrant-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            max-width: 300px;
-            margin: 0 auto;
-        }
-
-        .quadrant {
-            padding: 16px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-
-        .quadrant.q1 { background: #FFE5B4; color: #8B4513; }
-        .quadrant.q2 { background: #E5B4FF; color: #4B0082; }
-        .quadrant.q3 { background: #B4E5FF; color: #006400; }
-        .quadrant.q4 { background: #B4FFB4; color: #00008B; }
 
         .form-actions {
             padding: 20px;
@@ -234,7 +201,7 @@
             font-size: 0.75rem;
             font-weight: 500;
             z-index: 1000;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 6px;
         }
@@ -310,9 +277,9 @@
             .container { padding: 12px; }
             .form-card { border-radius: 20px; }
             .form-header { padding: 16px; flex-wrap: wrap; gap: 10px; }
-            .form-header h1 { font-size: 1.25rem; }
-            .form-body { padding: 20px 16px; }
-            .form-section { margin-bottom: 24px; }
+            .form-header h1 { font-size: 1.1rem; }
+            .form-body { padding: 16px 12px; }
+            .question-group { padding: 12px; margin-bottom: 16px; }
             .option-grid { grid-template-columns: 1fr; }
             .form-actions { padding: 16px; flex-direction: column; gap: 10px; }
             .btn { padding: 14px 20px; }
@@ -322,7 +289,7 @@
             .container { padding: 24px; max-width: 700px; }
             .form-card { border-radius: 20px; }
             .form-header { padding: 28px 24px; }
-            .form-header h1 { font-size: 1.625rem; }
+            .form-header h1 { font-size: 1.5rem; }
             .form-body { padding: 28px 24px; }
             .form-actions { padding: 24px; gap: 16px; }
             .btn { padding: 16px 28px; }
@@ -332,7 +299,7 @@
             .container { padding: 40px; max-width: 800px; }
             .form-card { border-radius: 24px; }
             .form-header { padding: 36px 32px; border-radius: 24px 24px 0 0; }
-            .form-header h1 { font-size: 1.875rem; }
+            .form-header h1 { font-size: 1.75rem; }
             .form-body { padding: 36px 32px; }
             .form-actions { padding: 28px 32px; gap: 16px; }
             .btn { max-width: 200px; margin: 0 auto; }
@@ -340,6 +307,8 @@
     </style>
 </head>
 <body>
+    <div class="progress-bar" id="progressBar"></div>
+    
     <div class="device-indicator" id="deviceIndicator">
         <span class="device-icon" id="deviceIcon">💻</span>
         <span id="deviceText">電腦版</span>
@@ -350,199 +319,11 @@
             <div class="form-header">
                 <a href="customer.html" class="back-btn">← 返回</a>
                 <h1 id="formTitle">中醫體質四象限檢測</h1>
-                <div style="width: 70px;"></div>
+                <div style="width: 60px;"></div>
             </div>
             
             <form class="form-body" id="constitutionForm">
-                <div class="form-section">
-                    <div class="section-title">陰陽虛實檢測</div>
-                    
-                    <div class="question-group">
-                        <label class="question-label">1. 您平時容易感到怕冷或怕熱？</label>
-                        <div class="option-grid">
-                            <label class="option-item">
-                                <input type="radio" name="q1" value="1">
-                                <span>很怕冷</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q1" value="2">
-                                <span>有點怕冷</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q1" value="3">
-                                <span>有點怕熱</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q1" value="4">
-                                <span>很怕熱</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="question-group">
-                        <label class="question-label">2. 您的睡眠品質如何？</label>
-                        <div class="option-grid">
-                            <label class="option-item">
-                                <input type="radio" name="q2" value="1">
-                                <span>很難入睡</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q2" value="2">
-                                <span>淺眠易醒</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q2" value="3">
-                                <span>還不錯</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q2" value="4">
-                                <span>很好</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="question-group">
-                        <label class="question-label">3. 您的體力容易疲勞嗎？</label>
-                        <div class="option-grid">
-                            <label class="option-item">
-                                <input type="radio" name="q3" value="1">
-                                <span>很容易疲勞</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q3" value="2">
-                                <span>容易疲勞</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q3" value="3">
-                                <span>還好</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q3" value="4">
-                                <span>体力充沛</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="question-group">
-                        <label class="question-label">4. 您的消化系統如何？</label>
-                        <div class="option-grid">
-                            <label class="option-item">
-                                <input type="radio" name="q4" value="1">
-                                <span>常常腹瀉</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q4" value="2">
-                                <span>容易脹氣</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q4" value="3">
-                                <span>還算正常</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q4" value="4">
-                                <span>消化良好</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="question-group">
-                        <label class="question-label">5. 您的情緒狀態？</label>
-                        <div class="option-grid">
-                            <label class="option-item">
-                                <input type="radio" name="q5" value="1">
-                                <span>容易焦慮</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q5" value="2">
-                                <span>容易緊張</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q5" value="3">
-                                <span>還算穩定</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q5" value="4">
-                                <span>很穩定</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="question-group">
-                        <label class="question-label">6. 您的皮膚狀況？</label>
-                        <div class="option-grid">
-                            <label class="option-item">
-                                <input type="radio" name="q6" value="1">
-                                <span>乾燥脫皮</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q6" value="2">
-                                <span>容易過敏</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q6" value="3">
-                                <span>還算正常</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q6" value="4">
-                                <span>光滑紅潤</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="question-group">
-                        <label class="question-label">7. 您的口乾情況？</label>
-                        <div class="option-grid">
-                            <label class="option-item">
-                                <input type="radio" name="q7" value="1">
-                                <span>經常口乾</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q7" value="2">
-                                <span>有時口乾</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q7" value="3">
-                                <span>還好</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q7" value="4">
-                                <span>不會</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="question-group">
-                        <label class="question-label">8. 您的排便情況？</label>
-                        <div class="option-grid">
-                            <label class="option-item">
-                                <input type="radio" name="q8" value="1">
-                                <span>便祕</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q8" value="2">
-                                <span>時而便祕</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q8" value="3">
-                                <span>還算正常</span>
-                            </label>
-                            <label class="option-item">
-                                <input type="radio" name="q8" value="4">
-                                <span>很正常</span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="quadrant-chart">
-                    <div class="quadrant-title">四象限體質分類說明</div>
-                    <div class="quadrant-grid">
-                        <div class="quadrant q2">陽虛<br>怕冷+疲勞</div>
-                        <div class="quadrant q1">陰虛<br>怕熱+失眠</div>
-                        <div class="quadrant q3">氣虛<br>怕冷+失眠</div>
-                        <div class="quadrant q4">陽盛<br>怕熱+精力旺</div>
-                    </div>
-                </div>
+                <!-- 題目會動態生成 -->
             </form>
             
             <div class="form-actions">
@@ -558,6 +339,203 @@
     <div class="error-message" id="errorMessage"></div>
 
     <script type="module">
+        const questionsData = {
+            "version": "1.0",
+            "language": "zh-TW",
+            "total": 27,
+            "items": [
+                {
+                    "id": 1,
+                    "filename": "wdq1.png",
+                    "question": "平時耳朵狀況",
+                    "type": "singleChoice",
+                    "options": ["有耳油會癢，經常用棉花棒", "耳屎結塊，常掏耳朵"]
+                },
+                {
+                    "id": 2,
+                    "filename": "chq2.png",
+                    "question": "容易暈車",
+                    "type": "singleChoice",
+                    "options": ["會或經常", "很少或不會"]
+                },
+                {
+                    "id": 3,
+                    "filename": "wdq3.png",
+                    "question": "喉嚨有痰",
+                    "type": "singleChoice",
+                    "options": ["會或經常", "很少或不會"]
+                },
+                {
+                    "id": 4,
+                    "filename": "wdq4.png",
+                    "question": "嘴巴容易散發異味",
+                    "type": "singleChoice",
+                    "options": ["是", "否"]
+                },
+                {
+                    "id": 5,
+                    "filename": "wdq5.png",
+                    "question": "比較喜歡吃",
+                    "type": "singleChoice",
+                    "options": ["甜食&澱粉", "肉類"]
+                },
+                {
+                    "id": 6,
+                    "filename": "chq6.png",
+                    "question": "喜歡喝的飲料或水",
+                    "type": "singleChoice",
+                    "options": ["冷的", "常溫", "熱的"]
+                },
+                {
+                    "id": 7,
+                    "filename": "wdq7.png",
+                    "question": "飯後易疲倦",
+                    "type": "singleChoice",
+                    "options": ["是", "否"]
+                },
+                {
+                    "id": 8,
+                    "filename": "wdq8.png",
+                    "question": "蚊蟲叮咬",
+                    "type": "singleChoice",
+                    "options": ["消腫快", "消腫慢"]
+                },
+                {
+                    "id": 9,
+                    "filename": "wdq9.png",
+                    "question": "睡眠狀況",
+                    "type": "singleChoice",
+                    "options": ["淺眠多夢", "易入睡"]
+                },
+                {
+                    "id": 10,
+                    "filename": "wdq10.png",
+                    "question": "睡醒狀況",
+                    "type": "singleChoice",
+                    "options": ["常常睡不飽", "精神很好"]
+                },
+                {
+                    "id": 11,
+                    "filename": "chq11.png",
+                    "question": "平常比較怕熱還是怕冷",
+                    "type": "singleChoice",
+                    "options": ["怕熱", "怕冷"]
+                },
+                {
+                    "id": 12,
+                    "filename": "chq12.png",
+                    "question": "手腳四肢易冰冷",
+                    "type": "singleChoice",
+                    "options": ["是", "否"]
+                },
+                {
+                    "id": 13,
+                    "filename": "wdq13.png",
+                    "question": "下肢或臉水腫時",
+                    "type": "singleChoice",
+                    "options": ["容易消腫", "不易消腫"]
+                },
+                {
+                    "id": 14,
+                    "filename": "chq14.png",
+                    "question": "精神狀況",
+                    "type": "singleChoice",
+                    "options": ["容易疲倦", "精神良好"]
+                },
+                {
+                    "id": 15,
+                    "filename": "wdq15.png",
+                    "question": "呼吸狀況",
+                    "type": "singleChoice",
+                    "options": ["容易喘不過氣或胸悶", "呼吸順暢/不易胸悶"]
+                },
+                {
+                    "id": 16,
+                    "filename": "wdq16.png",
+                    "question": "女性分泌物",
+                    "type": "singleChoice",
+                    "options": ["白帶", "黃帶", "我是男性"]
+                },
+                {
+                    "id": 17,
+                    "filename": "chq17.png",
+                    "question": "生理期前睡眠狀況",
+                    "type": "singleChoice",
+                    "options": ["頭痛或不易入睡", "較無影響", "我是男性"]
+                },
+                {
+                    "id": 18,
+                    "filename": "chq18.png",
+                    "question": "生理前後或期間狀況",
+                    "type": "singleChoice",
+                    "options": ["月經結塊或腹痛或腹瀉", "稍微不適或無影響", "我是男性"]
+                },
+                {
+                    "id": 19,
+                    "filename": "wdq19.png",
+                    "question": "消化狀況",
+                    "type": "singleChoice",
+                    "options": ["易脹氣", "容易消化"]
+                },
+                {
+                    "id": 20,
+                    "filename": "wdq20.png",
+                    "question": "排便狀況",
+                    "type": "singleChoice",
+                    "options": ["經常腹瀉或軟便", "正常或乾硬"]
+                },
+                {
+                    "id": 21,
+                    "filename": "chq21.png",
+                    "question": "夜間排尿狀況",
+                    "type": "singleChoice",
+                    "options": ["頻尿，例如：每晚1-2次", "很少或不會"]
+                },
+                {
+                    "id": 22,
+                    "filename": "wdq22.png",
+                    "question": "腎結石、膽結石、尿道結石",
+                    "type": "singleChoice",
+                    "options": ["曾經有或現在有", "沒有"]
+                },
+                {
+                    "id": 23,
+                    "filename": "wdq23.png",
+                    "question": "蕁麻疹",
+                    "type": "singleChoice",
+                    "options": ["曾經有或狀況嚴重", "很少或不曾發生"]
+                },
+                {
+                    "id": 24,
+                    "filename": "wdq24.png",
+                    "question": "痛風",
+                    "type": "singleChoice",
+                    "options": ["曾經有或狀況嚴重", "很少或不曾發生"]
+                },
+                {
+                    "id": 25,
+                    "filename": "wdq25.png",
+                    "question": "血糖不耐或糖尿病",
+                    "type": "singleChoice",
+                    "options": ["曾經有或狀況嚴重", "很少或不曾發生"]
+                },
+                {
+                    "id": 26,
+                    "filename": "chq26.png",
+                    "question": "臉部氣色或唇部周圍",
+                    "type": "singleChoice",
+                    "options": ["明亮", "暗沉"]
+                },
+                {
+                    "id": 27,
+                    "filename": "wdq27.png",
+                    "question": "經常有黑眼圈",
+                    "type": "singleChoice",
+                    "options": ["是", "否"]
+                }
+            ]
+        };
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -579,6 +557,49 @@
         let currentUser = null;
         let existingDocId = null;
 
+        function generateQuestions() {
+            const form = document.getElementById('constitutionForm');
+            form.innerHTML = '';
+            
+            questionsData.items.forEach((item, index) => {
+                const questionGroup = document.createElement('div');
+                questionGroup.className = 'question-group';
+                questionGroup.innerHTML = `
+                    <label class="question-label">${index + 1}. ${item.question}</label>
+                    <div class="option-grid" data-question-id="${item.id}">
+                        ${item.options.map((option, optIndex) => `
+                            <label class="option-item" data-value="${optIndex}">
+                                <input type="radio" name="q${item.id}" value="${optIndex}">
+                                <span>${option}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                `;
+                form.appendChild(questionGroup);
+            });
+
+            document.querySelectorAll('.option-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const group = this.closest('.option-grid');
+                    group.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    this.querySelector('input').checked = true;
+                    updateProgress();
+                });
+            });
+        }
+
+        function updateProgress() {
+            const total = questionsData.total;
+            let answered = 0;
+            for (let i = 1; i <= total; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (selected) answered++;
+            }
+            const progress = (answered / total) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.replace('login.html');
@@ -591,6 +612,7 @@
                 window.location.replace('index.html');
             }
             
+            generateQuestions();
             loadUserName(user.uid);
             loadExistingData(user.uid);
         });
@@ -622,18 +644,18 @@
                     
                     if (data.回答) {
                         Object.keys(data.回答).forEach(key => {
-                            const radios = document.querySelectorAll(`input[name="${key}"]`);
-                            radios.forEach(radio => {
-                                if (radio.value === String(data.回答[key])) {
-                                    radio.checked = true;
-                                    radio.closest('.option-item').classList.add('selected');
-                                }
-                            });
+                            const val = data.回答[key];
+                            const radio = document.querySelector(`input[name="${key}"][value="${val}"]`);
+                            if (radio) {
+                                radio.checked = true;
+                                radio.closest('.option-item').classList.add('selected');
+                            }
                         });
                     }
                     
                     document.getElementById('submitBtn').textContent = '更新資料';
                     document.getElementById('formTitle').textContent = '更新中醫體質檢測';
+                    updateProgress();
                 }
             } catch (error) {
                 console.error('載入現有資料失敗:', error);
@@ -662,13 +684,6 @@
         window.addEventListener('load', updateDeviceIndicator);
         window.addEventListener('resize', updateDeviceIndicator);
 
-        document.querySelectorAll('.option-item').forEach(item => {
-            item.addEventListener('click', function() {
-                this.parentElement.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
-                this.classList.add('selected');
-            });
-        });
-
         const form = document.getElementById('constitutionForm');
         const submitBtn = document.getElementById('submitBtn');
         const resetBtn = document.getElementById('resetBtn');
@@ -690,10 +705,10 @@
             e.preventDefault();
             
             const answers = {};
-            for (let i = 1; i <= 8; i++) {
+            for (let i = 1; i <= questionsData.total; i++) {
                 const selected = document.querySelector(`input[name="q${i}"]:checked`);
                 if (!selected) {
-                    alert('請回答所有問題');
+                    alert('請回答所有問題（第 ' + i + ' 題未作答）');
                     return;
                 }
                 answers[`q${i}`] = parseInt(selected.value);
@@ -740,6 +755,7 @@
             if (confirm('確定要清除所有資料嗎？')) {
                 form.reset();
                 document.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('selected'));
+                document.getElementById('progressBar').style.width = '0%';
             }
         });
     </script>
