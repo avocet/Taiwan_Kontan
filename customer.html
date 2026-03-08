@@ -560,11 +560,13 @@
                 portionTableModal.style.display = 'flex';
             });
             
-            // 選擇起始日期後，自動填入結束日期並打開月曆
+            // 選擇起始日期後，自動計算結束日期（+7天）並打開月曆
             document.getElementById('portionStartDate').addEventListener('change', function() {
                 const startVal = this.value;
                 if (startVal) {
-                    document.getElementById('portionEndDate').value = startVal;
+                    const start = new Date(startVal);
+                    start.setDate(start.getDate() + 7);
+                    document.getElementById('portionEndDate').value = start.toISOString().split('T')[0];
                     // 嘗試打開結束日期的月曆
                     document.getElementById('portionEndDate').click();
                 }
