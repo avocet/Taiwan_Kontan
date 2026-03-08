@@ -132,8 +132,36 @@
 
     <!-- 學員列表（管理員用） -->
     <div id="studentList" style="display:none;padding:20px;max-width:600px;margin:0 auto;">
-        <h2 style="margin-bottom:16px;font-size:1.25rem;">學員列表</h2>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2 style="font-size:1.25rem;">學員列表</h2>
+            <button id="addStudentBtn" style="background:#007AFF;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;">+ 新增學員</button>
+        </div>
         <div id="studentListContent"></div>
+    </div>
+
+    <!-- 新增學員 Modal -->
+    <div id="addStudentModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:16px;width:90%;max-width:400px;margin:20px;">
+            <h3 style="margin-bottom:16px;font-size:1.125rem;">新增學員</h3>
+            <form id="addStudentForm">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">使用者名稱</label>
+                    <input type="text" id="newUsername" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">電子郵件</label>
+                    <input type="email" id="newEmail" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">密碼</label>
+                    <input type="password" id="newPassword" required minlength="6" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;" placeholder="至少6個字元">
+                </div>
+                <div style="display:flex;gap:10px;margin-top:20px;">
+                    <button type="button" id="cancelAddStudent" style="flex:1;padding:12px;border:1px solid #ddd;background:white;border-radius:8px;cursor:pointer;">取消</button>
+                    <button type="submit" id="submitAddStudent" style="flex:1;padding:12px;background:#007AFF;color:white;border:none;border-radius:8px;cursor:pointer;">新增</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <div class="menu-grid" id="menuGrid">
@@ -141,8 +169,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -290,6 +318,93 @@
                 console.error('載入學員列表失敗:', error);
                 content.innerHTML = '<p>載入失敗</p>';
             }
+        }
+
+        // 新增學員功能
+        const addStudentBtn = document.getElementById('addStudentBtn');
+        const addStudentModal = document.getElementById('addStudentModal');
+        const addStudentForm = document.getElementById('addStudentForm');
+        const cancelAddStudent = document.getElementById('cancelAddStudent');
+        const submitAddStudent = document.getElementById('submitAddStudent');
+
+        if (addStudentBtn) {
+            addStudentBtn.addEventListener('click', () => {
+                addStudentModal.style.display = 'flex';
+            });
+        }
+
+        if (cancelAddStudent) {
+            cancelAddStudent.addEventListener('click', () => {
+                addStudentModal.style.display = 'none';
+                addStudentForm.reset();
+            });
+        }
+
+        if (addStudentModal) {
+            addStudentModal.addEventListener('click', (e) => {
+                if (e.target === addStudentModal) {
+                    addStudentModal.style.display = 'none';
+                    addStudentForm.reset();
+                }
+            });
+        }
+
+        if (addStudentForm) {
+            addStudentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('newUsername').value.trim();
+                const email = document.getElementById('newEmail').value.trim();
+                const password = document.getElementById('newPassword').value;
+                
+                if (!username || !email || !password) {
+                    alert('請填寫所有欄位');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    alert('密碼至少需要6個字元');
+                    return;
+                }
+                
+                submitAddStudent.disabled = true;
+                submitAddStudent.textContent = '新增中...';
+                
+                try {
+                    // 檢查使用者名稱是否已被使用
+                    const checkQuery = query(collection(db, "users"), where("username", "==", username.toLowerCase()));
+                    const checkSnapshot = await getDocs(checkQuery);
+                    
+                    if (!checkSnapshot.empty) {
+                        throw new Error('此使用者名稱已被使用');
+                    }
+                    
+                    // 建立 Firebase Auth 帳戶
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // 儲存到 Firestore
+                    await setDoc(doc(db, "users", user.uid), {
+                        uid: user.uid,
+                        username: username.toLowerCase(),
+                        email: email,
+                        role: 'customer',
+                        createdAt: serverTimestamp()
+                    });
+                    
+                    alert('學員新增成功！');
+                    addStudentModal.style.display = 'none';
+                    addStudentForm.reset();
+                    loadStudentList(); // 重新載入列表
+                    
+                } catch (error) {
+                    console.error('新增學員失敗:', error);
+                    alert('新增失敗: ' + error.message);
+                } finally {
+                    submitAddStudent.disabled = false;
+                    submitAddStudent.textContent = '新增';
+                }
+            });
         }
 
         // 登出按鈕
