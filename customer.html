@@ -763,7 +763,7 @@
         });
 
         // 飲食份數表功能
-        const portionTableModal = document.getElementById('portionTableModal');
+        window.portionTableModal = document.getElementById('portionTableModal');
         const showPortionTableBtn = document.getElementById('showPortionTableBtn');
         const closePortionTableBtn = document.getElementById('closePortionTableBtn');
 
@@ -1069,7 +1069,7 @@
             });
             
             // 顯示表單
-            portionTableModal.style.display = 'flex';
+            document.getElementById('portionTableModal').style.display = 'flex';
         };
         
         // 儲存 portionRecordsData 供編輯使用
