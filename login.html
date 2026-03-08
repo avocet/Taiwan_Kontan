@@ -544,61 +544,65 @@
             });
         }
 
-        forgotPasswordModal.addEventListener('click', (e) => {
-            if (e.target === forgotPasswordModal) {
-                forgotPasswordModal.style.display = 'none';
-                hideMessage('resetMessage');
-            }
-        });
-
-        forgotPasswordForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const email = document.getElementById('resetEmail').value.trim();
-            const resetBtn = document.getElementById('resetBtn');
-
-            if (!email) {
-                showMessage('resetMessage', '請輸入電子郵件', 'error');
-                return;
-            }
-
-            if (resetBtn) {
-                resetBtn.disabled = true;
-                resetBtn.classList.add('loading');
-            }
-
-            const timeout = setTimeout(() => {
-                if (resetBtn) {
-                    resetBtn.disabled = false;
-                    resetBtn.classList.remove('loading');
-                }
-                showMessage('resetMessage', '網路連接超時，請檢查網絡', 'error');
-            }, 10000);
-
-            try {
-                await sendPasswordResetEmail(auth, email);
-                clearTimeout(timeout);
-                showMessage('resetMessage', '密碼重設連結已發送到您的電子郵件！', 'success');
-                setTimeout(() => {
+        if (forgotPasswordModal) {
+            forgotPasswordModal.addEventListener('click', (e) => {
+                if (e.target === forgotPasswordModal) {
                     forgotPasswordModal.style.display = 'none';
                     hideMessage('resetMessage');
-                    forgotPasswordForm.reset();
-                }, 3000);
-            } catch (error) {
-                clearTimeout(timeout);
-                let errorMessage = '發送失敗，請稍後再試';
-                switch (error.code) {
-                    case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
-                    case 'auth/user-not-found': errorMessage = '找不到此帳號'; break;
                 }
-                showMessage('resetMessage', errorMessage, 'error');
-            } finally {
+            });
+        }
+
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('resetEmail').value.trim();
+                const resetBtn = document.getElementById('resetBtn');
+
+                if (!email) {
+                    showMessage('resetMessage', '請輸入電子郵件', 'error');
+                    return;
+                }
+
                 if (resetBtn) {
-                    resetBtn.disabled = false;
-                    resetBtn.classList.remove('loading');
+                    resetBtn.disabled = true;
+                    resetBtn.classList.add('loading');
                 }
-            }
-        });
+
+                const timeout = setTimeout(() => {
+                    if (resetBtn) {
+                        resetBtn.disabled = false;
+                        resetBtn.classList.remove('loading');
+                    }
+                    showMessage('resetMessage', '網路連接超時，請檢查網絡', 'error');
+                }, 10000);
+
+                try {
+                    await sendPasswordResetEmail(auth, email);
+                    clearTimeout(timeout);
+                    showMessage('resetMessage', '密碼重設連結已發送到您的電子郵件！', 'success');
+                    setTimeout(() => {
+                        if (forgotPasswordModal) forgotPasswordModal.style.display = 'none';
+                        hideMessage('resetMessage');
+                        forgotPasswordForm.reset();
+                    }, 3000);
+                } catch (error) {
+                    clearTimeout(timeout);
+                    let errorMessage = '發送失敗，請稍後再試';
+                    switch (error.code) {
+                        case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
+                        case 'auth/user-not-found': errorMessage = '找不到此帳號'; break;
+                    }
+                    showMessage('resetMessage', errorMessage, 'error');
+                } finally {
+                    if (resetBtn) {
+                        resetBtn.disabled = false;
+                        resetBtn.classList.remove('loading');
+                    }
+                }
+            });
+        }
     </script>
 </body>
 </html>
