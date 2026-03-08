@@ -159,22 +159,21 @@
 
     <!-- 飲食份數表 Modal -->
     <div id="portionTableModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-        <div style="background:white;padding:24px;border-radius:16px;width:95%;max-width:500px;max-height:90vh;overflow-y:auto;margin:20px;">
+        <div style="background:white;padding:24px;border-radius:16px;width:95%;max-width:600px;max-height:90vh;overflow-y:auto;margin:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
                 <h3 style="font-size:1.125rem;">飲食份數表</h3>
                 <button id="closePortionTableBtn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✕</button>
             </div>
             <div style="margin-bottom:16px;padding:12px;background:#f5f5f5;border-radius:8px;">
                 <label style="display:block;font-size:0.875rem;color:#666;margin-bottom:8px;">選擇日期範圍（預設7天）</label>
-                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px;">
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                     <input type="date" id="startDate" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:0.875rem;">
                     <span>至</span>
                     <input type="date" id="endDate" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:0.875rem;">
-                    <button id="loadDietTableBtn" style="background:#007AFF;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:0.875rem;cursor:pointer;">載入</button>
                 </div>
             </div>
             <div id="portionTableContent" style="font-size:0.75rem;line-height:1.8;overflow-x:auto;">
-                <p style="text-align:center;color:#999;">請選擇日期範圍後點擊「載入」</p>
+                <p style="text-align:center;color:#999;">選擇日期範圍後自動顯示</p>
             </div>
         </div>
     </div>
@@ -483,6 +482,9 @@
                 document.getElementById('endDate').value = today.toISOString().split('T')[0];
                 
                 portionTableModal.style.display = 'flex';
+                
+                // 自動載入表格
+                loadDietTable();
             });
         }
 
@@ -494,26 +496,22 @@
             document.getElementById('endDate').value = end.toISOString().split('T')[0];
         });
 
-        // 載入飲食表格
-        document.getElementById('loadDietTableBtn').addEventListener('click', async function() {
-            if (!currentStudentUid) {
-                alert('請先選擇學員');
-                return;
-            }
+        // 自動載入飲食表格（當日期變更時）
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        
+        async function loadDietTable() {
+            if (!currentStudentUid) return;
             
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
             
-            if (!startDate || !endDate) {
-                alert('請選擇日期範圍');
-                return;
-            }
+            if (!startDate || !endDate) return;
             
             const content = document.getElementById('portionTableContent');
             content.innerHTML = '<p style="text-align:center;">載入中...</p>';
             
             try {
-                // 查詢學員的飲食紀錄
                 const recordsQuery = query(collection(db, "每日體重三圍"), where("userId", "==", currentStudentUid));
                 const recordsSnapshot = await getDocs(recordsQuery);
                 
@@ -522,7 +520,6 @@
                     return;
                 }
                 
-                // 過濾日期範圍內的記錄
                 const records = [];
                 recordsSnapshot.docs.forEach(doc => {
                     const data = doc.data();
@@ -532,7 +529,6 @@
                     }
                 });
                 
-                // 按日期排序
                 records.sort((a, b) => new Date(a.紀錄日期) - new Date(b.紀錄日期));
                 
                 if (records.length === 0) {
@@ -540,52 +536,95 @@
                     return;
                 }
                 
-                // 建立表格
+                // 建立表格：橫列是 C,P,F,V，直欄是早餐、早點、午餐、午茶、晚餐、宵夜
                 let html = '<table style="width:100%;border-collapse:collapse;font-size:0.75rem;">';
-                html += '<tr style="background:#f5f5f5;"><th style="padding:6px;border:1px solid #ddd;min-width:60px;">時間</th>';
-                html += '<th style="padding:6px;border:1px solid #ddd;">早餐</th>';
-                html += '<th style="padding:6px;border:1px solid #ddd;">早點</th>';
-                html += '<th style="padding:6px;border:1px solid #ddd;">午餐</th>';
-                html += '<th style="padding:6px;border:1px solid #ddd;">午茶</th>';
-                html += '<th style="padding:6px;border:1px solid #ddd;">晚餐</th>';
-                html += '<th style="padding:6px;border:1px solid #ddd;">宵夜</th></tr>';
                 
-                // 時段標籤
-                const periods = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
-                
-                for (const record of records) {
-                    const date = record.紀錄日期;
-                    
-                    // 解析三餐內容，檢查是否含有 C、P、F、V
-                    const parseMeal = (mealText) => {
-                        if (!mealText || mealText === '-') return { C: false, P: false, F: false, V: false };
-                        const text = mealText.toLowerCase();
-                        return {
-                            C: text.includes('飯') || text.includes('麵') || text.includes('麵包') || text.includes('粥') || text.includes('碳水') || text.includes('澱粉'),
-                            P: text.includes('肉') || text.includes('魚') || text.includes('蛋') || text.includes('豆腐') || text.includes('蛋白質'),
-                            F: text.includes('油') || text.includes('堅果') || text.includes('花生') || text.includes('脂肪'),
-                            V: text.includes('菜') || text.includes('蔬') || text.includes('水果') || text.includes('番茄') || text.includes('黃瓜')
-                        };
+                // 解析三餐內容
+                const parseMeal = (mealText) => {
+                    if (!mealText || mealText === '-') return { C: false, P: false, F: false, V: false };
+                    const text = mealText.toLowerCase();
+                    return {
+                        C: text.includes('飯') || text.includes('麵') || text.includes('麵包') || text.includes('粥') || text.includes('碳水'),
+                        P: text.includes('肉') || text.includes('魚') || text.includes('蛋') || text.includes('豆腐') || text.includes('蛋白質'),
+                        F: text.includes('油') || text.includes('堅果') || text.includes('花生') || text.includes('脂肪'),
+                        V: text.includes('菜') || text.includes('蔬') || text.includes('水果')
                     };
-                    
-                    const breakfast = parseMeal(record.早餐);
-                    // 早點、午茶、宵夜目前沒有欄位，用午餐或晚餐的內容
-                    const lunch = parseMeal(record.午餐);
-                    const dinner = parseMeal(record.晚餐);
-                    
-                    const checkMark = (checked) => checked ? '<span style="color:#34C759;font-weight:bold;">✓</span>' : '<span style="color:#ccc;">-</span>';
-                    
-                    html += `<tr>`;
-                    html += `<td style="padding:6px;border:1px solid #ddd;font-weight:600;">${date}</td>`;
-                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(breakfast.C)} ${checkMark(breakfast.P)} ${checkMark(breakfast.F)} ${checkMark(breakfast.V)}</td>`;
-                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
-                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(lunch.C)} ${checkMark(lunch.P)} ${checkMark(lunch.F)} ${checkMark(lunch.V)}</td>`;
-                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
-                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(dinner.C)} ${checkMark(dinner.P)} ${checkMark(dinner.F)} ${checkMark(dinner.V)}</td>`;
-                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
-                    html += `</tr>`;
-                }
+                };
                 
+                const checkMark = (checked) => checked ? '<span style="color:#34C759;font-weight:bold;">✓</span>' : '<span style="color:#ccc;">-</span>';
+                
+                // 收集所有日期
+                const allDates = records.map(r => r.紀錄日期).sort((a,b) => new Date(a) - new Date(b));
+                
+                // C 列
+                html += '<tr><td style="padding:6px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;">C</td>';
+                for (const record of records) {
+                    const c = parseMeal(record.早餐);
+                    const lunchC = parseMeal(record.午餐);
+                    const dinnerC = parseMeal(record.晚餐);
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(c.C)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(lunchC.C)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(dinnerC.C)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                }
+                html += '</tr>';
+                
+                // P 列
+                html += '<tr><td style="padding:6px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;">P</td>';
+                for (const record of records) {
+                    const p = parseMeal(record.早餐);
+                    const lunchP = parseMeal(record.午餐);
+                    const dinnerP = parseMeal(record.晚餐);
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(p.P)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(lunchP.P)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(dinnerP.P)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                }
+                html += '</tr>';
+                
+                // F 列
+                html += '<tr><td style="padding:6px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;">F</td>';
+                for (const record of records) {
+                    const f = parseMeal(record.早餐);
+                    const lunchF = parseMeal(record.午餐);
+                    const dinnerF = parseMeal(record.晚餐);
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(f.F)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(lunchF.F)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(dinnerF.F)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                }
+                html += '</tr>';
+                
+                // V 列
+                html += '<tr><td style="padding:6px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;">V</td>';
+                for (const record of records) {
+                    const v = parseMeal(record.早餐);
+                    const lunchV = parseMeal(record.午餐);
+                    const dinnerV = parseMeal(record.晚餐);
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(v.V)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(lunchV.V)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">${checkMark(dinnerV.V)}</td>`;
+                    html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
+                }
+                html += '</tr>';
+                
+                // 時間列（最後）
+                html += '<tr><td style="padding:6px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;">時間</td>';
+                for (const record of records) {
+                    html += `<td style="padding:6px;border:1px solid #ddd;font-weight:600;" colspan="6">${record.紀錄日期}</td>`;
+                }
+                html += '</tr>';
+                
+                // 表頭
+                html = '<thead style="display:none;"><tr><th></th></tr></thead><tbody>' + html + '</tbody>';
                 html += '</table>';
                 html += '<div style="margin-top:12px;font-size:0.75rem;color:#666;">C=碳水化合物 P=蛋白質 F=脂肪 V=蔬菜</div>';
                 
@@ -595,7 +634,10 @@
                 console.error('載入飲食表格失敗:', error);
                 content.innerHTML = '<p style="text-align:center;color:red;">載入失敗</p>';
             }
-        });
+        }
+        
+        startDateInput.addEventListener('change', loadDietTable);
+        endDateInput.addEventListener('change', loadDietTable);
 
         if (closePortionTableBtn) {
             closePortionTableBtn.addEventListener('click', () => {
