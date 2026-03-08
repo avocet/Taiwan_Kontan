@@ -161,15 +161,7 @@
             <div style="flex:1;min-width:0;">
                 <h3 style="font-size:1rem;margin-bottom:12px;">飲食份數表</h3>
                 <div id="portionTableDisplay" style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:200px;">
-                    <p style="text-align:center;color:#999;">選擇日期範圍查看</p>
-                </div>
-                <div style="margin-top:12px;padding:12px;background:#f5f5f5;border-radius:8px;">
-                    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
-                        <input type="date" id="portionStartDate2" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:0.875rem;flex:1;">
-                        <span>至</span>
-                        <input type="date" id="portionEndDate2" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:0.875rem;flex:1;">
-                    </div>
-                    <button id="loadPortionTableBtn" style="background:#007AFF;color:white;padding:8px 16px;border:none;border-radius:8px;cursor:pointer;width:100%;">查詢</button>
+                    <p style="text-align:center;color:#999;">載入中...</p>
                 </div>
             </div>
         </div>
@@ -556,12 +548,79 @@
                 document.getElementById('portionStartDate2').value = startDateStr;
                 document.getElementById('portionEndDate2').value = today;
                 
+                // 自動載入飲食份數表
+                loadPortionTable();
+                
             } catch (error) {
                 console.error('載入學員紀錄失敗:', error);
                 recordsContent.innerHTML = '<p>載入失敗</p>';
                 mobileRecordsContent.innerHTML = '<p>載入失敗</p>';
             }
         };
+
+        // 自動載入飲食份數表
+        async function loadPortionTable() {
+            if (!currentStudentUid) return;
+            
+            const startDate = document.getElementById('portionStartDate2')?.value;
+            const endDate = document.getElementById('portionEndDate2')?.value;
+            
+            const displayDiv = document.getElementById('portionTableDisplay');
+            if (!displayDiv) return;
+            
+            displayDiv.innerHTML = '<p style="text-align:center;">載入中...</p>';
+            
+            try {
+                const q = query(
+                    collection(db, "飲食份數表"),
+                    where("userId", "==", currentStudentUid)
+                );
+                const snapshot = await getDocs(q);
+                
+                if (snapshot.empty) {
+                    displayDiv.innerHTML = '<p style="text-align:center;color:#999;">沒有資料</p>';
+                    return;
+                }
+                
+                const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+                
+                let html = '<table style="width:100%;border-collapse:collapse;font-size:0.7rem;overflow-x:auto;">';
+                html += '<tr style="background:#007AFF;color:white;"><th style="padding:6px;border:1px solid #ddd;white-space:nowrap;">餐別</th>';
+                
+                const records = [];
+                snapshot.forEach(doc => {
+                    records.push(doc.data());
+                });
+                records.sort((a, b) => new Date(a.紀錄日期) - new Date(b.紀錄日期));
+                
+                // 只顯示最近7天
+                const recentRecords = records.slice(-7);
+                
+                for (const r of recentRecords) {
+                    html += `<th style="padding:6px;border:1px solid #ddd;white-space:nowrap;">${r.紀錄日期}</th>`;
+                }
+                html += '</tr>';
+                
+                for (const meal of meals) {
+                    html += `<tr><td style="padding:6px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;white-space:nowrap;">${meal}</td>`;
+                    for (const r of recentRecords) {
+                        const c = r[`${meal}C`] || 0;
+                        const p = r[`${meal}P`] || 0;
+                        const f = r[`${meal}F`] || 0;
+                        const v = r[`${meal}V`] || 0;
+                        html += `<td style="padding:4px;border:1px solid #ddd;text-align:center;font-size:0.65rem;white-space:nowrap;">C:${c} P:${p} F:${f} V:${v}</td>`;
+                    }
+                    html += '</tr>';
+                }
+                
+                html += '</table>';
+                displayDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('載入飲食份數表失敗:', error);
+                displayDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗</p>';
+            }
+        }
 
         // 顯示照片
         window.showPhoto = function(url) {
@@ -689,81 +748,6 @@
             portionTableModal.addEventListener('click', (e) => {
                 if (e.target === portionTableModal) {
                     portionTableModal.style.display = 'none';
-                }
-            });
-        }
-
-        // 電腦版：載入飲食份數表資料
-        const loadPortionTableBtn = document.getElementById('loadPortionTableBtn');
-        if (loadPortionTableBtn) {
-            loadPortionTableBtn.addEventListener('click', async () => {
-                if (!currentStudentUid) return;
-                
-                const startDate = document.getElementById('portionStartDate2').value;
-                const endDate = document.getElementById('portionEndDate2').value;
-                
-                if (!startDate || !endDate) return;
-                
-                const displayDiv = document.getElementById('portionTableDisplay');
-                if (!displayDiv) return;
-                
-                displayDiv.innerHTML = '<p style="text-align:center;">載入中...</p>';
-                
-                try {
-                    const q = query(
-                        collection(db, "飲食份數表"),
-                        where("userId", "==", currentStudentUid),
-                        where("紀錄日期", ">=", startDate),
-                        where("紀錄日期", "<=", endDate)
-                    );
-                    const snapshot = await getDocs(q);
-                    
-                    if (snapshot.empty) {
-                        displayDiv.innerHTML = '<p style="text-align:center;color:#999;">沒有資料</p>';
-                        return;
-                    }
-                    
-                    const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
-                    
-                    let html = '<table style="width:100%;border-collapse:collapse;font-size:0.7rem;">';
-                    html += '<tr style="background:#007AFF;color:white;"><th style="padding:6px;border:1px solid #ddd;">餐別</th>';
-                    
-                    const dates = [];
-                    snapshot.forEach(doc => {
-                        const d = doc.data();
-                        if (!dates.includes(d.紀錄日期)) dates.push(d.紀錄日期);
-                    });
-                    dates.sort();
-                    
-                    for (const date of dates) {
-                        html += `<th style="padding:6px;border:1px solid #ddd;">${date}</th>`;
-                    }
-                    html += '</tr>';
-                    
-                    for (const meal of meals) {
-                        html += `<tr><td style="padding:6px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;">${meal}</td>`;
-                        for (const date of dates) {
-                            const doc = snapshot.docs.find(d => d.data().紀錄日期 === date);
-                            if (doc) {
-                                const data = doc.data();
-                                const c = data[`${meal}C`] || 0;
-                                const p = data[`${meal}P`] || 0;
-                                const f = data[`${meal}F`] || 0;
-                                const v = data[`${meal}V`] || 0;
-                                html += `<td style="padding:4px;border:1px solid #ddd;text-align:center;font-size:0.65rem;">C:${c}<br>P:${p}<br>F:${f}<br>V:${v}</td>`;
-                            } else {
-                                html += `<td style="padding:6px;border:1px solid #ddd;text-align:center;">-</td>`;
-                            }
-                        }
-                        html += '</tr>';
-                    }
-                    
-                    html += '</table>';
-                    displayDiv.innerHTML = html;
-                    
-                } catch (error) {
-                    console.error('載入飲食份數表失敗:', error);
-                    displayDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗</p>';
                 }
             });
         }
