@@ -190,6 +190,7 @@
             }
 
             // 獲取用戶資料
+            console.log('user.uid:', user.uid);
             const userDoc = await getDoc(doc(db, "users", user.uid));
             let userName = '';
             let userRole = 'customer';
