@@ -589,9 +589,6 @@
                 
                 const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
                 
-                let html = '<table style="width:auto;margin:0 auto;table-layout:auto;border-collapse:collapse;font-size:0.75rem;">';
-                html += '<tr style="background:#007AFF;color:white;"><th style="padding:8px 12px;border:1px solid #ddd;white-space:nowrap;text-align:center;">期間</th>';
-                
                 const records = [];
                 snapshot.forEach(doc => {
                     records.push(doc.data());
