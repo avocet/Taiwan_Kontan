@@ -255,8 +255,10 @@
             content.innerHTML = '<p>載入中...</p>';
             
             try {
+                console.log('Loading student list...');
                 const usersQuery = query(collection(db, "users"), where("role", "==", "customer"));
                 const usersSnapshot = await getDocs(usersQuery);
+                console.log('usersSnapshot size:', usersSnapshot.size);
                 
                 if (usersSnapshot.empty) {
                     content.innerHTML = '<p>目前沒有學員</p>';
@@ -267,6 +269,7 @@
                 
                 for (const doc of usersSnapshot.docs) {
                     const userData = doc.data();
+                    console.log('userData:', userData);
                     // 取得學員姓名
                     const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", userData.uid));
                     const customerSnapshot = await getDocs(customerQuery);
