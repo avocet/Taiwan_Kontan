@@ -168,6 +168,46 @@
             margin-bottom: 0;
         }
 
+        .photo-upload {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .photo-upload input[type="file"] {
+            display: none;
+        }
+
+        .photo-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .photo-preview.show {
+            display: block;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
         .form-actions {
             padding: 20px;
             background: var(--card-background);
@@ -400,6 +440,20 @@
                         <textarea id="note" name="note" rows="2" placeholder="其他備註" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
                 </div>
+                
+                <div class="form-section">
+                    <div class="section-title">照片上傳</div>
+                    
+                    <div class="form-group">
+                        <label>上傳照片</label>
+                        <div class="photo-upload" id="photoUpload">
+                            <input type="file" id="photo" name="photo" accept="image/*">
+                            <div class="upload-icon">📷</div>
+                            <div class="upload-text">點擊上傳照片</div>
+                            <img class="photo-preview" id="photoPreview">
+                        </div>
+                    </div>
+                </div>
             </form>
             
             <div class="form-actions">
@@ -418,6 +472,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -432,6 +487,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         let currentUser = null;
 
@@ -489,6 +545,24 @@
             document.getElementById('recordDate').value = today;
         });
 
+        const photoUpload = document.getElementById('photoUpload');
+        const photoInput = document.getElementById('photo');
+        const photoPreview = document.getElementById('photoPreview');
+
+        photoUpload.addEventListener('click', () => photoInput.click());
+
+        photoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    photoPreview.src = e.target.result;
+                    photoPreview.classList.add('show');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         function showMessage(element, duration = 3000) {
             overlay.classList.add('show');
             element.classList.add('show');
@@ -528,6 +602,14 @@
                     customerName = querySnapshot.docs[0].data().姓名 || '';
                 }
 
+                let photoUrl = '';
+                const photoFile = photoInput.files[0];
+                if (photoFile) {
+                    const photoRef = ref(storage, `photos/${currentUser.uid}/${Date.now()}_${photoFile.name}`);
+                    await uploadBytes(photoRef, photoFile);
+                    photoUrl = await getDownloadURL(photoRef);
+                }
+
                 const formData = {
                     userId: currentUser.uid,
                     客戶姓名: customerName,
@@ -538,6 +620,7 @@
                     午餐: document.getElementById('lunch').value.trim(),
                     晚餐: document.getElementById('dinner').value.trim(),
                     備註: document.getElementById('note').value.trim(),
+                    照片: photoUrl,
                     建立時間: serverTimestamp()
                 };
 
@@ -561,6 +644,8 @@
         resetBtn.addEventListener('click', function() {
             if (confirm('確定要清除所有資料嗎？')) {
                 form.reset();
+                photoPreview.src = '';
+                photoPreview.classList.remove('show');
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('recordDate').value = today;
             }
