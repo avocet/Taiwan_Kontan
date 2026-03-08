@@ -554,7 +554,7 @@
                         startDateEl.value = startDateStr;
                         endDateEl.value = today;
                     }
-                    loadAlignedRecords(records, latestDate);
+                    loadAlignedRecords();
                 }
                 
             } catch (error) {
@@ -565,7 +565,7 @@
         };
 
         // 對齊顯示每日飲食紀錄和飲食份數表
-        async function loadAlignedRecords(dietRecords, latestDate) {
+        async function loadAlignedRecords() {
             if (!currentStudentUid) return;
             
             const leftDiv = document.getElementById('leftAlignedDisplay');
@@ -577,6 +577,18 @@
             rightDiv.innerHTML = '<p style="text-align:center;">載入中...</p>';
             
             try {
+                // 取得每日飲食紀錄
+                const dietQuery = query(collection(db, "每日體重三圍"), where("userId", "==", currentStudentUid));
+                const dietSnapshot = await getDocs(dietQuery);
+                
+                const dietRecords = [];
+                dietSnapshot.forEach(doc => {
+                    dietRecords.push(doc.data());
+                });
+                dietRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+                
+                const latestDate = dietRecords.length > 0 ? dietRecords[0].紀錄日期 : null;
+                
                 // 取得飲食份數表
                 const portionQuery = query(collection(db, "飲食份數表"), where("userId", "==", currentStudentUid));
                 const portionSnapshot = await getDocs(portionQuery);
