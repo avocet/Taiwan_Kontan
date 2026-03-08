@@ -172,10 +172,11 @@
             
             let userName = '';
             let userRole = 'customer';
+            let usersSnapshot = null;
             
             if (savedUsername) {
                 const usersQuery = query(collection(db, "users"), where("username", "==", savedUsername));
-                const usersSnapshot = await getDocs(usersQuery);
+                usersSnapshot = await getDocs(usersQuery);
                 console.log('usersSnapshot empty:', usersSnapshot.empty);
                 
                 if (!usersSnapshot.empty) {
@@ -194,7 +195,7 @@
             }
 
             // 如果沒有姓名，使用 username
-            if (!userName && !usersSnapshot.empty) {
+            if (!userName && usersSnapshot && !usersSnapshot.empty) {
                 userName = usersSnapshot.docs[0].data().username || '';
             }
 
