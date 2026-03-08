@@ -119,12 +119,14 @@
         @media screen and (max-width: 768px) {
             #desktopRecordsContainer { display: none !important; }
             #mobileRecordsContent { display: block !important; }
+            #studentRecordsContent { display: none !important; }
             #studentRecords { max-width: 600px; }
         }
         
         @media screen and (min-width: 769px) {
             #desktopRecordsContainer { display: flex !important; }
             #mobileRecordsContent { display: none !important; }
+            #studentRecordsContent { display: none !important; }
             #showPortionTableBtn { display: block; }
         }
     </style>
@@ -540,7 +542,6 @@
                 }
                 
                 html += '</div>';
-                recordsContent.innerHTML = html;
                 mobileRecordsContent.innerHTML = html;
                 
                 // 設定電腦版日期預設值
