@@ -592,7 +592,7 @@
                     records.push(doc.data());
                 });
                 
-                // 篩選：只有每日飲食紀錄日期在飲食份數表期間內的記錄
+                // 顯示符合條件的記錄（每日飲食紀錄日期在飲食份數表期間內）
                 let filteredRecords = records;
                 if (latestDate) {
                     filteredRecords = records.filter(r => {
@@ -600,12 +600,6 @@
                         const end = r.結束日期 || start;
                         return latestDate >= start && latestDate <= end;
                     });
-                    
-                    // 如果沒有符合的記錄，顯示空白
-                    if (filteredRecords.length === 0) {
-                        displayDiv.innerHTML = '<p style="text-align:center;color:#999;">沒有符合的資料</p>';
-                        return;
-                    }
                 }
                 
                 filteredRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
