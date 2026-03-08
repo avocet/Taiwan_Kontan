@@ -316,18 +316,8 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        // 簡單的密碼雜湊函數
-        function hashPassword(password) {
-            let hash = 0;
-            for (let i = 0; i < password.length; i++) {
-                const char = password.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return hash.toString(16);
-        }
 
         function showMessage(elementId, text, type) {
             const element = document.getElementById(elementId);
@@ -371,20 +361,22 @@
                 const q = query(usersRef, where("username", "==", username.toLowerCase()));
                 const querySnapshot = await getDocs(q);
                 
-                if (querySnapshot.empty) {
-                    throw new Error('找不到此使用者名稱');
+                let email;
+                if (!querySnapshot.empty) {
+                    // 找到對應的 email
+                    email = querySnapshot.docs[0].data().email;
+                } else {
+                    // 沒找到，嘗試直接用輸入作為 email
+                    email = username;
                 }
                 
-                const userData = querySnapshot.docs[0].data();
-                const hashedPassword = hashPassword(password);
+                // 用 email 登入 Firebase Auth
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
                 
-                if (userData.password !== hashedPassword) {
-                    throw new Error('密碼錯誤');
-                }
-                
-                // 登入成功，儲存登入狀態到 localStorage
-                localStorage.setItem('twkt_user_id', userData.uid);
-                localStorage.setItem('twkt_username', userData.username);
+                // 登入成功
+                localStorage.setItem('twkt_user_id', user.uid);
+                localStorage.setItem('twkt_username', username.toLowerCase());
                 
                 clearTimeout(timeout);
                 showMessage('message', '登入成功！正在轉跳...', 'success');
@@ -394,7 +386,11 @@
             } catch (error) {
                 clearTimeout(timeout);
                 console.error('登入錯誤:', error);
-                showMessage('message', error.message || '登入失敗', 'error');
+                let errorMessage = '登入失敗';
+                if (error.code === 'auth/user-not-found') errorMessage = '找不到此帳號';
+                else if (error.code === 'auth/wrong-password') errorMessage = '密碼錯誤';
+                else if (error.code === 'auth/invalid-email') errorMessage = '電子郵件格式錯誤';
+                showMessage('message', errorMessage, 'error');
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
@@ -468,16 +464,15 @@
                     throw new Error('此使用者名稱已被使用');
                 }
                 
-                // 產生 UID
-                const uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-                const hashedPassword = hashPassword(password);
+                // 建立 Firebase Auth 帳戶
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
                 
                 // 儲存到 Firestore
-                await setDoc(doc(db, "users", uid), {
-                    uid: uid,
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
                     username: username.toLowerCase(),
                     email: email,
-                    password: hashedPassword,
                     createdAt: serverTimestamp()
                 });
                 
