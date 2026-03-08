@@ -589,9 +589,8 @@
                 
                 const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
                 
-                let html = '<table style="width:100%;table-layout:fixed;border-collapse:collapse;font-size:0.75rem;">';
-                html += '<colgroup><col style="width:60px;"><col style="width:auto;"></colgroup>';
-                html += '<tr style="background:#007AFF;color:white;"><th style="padding:8px 4px;border:1px solid #ddd;white-space:nowrap;text-align:center;">期間</th>';
+                let html = '<table style="width:auto;margin:0 auto;table-layout:auto;border-collapse:collapse;font-size:0.75rem;">';
+                html += '<tr style="background:#007AFF;color:white;"><th style="padding:8px 12px;border:1px solid #ddd;white-space:nowrap;text-align:center;">期間</th>';
                 
                 const records = [];
                 snapshot.forEach(doc => {
@@ -613,12 +612,12 @@
                 if (recentRecords.length > 0) {
                     const firstDate = formatDate(recentRecords[0].紀錄日期);
                     const lastDate = formatDate(recentRecords[recentRecords.length - 1].紀錄日期);
-                    html += `<th style="padding:8px 4px;border:1px solid #ddd;white-space:nowrap;text-align:center;">${firstDate} 到 ${lastDate}</th>`;
+                    html += `<th style="padding:8px 12px;border:1px solid #ddd;white-space:nowrap;text-align:center;">${firstDate} 到 ${lastDate}</th>`;
                 }
                 html += '</tr>';
                 
                 for (const meal of meals) {
-                    html += `<tr><td style="padding:8px 4px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;white-space:nowrap;text-align:center;">${meal}</td>`;
+                    html += `<tr><td style="padding:8px 12px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;white-space:nowrap;text-align:center;">${meal}</td>`;
                     // 只顯示最新一筆資料
                     if (recentRecords.length > 0) {
                         const r = recentRecords[recentRecords.length - 1];
@@ -626,7 +625,7 @@
                         const p = r[`${meal}P`] || 0;
                         const f = r[`${meal}F`] || 0;
                         const v = r[`${meal}V`] || 0;
-                        html += `<td style="padding:8px 4px;border:1px solid #ddd;text-align:center;">C:${c} P:${p} F:${f} V:${v}</td>`;
+                        html += `<td style="padding:8px 12px;border:1px solid #ddd;text-align:center;white-space:nowrap;">C:${c} P:${p} F:${f} V:${v}</td>`;
                     }
                     html += '</tr>';
                 }
