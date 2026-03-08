@@ -270,8 +270,8 @@
                 for (const doc of usersSnapshot.docs) {
                     const userData = doc.data();
                     console.log('userData:', userData);
-                    // 取得學員姓名
-                    const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", userData.uid));
+                    // 嘗試用 username 查詢客戶資料
+                    const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", userData.username));
                     const customerSnapshot = await getDocs(customerQuery);
                     const studentName = customerSnapshot.empty ? (userData.username || '-') : (customerSnapshot.docs[0].data().姓名 || userData.username || '-');
                     
