@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿克索體重管理班</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+            --success-color: #34C759;
+            --error-color: #FF3B30;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: var(--card-background);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .login-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            font-size: 0.9375rem;
+            opacity: 0.9;
+        }
+
+        .login-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--card-background);
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        }
+
+        input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: var(--background-color);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: #E5E5EA;
+        }
+
+        .link-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+        }
+
+        .link-buttons a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .link-buttons a:hover {
+            text-decoration: underline;
+        }
+
+        .back-home {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .back-home a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .back-home a:hover {
+            color: var(--primary-color);
+        }
+
+        .message {
+            display: none;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: rgba(52, 199, 89, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+
+        .message.error {
+            background: rgba(255, 59, 48, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        .btn.loading .loading-spinner {
+            display: inline-block;
+        }
+
+        .btn.loading .btn-text {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media screen and (max-width: 428px) {
+            .login-container { border-radius: 20px; }
+            .login-header { padding: 30px 20px; }
+            .login-header h1 { font-size: 1.5rem; }
+            .login-body { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>阿克索體重管理班</h1>
+            <p>請登入以繼續</p>
+        </div>
+        
+        <div class="login-body">
+            <div class="message" id="message"></div>
+            
+            <!-- 登入表單 -->
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">使用者名稱</label>
+                    <input type="text" id="email" name="email" placeholder="請輸入使用者名稱" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">密碼</label>
+                    <input type="password" id="password" name="password" placeholder="請輸入密碼" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="loginBtn">
+                    <span class="loading-spinner"></span>
+                    <span class="btn-text">登 入</span>
+                </button>
+            </form>
+            
+            <div class="link-buttons">
+                <a href="#" id="forgotPasswordLink">忘記密碼？</a>
+                <a href="#" id="registerLink">建立新帳戶</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- 註冊 Modal -->
+    <div id="registerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="login-container" style="max-width:380px;margin:20px;">
+            <div class="login-header">
+                <h2>建立新帳戶</h2>
+            </div>
+            <div class="login-body">
+                <div class="message" id="registerMessage"></div>
+                <form id="registerForm">
+                    <div class="form-group">
+                        <label for="registerUsername">使用者名稱</label>
+                        <input type="text" id="registerUsername" name="registerUsername" placeholder="請輸入使用者名稱" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">電子郵件</label>
+                        <input type="email" id="registerEmail" name="registerEmail" placeholder="請輸入電子郵件" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">設定密碼</label>
+                        <input type="password" id="registerPassword" name="registerPassword" placeholder="請設定密碼（至少6個字元）" minlength="6" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registerConfirmPassword">確認密碼</label>
+                        <input type="password" id="registerConfirmPassword" name="registerConfirmPassword" placeholder="請再次輸入密碼" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="registerBtn" style="width:100%;">
+                        建立帳戶
+                    </button>
+                </form>
+                <button type="button" class="btn btn-secondary" id="closeRegisterModal" style="width:100%;margin-top:10px;">
+                    取 消
+                </button>
+            </div>
+        </div>
+    </div>
+                
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
+            authDomain: "akso-weightcontroll.firebaseapp.com",
+            projectId: "akso-weightcontroll",
+            storageBucket: "akso-weightcontroll.firebasestorage.app",
+            messagingSenderId: "523229071422",
+            appId: "1:523229071422:web:c36fd110cc5812fea2a96f",
+            measurementId: "G-DFEEKX4V0S"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        function showMessage(elementId, text, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = text;
+            element.className = 'message show ' + type;
+        }
+
+        function hideMessage(elementId) {
+            const element = document.getElementById(elementId);
+            element.textContent = '';
+            element.className = 'message';
+        }
+
+        // ===== 登入 =====
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                showMessage('message', '請填寫所有欄位', 'error');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.classList.add('loading');
+
+            const timeout = setTimeout(() => {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+                showMessage('message', '網路連接超時，請檢查網絡', 'error');
+            }, 10000);
+
+            try {
+                // 從 Firestore 查詢使用者
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("username", "==", username.toLowerCase()));
+                console.log('Querying for username:', username.toLowerCase());
+                
+                let email;
+                try {
+                    const querySnapshot = await getDocs(q);
+                    console.log('Query result count:', querySnapshot.size);
+                    
+                    if (!querySnapshot.empty) {
+                        // 找到對應的 email
+                        const userData = querySnapshot.docs[0].data();
+                        console.log('Found user data:', userData);
+                        email = userData.email;
+                        console.log('Using email from DB:', email);
+                    } else {
+                        console.log('User not found in Firestore, trying as email');
+                        // 沒找到，嘗試直接用輸入作為 email
+                        email = username;
+                    }
+                } catch (queryError) {
+                    console.error('Query error:', queryError);
+                    // 如果查詢失敗，嘗試直接用輸入作為 email
+                    email = username;
+                }
+                
+                console.log('Final email to use:', email);
+                
+                // 用 email 登入 Firebase Auth
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // 登入成功
+                localStorage.setItem('twkt_user_id', user.uid);
+                localStorage.setItem('twkt_username', username.toLowerCase());
+                
+                clearTimeout(timeout);
+                showMessage('message', '登入成功！正在轉跳...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'customer.html';
+                }, 1000);
+            } catch (error) {
+                clearTimeout(timeout);
+                console.error('登入錯誤:', error);
+                let errorMessage = '登入失敗：' + error.message;
+                if (error.code === 'auth/user-not-found') errorMessage = '找不到此帳號，請先註冊';
+                else if (error.code === 'auth/wrong-password') errorMessage = '密碼錯誤';
+                else if (error.code === 'auth/invalid-email') errorMessage = '找不到此使用者名稱，請先註冊';
+                showMessage('message', errorMessage, 'error');
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+            }
+        });
+
+        // ===== 註冊 =====
+        const registerModal = document.getElementById('registerModal');
+        const registerLink = document.getElementById('registerLink');
+        const closeRegisterModal = document.getElementById('closeRegisterModal');
+        const registerForm = document.getElementById('registerForm');
+        const registerBtn = document.getElementById('registerBtn');
+
+        registerLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerModal.style.display = 'flex';
+        });
+
+        closeRegisterModal.addEventListener('click', () => {
+            registerModal.style.display = 'none';
+            hideMessage('registerMessage');
+            registerForm.reset();
+        });
+
+        registerModal.addEventListener('click', (e) => {
+            if (e.target === registerModal) {
+                registerModal.style.display = 'none';
+                hideMessage('registerMessage');
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('registerUsername').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('registerConfirmPassword').value;
+
+            if (!username || !email || !password || !confirmPassword) {
+                showMessage('registerMessage', '請填寫所有欄位', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('registerMessage', '密碼至少需要6個字元', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage('registerMessage', '兩次輸入的密碼不一致', 'error');
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerBtn.classList.add('loading');
+
+            const timeout = setTimeout(() => {
+                registerBtn.disabled = false;
+                registerBtn.classList.remove('loading');
+                showMessage('registerMessage', '網路連接超時，請檢查網絡', 'error');
+            }, 10000);
+
+            try {
+                // 檢查使用者名稱是否已被使用
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("username", "==", username.toLowerCase()));
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    throw new Error('此使用者名稱已被使用');
+                }
+                
+                // 建立 Firebase Auth 帳戶
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // 儲存到 Firestore
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    username: username.toLowerCase(),
+                    email: email,
+                    createdAt: serverTimestamp()
+                });
+                
+                clearTimeout(timeout);
+                showMessage('registerMessage', '帳戶建立成功！正在轉跳...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'customer.html';
+                }, 1500);
+            } catch (error) {
+                clearTimeout(timeout);
+                console.error('註冊錯誤:', error);
+                showMessage('registerMessage', error.message || '建立帳戶失敗', 'error');
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.classList.remove('loading');
+            }
+        });
+
+        // ===== 忘記密碼 =====
+        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const closeForgotModal = document.getElementById('closeForgotModal');
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+
+        if (forgotPasswordLink && forgotPasswordModal) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                forgotPasswordModal.style.display = 'flex';
+            });
+        }
+
+        if (closeForgotModal && forgotPasswordModal && forgotPasswordForm) {
+            closeForgotModal.addEventListener('click', () => {
+                forgotPasswordModal.style.display = 'none';
+                hideMessage('resetMessage');
+                forgotPasswordForm.reset();
+            });
+        }
+
+        if (forgotPasswordModal) {
+            forgotPasswordModal.addEventListener('click', (e) => {
+                if (e.target === forgotPasswordModal) {
+                    forgotPasswordModal.style.display = 'none';
+                    hideMessage('resetMessage');
+                }
+            });
+        }
+
+        if (closeForgotModal) {
+            closeForgotModal.addEventListener('click', () => {
+                forgotPasswordModal.style.display = 'none';
+                hideMessage('resetMessage');
+                forgotPasswordForm.reset();
+            });
+        }
+
+        if (forgotPasswordModal) {
+            forgotPasswordModal.addEventListener('click', (e) => {
+                if (e.target === forgotPasswordModal) {
+                    forgotPasswordModal.style.display = 'none';
+                    hideMessage('resetMessage');
+                }
+            });
+        }
+
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('resetEmail').value.trim();
+                const resetBtn = document.getElementById('resetBtn');
+
+                if (!email) {
+                    showMessage('resetMessage', '請輸入電子郵件', 'error');
+                    return;
+                }
+
+                if (resetBtn) {
+                    resetBtn.disabled = true;
+                    resetBtn.classList.add('loading');
+                }
+
+                const timeout = setTimeout(() => {
+                    if (resetBtn) {
+                        resetBtn.disabled = false;
+                        resetBtn.classList.remove('loading');
+                    }
+                    showMessage('resetMessage', '網路連接超時，請檢查網絡', 'error');
+                }, 10000);
+
+                try {
+                    await sendPasswordResetEmail(auth, email);
+                    clearTimeout(timeout);
+                    showMessage('resetMessage', '密碼重設連結已發送到您的電子郵件！', 'success');
+                    setTimeout(() => {
+                        if (forgotPasswordModal) forgotPasswordModal.style.display = 'none';
+                        hideMessage('resetMessage');
+                        forgotPasswordForm.reset();
+                    }, 3000);
+                } catch (error) {
+                    clearTimeout(timeout);
+                    let errorMessage = '發送失敗，請稍後再試';
+                    switch (error.code) {
+                        case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
+                        case 'auth/user-not-found': errorMessage = '找不到此帳號'; break;
+                    }
+                    showMessage('resetMessage', errorMessage, 'error');
+                } finally {
+                    if (resetBtn) {
+                        resetBtn.disabled = false;
+                        resetBtn.classList.remove('loading');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
