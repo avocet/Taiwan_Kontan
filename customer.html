@@ -164,6 +164,14 @@
                 <h3 style="font-size:1.125rem;">飲食份數表</h3>
                 <button id="closePortionTableBtn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✕</button>
             </div>
+            <div style="margin-bottom:16px;padding:12px;background:#f5f5f5;border-radius:8px;">
+                <label style="display:block;font-size:0.875rem;color:#666;margin-bottom:8px;">選擇日期範圍（預設7天）</label>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <input type="date" id="startDate" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:0.875rem;">
+                    <span>至</span>
+                    <input type="date" id="endDate" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:0.875rem;">
+                </div>
+            </div>
             <div id="portionTableContent" style="font-size:0.875rem;line-height:1.8;">
                 <h4 style="margin:12px 0 8px;font-size:1rem;">🥩 蛋白質</h4>
                 <table style="width:100%;border-collapse:collapse;font-size:0.8125rem;"><tr style="background:#f5f5f5;"><th style="padding:8px;border:1px solid #ddd;text-align:left;">食物</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">份量</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">熱量</th></tr>
@@ -488,9 +496,25 @@
 
         if (showPortionTableBtn) {
             showPortionTableBtn.addEventListener('click', () => {
+                // 初始化日期範圍（默認7天）
+                const today = new Date();
+                const startDate = new Date(today);
+                startDate.setDate(today.getDate() - 7);
+                
+                document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+                document.getElementById('endDate').value = today.toISOString().split('T')[0];
+                
                 portionTableModal.style.display = 'flex';
             });
         }
+
+        // 起始日期變更時，自動計算結束日期（+7天）
+        document.getElementById('startDate').addEventListener('change', function() {
+            const start = new Date(this.value);
+            const end = new Date(start);
+            end.setDate(start.getDate() + 7);
+            document.getElementById('endDate').value = end.toISOString().split('T')[0];
+        });
 
         if (closePortionTableBtn) {
             closePortionTableBtn.addEventListener('click', () => {
