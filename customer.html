@@ -443,6 +443,8 @@
         let currentStudentUsername = null;
         let currentStudentName = null;
         let currentStudentUid = null;
+        let editingPortionDocId = null;
+        window.portionRecordsData = [];
 
         // 查看學員飲食紀錄
         window.viewStudentRecords = async function(username, name) {
@@ -596,10 +598,16 @@
                 const portionSnapshot = await getDocs(portionQuery);
                 
                 const portionRecords = [];
-                portionSnapshot.forEach(doc => {
-                    portionRecords.push(doc.data());
+                portionSnapshot.forEach(docSnap => {
+                    portionRecords.push({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    });
                 });
                 portionRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+                
+                // 儲存供編輯使用
+                window.portionRecordsData = portionRecords;
                 
                 const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
                 const formatDate = (dateStr) => {
@@ -647,24 +655,13 @@
                     rightHtml += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;justify-content:space-between;align-items:flex-start;">
                             <div style="flex:1;">${portionHtml}</div>
-                            <button class="editPortionBtn" data-start="${startDate}" data-end="${endDate}" style="background:#007AFF;color:white;border:none;padding:8px 12px;border-radius:8px;font-size:0.75rem;cursor:pointer;margin-left:10px;white-space:nowrap;">編輯</button>
+                            <button class="editPortionBtn" data-portion-id="${portion.id}" style="background:#007AFF;color:white;border:none;padding:8px 12px;border-radius:8px;font-size:0.75rem;cursor:pointer;margin-left:10px;white-space:nowrap;">編輯</button>
                         </div>
                     `;
                 }
                 
                 leftHtml += '</div>';
                 rightHtml += '</div>';
-                
-                // 渲染後綁定編輯按鈕事件
-                setTimeout(() => {
-                    document.querySelectorAll('.editPortionBtn').forEach(btn => {
-                        btn.addEventListener('click', function() {
-                            const startDate = this.getAttribute('data-start');
-                            const endDate = this.getAttribute('data-end');
-                            editPortionRecord(startDate, endDate);
-                        });
-                    });
-                }, 100);
                 
                 leftDiv.innerHTML = leftHtml;
                 rightDiv.innerHTML = rightHtml;
@@ -676,6 +673,35 @@
             }
         }
 
+        function editPortionRecordById(portionId) {
+            const portionRecords = window.portionRecordsData || [];
+            const matchedPortion = portionRecords.find(p => p.id === portionId);
+
+            if (!matchedPortion) {
+                alert('找不到資料');
+                return;
+            }
+
+            editingPortionDocId = portionId;
+            document.getElementById('portionStartDate').value = matchedPortion.紀錄日期 || '';
+            document.getElementById('portionEndDate').value = matchedPortion.結束日期 || matchedPortion.紀錄日期 || '';
+
+            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+            const nutrients = ['C', 'P', 'F', 'V'];
+
+            meals.forEach(meal => {
+                nutrients.forEach(nutrient => {
+                    const selectEl = document.querySelector(`[name="${meal}${nutrient}"]`);
+                    if (selectEl) selectEl.value = matchedPortion[`${meal}${nutrient}`] || 0;
+                });
+
+                const timeEl = document.querySelector(`[name="${meal}時間"]`);
+                if (timeEl) timeEl.value = matchedPortion[`${meal}時間`] || '';
+            });
+
+            document.getElementById('portionTableModal').style.display = 'flex';
+        }
+        
         // 自動載入飲食份數表
         async function loadPortionTable(latestDate) {
             if (!currentStudentUid) return;
@@ -770,6 +796,17 @@
             loadStudentList();
         });
 
+        const rightAlignedDisplay = document.getElementById('rightAlignedDisplay');
+        if (rightAlignedDisplay) {
+            rightAlignedDisplay.addEventListener('click', (e) => {
+                const btn = e.target.closest('.editPortionBtn');
+                if (!btn) return;
+                const portionId = btn.getAttribute('data-portion-id');
+                if (!portionId) return;
+                editPortionRecordById(portionId);
+            });
+        }
+
         // 飲食份數表功能
         window.portionTableModal = document.getElementById('portionTableModal');
         const showPortionTableBtn = document.getElementById('showPortionTableBtn');
@@ -777,6 +814,7 @@
 
         if (showPortionTableBtn) {
             showPortionTableBtn.addEventListener('click', () => {
+                editingPortionDocId = null;
                 // 設定今天日期為預設
                 const today = new Date().toISOString().split('T')[0];
                 const startDate = new Date();
@@ -853,25 +891,30 @@
             });
             
             try {
-                // 檢查是否已有當天紀錄
-                const existingQuery = query(
-                    collection(db, "飲食份數表"),
-                    where("userId", "==", currentStudentUid),
-                    where("紀錄日期", "==", startDate)
-                );
-                const existingDocs = await getDocs(existingQuery);
-                
-                if (existingDocs.empty) {
-                    // 新增
-                    await addDoc(collection(db, "飲食份數表"), portionData);
+                if (editingPortionDocId) {
+                    await updateDoc(doc(db, "飲食份數表", editingPortionDocId), portionData);
                 } else {
-                    // 更新
-                    const docId = existingDocs.docs[0].id;
-                    await updateDoc(doc(db, "飲食份數表", docId), portionData);
+                    // 檢查是否已有當天紀錄
+                    const existingQuery = query(
+                        collection(db, "飲食份數表"),
+                        where("userId", "==", currentStudentUid),
+                        where("紀錄日期", "==", startDate)
+                    );
+                    const existingDocs = await getDocs(existingQuery);
+
+                    if (existingDocs.empty) {
+                        // 新增
+                        await addDoc(collection(db, "飲食份數表"), portionData);
+                    } else {
+                        // 更新
+                        const docId = existingDocs.docs[0].id;
+                        await updateDoc(doc(db, "飲食份數表", docId), portionData);
+                    }
                 }
                 
                 alert('儲存成功！');
                 portionTableModal.style.display = 'none';
+                editingPortionDocId = null;
                 
                 // 自動重新載入對齊顯示
                 if (document.getElementById('leftAlignedDisplay')) {
@@ -1034,9 +1077,7 @@
                     if (!user) {
                         window.location.replace('login.html');
                     } else {
-                        // 從 localStorage 取得 username
                         const savedUsername = localStorage.getItem('twkt_username');
-                        
                         let userRole = 'customer';
                         
                         if (savedUsername) {
@@ -1045,43 +1086,8 @@
                             
                             if (!usersSnapshot.empty) {
                                 userRole = usersSnapshot.docs[0].data().role || 'customer';
-            }
-        }
-        
-        // 編輯飲食份數表
-        function editPortionRecord(startDate, endDate) {
-            // 找出對應的資料
-            const portionRecords = window.portionRecordsData || [];
-            const matchedPortion = portionRecords.find(p => p.紀錄日期 === startDate);
-            
-            if (!matchedPortion) {
-                alert('找不到資料');
-                return;
-            }
-            
-            // 填入表單
-            document.getElementById('portionStartDate').value = startDate;
-            document.getElementById('portionEndDate').value = endDate;
-            
-            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
-            const nutrients = ['C', 'P', 'F', 'V'];
-            
-            meals.forEach(meal => {
-                nutrients.forEach(nutrient => {
-                    const selectEl = document.querySelector(`[name="${meal}${nutrient}"]`);
-                    if (selectEl) selectEl.value = matchedPortion[`${meal}${nutrient}`] || 0;
-                });
-                
-                const timeEl = document.querySelector(`[name="${meal}時間"]`);
-                if (timeEl) timeEl.value = matchedPortion[`${meal}時間`] || '';
-            });
-            
-            // 顯示表單
-            document.getElementById('portionTableModal').style.display = 'flex';
-        };
-        
-        // 儲存 portionRecordsData 供編輯使用
-        window.portionRecordsData = [];
+                            }
+                        }
                     }
                 });
             }
