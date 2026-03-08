@@ -151,6 +151,12 @@
         <div id="studentRecordsContent"></div>
     </div>
 
+    <!-- 照片 Modal -->
+    <div id="photoModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:2000;align-items:center;justify-content:center;">
+        <img id="modalImg" style="max-width:90%;max-height:90%;border-radius:8px;">
+        <button onclick="document.getElementById('photoModal').style.display='none'" style="position:absolute;top:20px;right:20px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;">✕</button>
+    </div>
+
     <!-- 飲食份數表 Modal -->
     <div id="portionTableModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
         <div style="background:white;padding:24px;border-radius:16px;width:95%;max-width:500px;max-height:90vh;overflow-y:auto;margin:20px;">
@@ -425,6 +431,17 @@
                     const lunch = record.午餐 || '-';
                     const dinner = record.晚餐 || '-';
                     
+                    // 處理照片
+                    let photosHtml = '';
+                    if (record.照片) {
+                        const photos = Array.isArray(record.照片) ? record.照片 : [record.照片];
+                        photosHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">';
+                        photos.forEach(photoUrl => {
+                            photosHtml += `<img src="${photoUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="showPhoto('${photoUrl}')">`;
+                        });
+                        photosHtml += '</div>';
+                    }
+                    
                     html += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
                             <div style="font-weight:600;margin-bottom:8px;">${date}</div>
@@ -437,6 +454,7 @@
                                 <div>午餐: ${lunch}</div>
                                 <div>晚餐: ${dinner}</div>
                             </div>
+                            ${photosHtml}
                         </div>
                     `;
                 }
@@ -448,6 +466,12 @@
                 console.error('載入學員紀錄失敗:', error);
                 recordsContent.innerHTML = '<p>載入失敗</p>';
             }
+        };
+
+        // 顯示照片
+        window.showPhoto = function(url) {
+            document.getElementById('modalImg').src = url;
+            document.getElementById('photoModal').style.display = 'flex';
         };
 
         // 返回學員列表
