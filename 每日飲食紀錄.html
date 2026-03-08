@@ -315,6 +315,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, collection, query, where, getDocs, orderBy, doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getStorage, ref, deleteObject } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -329,6 +330,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         // 檢查登入狀態
         let currentUser = null;
@@ -497,6 +499,23 @@
             }
             
             try {
+                // 取得文件資料以刪除照片
+                const docSnap = await getDoc(doc(db, "每日體重三圍", docId));
+                if (docSnap.exists() && docSnap.data().照片) {
+                    const photos = docSnap.data().照片;
+                    const photoArray = Array.isArray(photos) ? photos : [photos];
+                    
+                    // 刪除每張照片
+                    for (const photoUrl of photoArray) {
+                        try {
+                            const photoRef = ref(storage, photoUrl);
+                            await deleteObject(photoRef);
+                        } catch (e) {
+                            console.log('刪除照片失敗:', e);
+                        }
+                    }
+                }
+                
                 await deleteDoc(doc(db, "每日體重三圍", docId));
                 alert('資料已刪除');
                 loadData(currentUser.uid);
