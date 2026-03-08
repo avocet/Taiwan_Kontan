@@ -192,13 +192,16 @@
             // 獲取用戶資料 - 用 uid 欄位查詢
             const usersQuery = query(collection(db, "users"), where("uid", "==", user.uid));
             const usersSnapshot = await getDocs(usersQuery);
+            console.log('uid:', user.uid, 'usersSnapshot empty:', usersSnapshot.empty);
             
             let userName = '';
             let userRole = 'customer';
             
             if (!usersSnapshot.empty) {
                 const userData = usersSnapshot.docs[0].data();
+                console.log('userData:', userData);
                 userRole = userData.role || 'customer';
+                console.log('userRole:', userRole);
             }
 
             // 嘗試從客戶資料獲取姓名
