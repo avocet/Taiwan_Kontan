@@ -592,25 +592,34 @@
                     records.push(doc.data());
                 });
                 
-                // 顯示符合條件的記錄（每日飲食紀錄日期在飲食份數表期間內）
-                let filteredRecords = records;
-                if (latestDate) {
-                    filteredRecords = records.filter(r => {
-                        const start = r.紀錄日期;
-                        const end = r.結束日期 || start;
-                        return latestDate >= start && latestDate <= end;
-                    });
-                }
+                // 全部顯示，但標記是否符合最新日期期間
+                const processedRecords = records.map(r => {
+                    const start = r.紀錄日期;
+                    const end = r.結束日期 || start;
+                    const isMatch = latestDate ? (latestDate >= start && latestDate <= end) : false;
+                    return { ...r, _isEmpty: !isMatch };
+                });
                 
-                filteredRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+                processedRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
                 const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
                 
                 let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
-                for (const record of filteredRecords) {
+                for (const record of processedRecords) {
                     const startDate = record.紀錄日期 || '-';
                     const endDate = record.結束日期 || startDate;
+                    
+                    // 如果不符合最新日期期間，顯示空白
+                    if (record._isEmpty) {
+                        html += `
+                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:100px;">
+                                <div style="font-weight:600;margin-bottom:8px;">期間：${startDate} 到 ${endDate}</div>
+                                <div style="color:#999;">（無符合資料）</div>
+                            </div>
+                        `;
+                        continue;
+                    }
                     
                     // 格式化日期顯示為 月/日
                     const formatDate = (dateStr) => {
