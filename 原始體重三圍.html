@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>原始體重三圍</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+            --success-color: #34C759;
+            --error-color: #FF3B30;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF9500, #FF3B30);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-card {
+            background: var(--card-background);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .form-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: var(--background-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .form-row-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #FF9500, #FF3B30);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 149, 0, 0.3);
+        }
+
+        .save-btn:active {
+            transform: translateY(0);
+        }
+
+        .save-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: var(--success-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media screen and (max-width: 428px) {
+            .header {
+                padding: 16px;
+            }
+            
+            .header h1 {
+                font-size: 1rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .content {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <a href="customer.html" class="back-btn">← 返回</a>
+            <h1>原始體重三圍</h1>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="success-message" id="successMessage">資料已儲存！</div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>載入中...</p>
+        </div>
+
+        <div class="form-card" id="formCard" style="display: none;">
+            <div class="form-title">📝 初始體重與身體尺寸</div>
+            
+            <form id="dataForm">
+                <div class="form-group">
+                    <label class="form-label">記錄日期</label>
+                    <input type="date" class="form-input" id="紀錄日期" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">體重 (kg)</label>
+                    <input type="number" class="form-input" id="體重" step="0.1" placeholder="例如：70.5" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">胸圍 (cm)</label>
+                        <input type="number" class="form-input" id="胸圍" step="0.1" placeholder="例如：90">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">腰圍 (cm)</label>
+                        <input type="number" class="form-input" id="腰圍" step="0.1" placeholder="例如：80">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">臀圍 (cm)</label>
+                        <input type="number" class="form-input" id="臀圍" step="0.1" placeholder="例如：95">
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label class="form-label">大腿圍 (cm)</label>
+                        <input type="number" class="form-input" id="大腿圍" step="0.1" placeholder="例如：55">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">手臂圍 (cm)</label>
+                        <input type="number" class="form-input" id="手臂圍" step="0.1" placeholder="例如：30">
+                    </div>
+                </div>
+
+                <button type="submit" class="save-btn" id="saveBtn">儲存資料</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
+            authDomain: "akso-weightcontroll.firebaseapp.com",
+            projectId: "akso-weightcontroll",
+            storageBucket: "akso-weightcontroll.firebasestorage.app",
+            messagingSenderId: "523229071422",
+            appId: "1:523229071422:web:c36fd110cc5812fea2a96f",
+            measurementId: "G-DFEEKX4V0S"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let existingDocId = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.replace('login.html');
+                return;
+            }
+            currentUser = user;
+            const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+            if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                await signOut(auth);
+                window.location.replace('index.html');
+                return;
+            }
+            
+            loadData(user.uid);
+        });
+
+        window.onpageshow = function(event) {
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    window.location.replace('login.html');
+                } else {
+                    const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+                    if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                        await signOut(auth);
+                        window.location.replace('index.html');
+                    }
+                }
+            });
+        };
+
+        async function loadData(userId) {
+            try {
+                const q = query(
+                    collection(db, "原始體重三圍"),
+                    where("userId", "==", userId)
+                );
+                const querySnapshot = await getDocs(q);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('formCard').style.display = 'block';
+                
+                if (!querySnapshot.empty) {
+                    const docData = querySnapshot.docs[0];
+                    existingDocId = docData.id;
+                    const data = docData.data();
+                    
+                    document.getElementById('紀錄日期').value = data.紀錄日期 || '';
+                    document.getElementById('體重').value = data.體重 || '';
+                    document.getElementById('胸圍').value = data.胸圍 || '';
+                    document.getElementById('腰圍').value = data.腰圍 || '';
+                    document.getElementById('臀圍').value = data.臀圍 || '';
+                    document.getElementById('大腿圍').value = data.大腿圍 || '';
+                    document.getElementById('手臂圍').value = data.手臂圍 || '';
+                } else {
+                    const today = new Date().toISOString().split('T')[0];
+                    document.getElementById('紀錄日期').value = today;
+                }
+                
+            } catch (error) {
+                console.error('載入資料失敗:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('formCard').style.display = 'block';
+            }
+        }
+
+        document.getElementById('dataForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = '儲存中...';
+            
+            const data = {
+                userId: currentUser.uid,
+                紀錄日期: document.getElementById('紀錄日期').value,
+                體重: parseFloat(document.getElementById('體重').value) || 0,
+                胸圍: parseFloat(document.getElementById('胸圍').value) || 0,
+                腰圍: parseFloat(document.getElementById('腰圍').value) || 0,
+                臀圍: parseFloat(document.getElementById('臀圍').value) || 0,
+                大腿圍: parseFloat(document.getElementById('大腿圍').value) || 0,
+                手臂圍: parseFloat(document.getElementById('手臂圍').value) || 0,
+                更新時間: new Date().toISOString()
+            };
+            
+            try {
+                if (existingDocId) {
+                    await setDoc(doc(db, "原始體重三圍", existingDocId), data, { merge: true });
+                } else {
+                    await setDoc(doc(collection(db, "原始體重三圍")), data);
+                }
+                
+                const successMsg = document.getElementById('successMessage');
+                successMsg.classList.add('show');
+                setTimeout(() => {
+                    successMsg.classList.remove('show');
+                }, 3000);
+                
+            } catch (error) {
+                console.error('儲存失敗:', error);
+                alert('儲存失敗: ' + error.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '儲存資料';
+            }
+        });
+    </script>
+</body>
+</html>
