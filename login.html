@@ -360,21 +360,30 @@
                 const usersRef = collection(db, "users");
                 const q = query(usersRef, where("username", "==", username.toLowerCase()));
                 console.log('Querying for username:', username.toLowerCase());
-                const querySnapshot = await getDocs(q);
-                console.log('Query result:', querySnapshot.size);
                 
                 let email;
-                if (!querySnapshot.empty) {
-                    // 找到對應的 email
-                    const userData = querySnapshot.docs[0].data();
-                    console.log('Found user:', userData);
-                    email = userData.email;
-                } else {
-                    // 沒找到，嘗試直接用輸入作為 email
+                try {
+                    const querySnapshot = await getDocs(q);
+                    console.log('Query result count:', querySnapshot.size);
+                    
+                    if (!querySnapshot.empty) {
+                        // 找到對應的 email
+                        const userData = querySnapshot.docs[0].data();
+                        console.log('Found user data:', userData);
+                        email = userData.email;
+                        console.log('Using email from DB:', email);
+                    } else {
+                        console.log('User not found in Firestore, trying as email');
+                        // 沒找到，嘗試直接用輸入作為 email
+                        email = username;
+                    }
+                } catch (queryError) {
+                    console.error('Query error:', queryError);
+                    // 如果查詢失敗，嘗試直接用輸入作為 email
                     email = username;
                 }
                 
-                console.log('Using email:', email);
+                console.log('Final email to use:', email);
                 
                 // 用 email 登入 Firebase Auth
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
