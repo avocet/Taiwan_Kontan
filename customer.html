@@ -553,7 +553,16 @@
                 // 清空表單
                 document.getElementById('portionTableForm').reset();
                 
+                // 恢復預設值
+                document.getElementById('portionStartDate').value = startDate.toISOString().split('T')[0];
+                document.getElementById('portionEndDate').value = today;
+                
                 portionTableModal.style.display = 'flex';
+            });
+            
+            // 選擇起始日期後自動跳到結束日期
+            document.getElementById('portionStartDate').addEventListener('change', function() {
+                document.getElementById('portionEndDate').focus();
             });
         }
 
