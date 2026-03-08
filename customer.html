@@ -611,20 +611,11 @@
                 let leftHtml = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 let rightHtml = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
-                // 左邊先顯示所有每日飲食紀錄
+                // 左邊顯示所有每日飲食紀錄
                 for (const daily of dietRecords) {
-                    const dailyDate = daily.紀錄日期;
-                    
-                    // 找出對應的飲食份數表
-                    const matchedPortion = portionRecords.find(p => {
-                        const start = p.紀錄日期;
-                        const end = p.結束日期 || start;
-                        return dailyDate >= start && dailyDate <= end;
-                    });
-                    
                     leftHtml += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                            <div style="font-weight:600;margin-bottom:8px;">${dailyDate}</div>
+                            <div style="font-weight:600;margin-bottom:8px;">${daily.紀錄日期}</div>
                             <div style="font-size:0.8rem;">
                                 <div>體重: ${daily.體重 || '-'} kg</div>
                                 <div>體脂: ${daily.體脂 || '-'}%</div>
@@ -634,72 +625,29 @@
                             </div>
                         </div>
                     `;
-                    
-                    // 右邊對應的飲食份數表
-                    if (matchedPortion) {
-                        const startDate = matchedPortion.紀錄日期;
-                        const endDate = matchedPortion.結束日期 || startDate;
-                        
-                        let portionHtml = `<div style="font-weight:600;margin-bottom:8px;">期間：${formatDate(startDate)} 到 ${formatDate(endDate)}</div>`;
-                        
-                        for (const meal of meals) {
-                            const time = matchedPortion[`${meal}時間`] || '';
-                            const c = matchedPortion[`${meal}C`] || 0;
-                            const p = matchedPortion[`${meal}P`] || 0;
-                            const f = matchedPortion[`${meal}F`] || 0;
-                            const v = matchedPortion[`${meal}V`] || 0;
-                            portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
-                        }
-                        
-                        rightHtml += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                ${portionHtml}
-                            </div>
-                        `;
-                    } else {
-                        rightHtml += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:100px;">
-                            </div>
-                        `;
-                    }
                 }
                 
-                // 右邊額外顯示沒有對應每日紀錄的飲食份數表
+                // 右邊顯示所有飲食份數表
                 for (const portion of portionRecords) {
                     const startDate = portion.紀錄日期;
                     const endDate = portion.結束日期 || startDate;
                     
-                    // 檢查是否已有對應的每日紀錄
-                    const hasMatch = dietRecords.some(d => {
-                        const dailyDate = d.紀錄日期;
-                        return dailyDate >= startDate && dailyDate <= endDate;
-                    });
+                    let portionHtml = `<div style="font-weight:600;margin-bottom:8px;">期間：${formatDate(startDate)} 到 ${formatDate(endDate)}</div>`;
                     
-                    if (!hasMatch) {
-                        // 左邊空白
-                        leftHtml += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:100px;">
-                            </div>
-                        `;
-                        
-                        // 右邊顯示飲食份數表
-                        let portionHtml = `<div style="font-weight:600;margin-bottom:8px;">期間：${formatDate(startDate)} 到 ${formatDate(endDate)}</div>`;
-                        
-                        for (const meal of meals) {
-                            const time = portion[`${meal}時間`] || '';
-                            const c = portion[`${meal}C`] || 0;
-                            const p = portion[`${meal}P`] || 0;
-                            const f = portion[`${meal}F`] || 0;
-                            const v = portion[`${meal}V`] || 0;
-                            portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
-                        }
-                        
-                        rightHtml += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                ${portionHtml}
-                            </div>
-                        `;
+                    for (const meal of meals) {
+                        const time = portion[`${meal}時間`] || '';
+                        const c = portion[`${meal}C`] || 0;
+                        const p = portion[`${meal}P`] || 0;
+                        const f = portion[`${meal}F`] || 0;
+                        const v = portion[`${meal}V`] || 0;
+                        portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
                     }
+                    
+                    rightHtml += `
+                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                            ${portionHtml}
+                        </div>
+                    `;
                 }
                 
                 leftHtml += '</div>';
