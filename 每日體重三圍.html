@@ -347,8 +347,7 @@
             try {
                 const q = query(
                     collection(db, "每日體重三圍"),
-                    where("userId", "==", userId),
-                    orderBy("紀錄日期", "desc")
+                    where("userId", "==", userId)
                 );
                 const querySnapshot = await getDocs(q);
                 
@@ -365,10 +364,21 @@
                     return;
                 }
                 
-                let html = '';
+                // 轉為陣列並用 JavaScript 排序
+                let docsArray = [];
                 querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    html += createDataCard(data, doc.id);
+                    docsArray.push({ id: doc.id, data: doc.data() });
+                });
+                
+                docsArray.sort((a, b) => {
+                    const dateA = a.data.紀錄日期 || '';
+                    const dateB = b.data.紀錄日期 || '';
+                    return dateB.localeCompare(dateA);
+                });
+                
+                let html = '';
+                docsArray.forEach((item) => {
+                    html += createDataCard(item.data, item.id);
                 });
                 document.getElementById('dataList').innerHTML = html;
                 
