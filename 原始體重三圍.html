@@ -211,6 +211,46 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        .photo-upload {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .photo-upload:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .photo-upload input[type="file"] {
+            display: none;
+        }
+
+        .photo-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+
+        .photo-preview.show {
+            display: block;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
         @media screen and (max-width: 428px) {
             .header {
                 padding: 16px;
@@ -290,6 +330,16 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">上傳照片</label>
+                    <div class="photo-upload" id="photoUpload">
+                        <input type="file" id="照片" name="照片" accept="image/*">
+                        <div class="upload-icon">📷</div>
+                        <div class="upload-text">點擊上傳照片</div>
+                        <img class="photo-preview" id="photoPreview">
+                    </div>
+                </div>
+
                 <button type="submit" class="save-btn" id="saveBtn">儲存資料</button>
             </form>
         </div>
@@ -299,6 +349,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, collection, query, where, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -313,6 +364,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const storage = getStorage(app);
 
         let currentUser = null;
         let existingDocId = null;
@@ -370,6 +422,11 @@
                     document.getElementById('臀圍').value = data.臀圍 || '';
                     document.getElementById('大腿圍').value = data.大腿圍 || '';
                     document.getElementById('手臂圍').value = data.手臂圍 || '';
+                    
+                    if (data.照片) {
+                        photoPreview.src = data.照片;
+                        photoPreview.classList.add('show');
+                    }
                 } else {
                     const today = new Date().toISOString().split('T')[0];
                     document.getElementById('紀錄日期').value = today;
@@ -382,12 +439,39 @@
             }
         }
 
+        // 照片上傳預覽
+        const photoUpload = document.getElementById('photoUpload');
+        const photoInput = document.getElementById('照片');
+        const photoPreview = document.getElementById('photoPreview');
+
+        photoUpload.addEventListener('click', () => photoInput.click());
+
+        photoInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    photoPreview.src = e.target.result;
+                    photoPreview.classList.add('show');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
         document.getElementById('dataForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const saveBtn = document.getElementById('saveBtn');
             saveBtn.disabled = true;
             saveBtn.textContent = '儲存中...';
+            
+            let photoUrl = '';
+            const photoFile = photoInput.files[0];
+            if (photoFile) {
+                const photoRef = ref(storage, `photos/${currentUser.uid}/initial_${Date.now()}_${photoFile.name}`);
+                await uploadBytes(photoRef, photoFile);
+                photoUrl = await getDownloadURL(photoRef);
+            }
             
             const data = {
                 userId: currentUser.uid,
@@ -398,6 +482,7 @@
                 臀圍: parseFloat(document.getElementById('臀圍').value) || 0,
                 大腿圍: parseFloat(document.getElementById('大腿圍').value) || 0,
                 手臂圍: parseFloat(document.getElementById('手臂圍').value) || 0,
+                照片: photoUrl || document.querySelector('.photo-preview').src || '',
                 更新時間: new Date().toISOString()
             };
             
