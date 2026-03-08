@@ -604,6 +604,8 @@
                 
                 filteredRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
+                const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+                
                 let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
                 for (const record of filteredRecords) {
