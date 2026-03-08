@@ -194,14 +194,19 @@
             let userName = '';
             let userRole = 'customer';
             
+            console.log('userDoc exists:', userDoc.exists());
             if (userDoc.exists()) {
+                console.log('userDoc data:', userDoc.data());
                 userRole = userDoc.data().role || 'customer';
+                console.log('userRole from users:', userRole);
             }
 
             // 檢查管理員collection
             const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+            console.log('adminDoc exists:', adminDoc.exists());
             if (adminDoc.exists() && adminDoc.data().role === 'admin') {
                 userRole = 'admin';
+                console.log('userRole from admin collection: admin');
             }
 
             // 嘗試從客戶資料獲取姓名
