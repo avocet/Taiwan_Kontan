@@ -505,8 +505,14 @@
                 })).sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 window.portionRecordsData = portionRecordsMobile;
 
+                const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '-';
+                    const d = new Date(dateStr);
+                    return `${d.getMonth() + 1}/${d.getDate()}`;
+                };
+
                 let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
-                html += '<h3 style="font-size:1rem;margin-top:4px;">每日飲食紀錄</h3>';
 
                 if (records.length === 0) {
                     html += '<p style="color:#666;">目前沒有每日飲食紀錄</p>';
@@ -518,8 +524,12 @@
                         const breakfast = record.早餐 || '-';
                         const lunch = record.午餐 || '-';
                         const dinner = record.晚餐 || '-';
+                        const matchedPortions = portionRecordsMobile.filter(portion => {
+                            const startDate = portion.紀錄日期;
+                            const endDate = portion.結束日期 || startDate;
+                            return date >= startDate && date <= endDate;
+                        });
                         
-                        // 處理照片
                         let photosHtml = '';
                         if (record.照片) {
                             const photos = Array.isArray(record.照片) ? record.照片 : [record.照片];
@@ -529,6 +539,27 @@
                             });
                             photosHtml += '</div>';
                         }
+
+                        let portionSectionHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee;">';
+                        portionSectionHtml += '<div style="font-weight:600;margin-bottom:8px;">飲食份數表</div>';
+                        if (matchedPortions.length === 0) {
+                            portionSectionHtml += '<div style="font-size:0.85rem;color:#999;">此日期沒有對應的飲食份數表</div>';
+                        } else {
+                            for (const portion of matchedPortions) {
+                                const startDate = portion.紀錄日期;
+                                const endDate = portion.結束日期 || startDate;
+                                portionSectionHtml += `<div style="font-size:0.8rem;color:#666;margin-bottom:6px;">期間：${formatDate(startDate)} 到 ${formatDate(endDate)}</div>`;
+                                for (const meal of meals) {
+                                    const time = portion[`${meal}時間`] || '';
+                                    const c = portion[`${meal}C`] || 0;
+                                    const p = portion[`${meal}P`] || 0;
+                                    const f = portion[`${meal}F`] || 0;
+                                    const v = portion[`${meal}V`] || 0;
+                                    portionSectionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
+                                }
+                            }
+                        }
+                        portionSectionHtml += '</div>';
                         
                         html += `
                             <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
@@ -543,39 +574,7 @@
                                     <div>晚餐: ${dinner}</div>
                                 </div>
                                 ${photosHtml}
-                            </div>
-                        `;
-                    }
-                }
-
-                html += '<h3 style="font-size:1rem;margin-top:8px;">飲食份數表</h3>';
-                if (portionRecordsMobile.length === 0) {
-                    html += '<p style="color:#666;">目前沒有飲食份數表資料</p>';
-                } else {
-                    const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
-                    const formatDate = (dateStr) => {
-                        if (!dateStr) return '-';
-                        const d = new Date(dateStr);
-                        return `${d.getMonth() + 1}/${d.getDate()}`;
-                    };
-
-                    for (const portion of portionRecordsMobile) {
-                        const startDate = portion.紀錄日期;
-                        const endDate = portion.結束日期 || startDate;
-                        let portionHtml = `<div style="font-weight:600;margin-bottom:8px;">期間：${formatDate(startDate)} 到 ${formatDate(endDate)}</div>`;
-
-                        for (const meal of meals) {
-                            const time = portion[`${meal}時間`] || '';
-                            const c = portion[`${meal}C`] || 0;
-                            const p = portion[`${meal}P`] || 0;
-                            const f = portion[`${meal}F`] || 0;
-                            const v = portion[`${meal}V`] || 0;
-                            portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
-                        }
-
-                        html += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                ${portionHtml}
+                                ${portionSectionHtml}
                             </div>
                         `;
                     }
