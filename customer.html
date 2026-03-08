@@ -497,6 +497,9 @@
                     ...doc.data()
                 })).sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
+                // 取得最新日期
+                const latestDate = records.length > 0 ? records[0].紀錄日期 : null;
+                
                 let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
                 for (const record of records) {
@@ -553,7 +556,7 @@
                         startDateEl.value = startDateStr;
                         endDateEl.value = today;
                     }
-                    loadPortionTable();
+                    loadPortionTable(latestDate);
                 }
                 
             } catch (error) {
@@ -564,11 +567,8 @@
         };
 
         // 自動載入飲食份數表
-        async function loadPortionTable() {
+        async function loadPortionTable(latestDate) {
             if (!currentStudentUid) return;
-            
-            const startDate = document.getElementById('portionStartDate2')?.value;
-            const endDate = document.getElementById('portionEndDate2')?.value;
             
             const displayDiv = document.getElementById('portionTableDisplay');
             if (!displayDiv) return;
@@ -587,18 +587,26 @@
                     return;
                 }
                 
-                const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
-                const nutrients = ['C', 'P', 'F', 'V'];
-                
                 const records = [];
                 snapshot.forEach(doc => {
                     records.push(doc.data());
                 });
-                records.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+                
+                // 如果有最新日期，篩選符合的記錄
+                let filteredRecords = records;
+                if (latestDate) {
+                    filteredRecords = records.filter(r => {
+                        const start = r.紀錄日期;
+                        const end = r.結束日期 || start;
+                        return latestDate >= start && latestDate <= end;
+                    });
+                }
+                
+                filteredRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
                 let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
-                for (const record of records) {
+                for (const record of filteredRecords) {
                     const startDate = record.紀錄日期 || '-';
                     const endDate = record.結束日期 || startDate;
                     
