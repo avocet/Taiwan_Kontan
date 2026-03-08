@@ -337,9 +337,25 @@
             recordsContent.innerHTML = '<p>載入中...</p>';
             
             try {
-                // 用 username 查詢學員的飲食紀錄
-                const recordsQuery = query(collection(db, "每日體重三圍"), where("客戶姓名", "==", name));
+                console.log('Querying for name:', name);
+                
+                // 先取得學員的 uid
+                const userQuery = query(collection(db, "users"), where("username", "==", username));
+                const userSnapshot = await getDocs(userQuery);
+                
+                if (userSnapshot.empty) {
+                    recordsContent.innerHTML = '<p>找不到學員資料</p>';
+                    return;
+                }
+                
+                const userData = userSnapshot.docs[0].data();
+                const userUid = userData.uid;
+                console.log('userUid:', userUid);
+                
+                // 用 uid 查詢學員的飲食紀錄
+                const recordsQuery = query(collection(db, "每日體重三圍"), where("userId", "==", userUid));
                 const recordsSnapshot = await getDocs(recordsQuery);
+                console.log('recordsSnapshot size:', recordsSnapshot.size);
                 
                 if (recordsSnapshot.empty) {
                     recordsContent.innerHTML = '<p>目前沒有飲食紀錄</p>';
