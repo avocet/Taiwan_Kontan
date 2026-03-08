@@ -445,13 +445,13 @@
                     <div class="section-title">照片上傳</div>
                     
                     <div class="form-group">
-                        <label>上傳照片</label>
+                        <label>上傳照片（可多張）</label>
                         <div class="photo-upload" id="photoUpload">
-                            <input type="file" id="photo" name="photo" accept="image/*">
+                            <input type="file" id="photo" name="photo" accept="image/*" multiple>
                             <div class="upload-icon">📷</div>
-                            <div class="upload-text">點擊上傳照片</div>
-                            <img class="photo-preview" id="photoPreview">
+                            <div class="upload-text">點擊上傳照片（可多張）</div>
                         </div>
+                        <div id="photoPreviewContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
                     </div>
                 </div>
             </form>
@@ -547,20 +547,41 @@
 
         const photoUpload = document.getElementById('photoUpload');
         const photoInput = document.getElementById('photo');
-        const photoPreview = document.getElementById('photoPreview');
+        const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+        let uploadedPhotos = [];
 
         photoUpload.addEventListener('click', () => photoInput.click());
 
         photoInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
+            const files = Array.from(e.target.files);
+            photoPreviewContainer.innerHTML = '';
+            uploadedPhotos = [];
+            
+            files.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    photoPreview.src = e.target.result;
-                    photoPreview.classList.add('show');
+                    const imgContainer = document.createElement('div');
+                    imgContainer.style.cssText = 'position:relative;width:80px;height:80px;';
+                    
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:8px;';
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;';
+                    removeBtn.onclick = () => {
+                        uploadedPhotos.splice(index, 1);
+                        imgContainer.remove();
+                    };
+                    
+                    imgContainer.appendChild(img);
+                    imgContainer.appendChild(removeBtn);
+                    photoPreviewContainer.appendChild(imgContainer);
+                    uploadedPhotos.push(e.target.result);
                 };
                 reader.readAsDataURL(file);
-            }
+            });
         });
 
         function showMessage(element, duration = 3000) {
@@ -602,12 +623,15 @@
                     customerName = querySnapshot.docs[0].data().姓名 || '';
                 }
 
-                let photoUrl = '';
-                const photoFile = photoInput.files[0];
-                if (photoFile) {
-                    const photoRef = ref(storage, `photos/${currentUser.uid}/${Date.now()}_${photoFile.name}`);
+                const photoFiles = Array.from(photoInput.files);
+                const photoUrls = [];
+                
+                for (let i = 0; i < photoFiles.length; i++) {
+                    const photoFile = photoFiles[i];
+                    const photoRef = ref(storage, `photos/${currentUser.uid}/${Date.now()}_${i}_${photoFile.name}`);
                     await uploadBytes(photoRef, photoFile);
-                    photoUrl = await getDownloadURL(photoRef);
+                    const url = await getDownloadURL(photoRef);
+                    photoUrls.push(url);
                 }
 
                 const formData = {
@@ -620,7 +644,7 @@
                     午餐: document.getElementById('lunch').value.trim(),
                     晚餐: document.getElementById('dinner').value.trim(),
                     備註: document.getElementById('note').value.trim(),
-                    照片: photoUrl,
+                    照片: photoUrls,
                     建立時間: serverTimestamp()
                 };
 
@@ -644,8 +668,8 @@
         resetBtn.addEventListener('click', function() {
             if (confirm('確定要清除所有資料嗎？')) {
                 form.reset();
-                photoPreview.src = '';
-                photoPreview.classList.remove('show');
+                photoPreviewContainer.innerHTML = '';
+                uploadedPhotos = [];
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('recordDate').value = today;
             }

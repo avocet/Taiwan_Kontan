@@ -218,6 +218,21 @@
             border-radius: 8px;
             object-fit: cover;
             cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .data-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .data-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         /* 照片 Modal */
@@ -405,7 +420,17 @@
         // 建立資料卡片
         function createDataCard(data, docId) {
             const date = data.紀錄日期 || '-';
-            const photoHtml = data.照片 ? `<img class="data-photo" src="${data.照片}" onclick="showPhoto('${data.照片}')" alt="照片">` : '';
+            
+            let photoHtml = '';
+            if (data.照片) {
+                if (Array.isArray(data.照片)) {
+                    data.照片.forEach(photoUrl => {
+                        photoHtml += `<img class="data-photo" src="${photoUrl}" onclick="showPhoto('${photoUrl}')" alt="照片">`;
+                    });
+                } else {
+                    photoHtml = `<img class="data-photo" src="${data.照片}" onclick="showPhoto('${data.照片}')" alt="照片">`;
+                }
+            }
             
             return `
                 <div class="data-card">
