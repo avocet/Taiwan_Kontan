@@ -588,6 +588,7 @@
                 }
                 
                 const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+                const nutrients = ['C', 'P', 'F', 'V'];
                 
                 const records = [];
                 snapshot.forEach(doc => {
@@ -595,35 +596,30 @@
                 });
                 records.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
-                // 格式化日期顯示為 月/日
-                const formatDate = (dateStr) => {
-                    if (!dateStr) return '-';
-                    const d = new Date(dateStr);
-                    return `${d.getMonth() + 1}/${d.getDate()}`;
-                };
+                let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
-                let html = '<table style="width:auto;margin:0 auto;table-layout:auto;border-collapse:collapse;font-size:0.75rem;">';
-                html += '<tr style="background:#007AFF;color:white;"><th style="padding:8px 12px;border:1px solid #ddd;white-space:nowrap;text-align:center;">餐別</th>';
-                
-                // 每個日期一欄
-                for (const r of records) {
-                    html += `<th style="padding:8px 12px;border:1px solid #ddd;white-space:nowrap;text-align:center;">${formatDate(r.紀錄日期)}</th>`;
-                }
-                html += '</tr>';
-                
-                for (const meal of meals) {
-                    html += `<tr><td style="padding:8px 12px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;white-space:nowrap;text-align:center;">${meal}</td>`;
-                    for (const r of records) {
-                        const c = r[`${meal}C`] || 0;
-                        const p = r[`${meal}P`] || 0;
-                        const f = r[`${meal}F`] || 0;
-                        const v = r[`${meal}V`] || 0;
-                        html += `<td style="padding:8px 12px;border:1px solid #ddd;text-align:center;white-space:nowrap;">C:${c} P:${p} F:${f} V:${v}</td>`;
+                for (const record of records) {
+                    const date = record.紀錄日期 || '-';
+                    
+                    let mealsHtml = '';
+                    for (const meal of meals) {
+                        const time = record[`${meal}時間`] || '';
+                        const c = record[`${meal}C`] || 0;
+                        const p = record[`${meal}P`] || 0;
+                        const f = record[`${meal}F`] || 0;
+                        const v = record[`${meal}V`] || 0;
+                        mealsHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
                     }
-                    html += '</tr>';
+                    
+                    html += `
+                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight:600;margin-bottom:8px;">${date}</div>
+                            ${mealsHtml}
+                        </div>
+                    `;
                 }
                 
-                html += '</table>';
+                html += '</div>';
                 displayDiv.innerHTML = html;
                 
             } catch (error) {
