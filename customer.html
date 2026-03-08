@@ -189,19 +189,24 @@
                 return;
             }
 
-            // 獲取用戶資料 - 用 uid 欄位查詢
-            const usersQuery = query(collection(db, "users"), where("uid", "==", user.uid));
-            const usersSnapshot = await getDocs(usersQuery);
-            console.log('uid:', user.uid, 'usersSnapshot empty:', usersSnapshot.empty);
+            // 獲取用戶資料 - 從 localStorage 取得 username
+            const savedUsername = localStorage.getItem('twkt_username');
+            console.log('savedUsername:', savedUsername);
             
             let userName = '';
             let userRole = 'customer';
             
-            if (!usersSnapshot.empty) {
-                const userData = usersSnapshot.docs[0].data();
-                console.log('userData:', userData);
-                userRole = userData.role || 'customer';
-                console.log('userRole:', userRole);
+            if (savedUsername) {
+                const usersQuery = query(collection(db, "users"), where("username", "==", savedUsername));
+                const usersSnapshot = await getDocs(usersQuery);
+                console.log('usersSnapshot empty:', usersSnapshot.empty);
+                
+                if (!usersSnapshot.empty) {
+                    const userData = usersSnapshot.docs[0].data();
+                    console.log('userData:', userData);
+                    userRole = userData.role || 'customer';
+                    console.log('userRole:', userRole);
+                }
             }
 
             // 嘗試從客戶資料獲取姓名
@@ -246,16 +251,21 @@
                 if (!user) {
                     window.location.replace('login.html');
                 } else {
-                    // 用 uid 欄位查詢 users collection
-                    const usersQuery = query(collection(db, "users"), where("uid", "==", user.uid));
-                    const usersSnapshot = await getDocs(usersQuery);
+                    // 從 localStorage 取得 username
+                    const savedUsername = localStorage.getItem('twkt_username');
                     
                     let userName = '';
                     let userRole = 'customer';
                     
-                    if (!usersSnapshot.empty) {
-                        const userData = usersSnapshot.docs[0].data();
-                        userRole = userData.role || 'customer';
+                    if (savedUsername) {
+                        const usersQuery = query(collection(db, "users"), where("username", "==", savedUsername));
+                        const usersSnapshot = await getDocs(usersQuery);
+                        
+                        if (!usersSnapshot.empty) {
+                            const userData = usersSnapshot.docs[0].data();
+                            userRole = userData.role || 'customer';
+                            userName = userData.username || '';
+                        }
                     }
                     
                     // 嘗試從客戶資料獲取姓名
@@ -263,11 +273,6 @@
                     const customerSnapshot = await getDocs(customerQuery);
                     if (!customerSnapshot.empty) {
                         userName = customerSnapshot.docs[0].data().姓名 || '';
-                    }
-                    
-                    // 如果沒有姓名，使用 username
-                    if (!userName && !usersSnapshot.empty) {
-                        userName = usersSnapshot.docs[0].data().username || '';
                     }
                     
                     const headerTitle = document.getElementById('pageTitle');
@@ -293,14 +298,18 @@
                     if (!user) {
                         window.location.replace('login.html');
                     } else {
-                        // 用 uid 欄位查詢 users collection
-                        const usersQuery = query(collection(db, "users"), where("uid", "==", user.uid));
-                        const usersSnapshot = await getDocs(usersQuery);
+                        // 從 localStorage 取得 username
+                        const savedUsername = localStorage.getItem('twkt_username');
                         
                         let userRole = 'customer';
                         
-                        if (!usersSnapshot.empty) {
-                            userRole = usersSnapshot.docs[0].data().role || 'customer';
+                        if (savedUsername) {
+                            const usersQuery = query(collection(db, "users"), where("username", "==", savedUsername));
+                            const usersSnapshot = await getDocs(usersQuery);
+                            
+                            if (!usersSnapshot.empty) {
+                                userRole = usersSnapshot.docs[0].data().role || 'customer';
+                            }
                         }
                         
                         if (userRole === 'admin') {
