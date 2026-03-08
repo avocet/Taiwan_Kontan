@@ -335,6 +335,27 @@
 
         .overlay.show { display: block; }
 
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show { display: flex; }
+
+        .modal-img {
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+        }
+
         @media screen and (max-width: 428px) {
             .container { padding: 12px; }
             .form-card { border-radius: 20px; }
@@ -445,17 +466,14 @@
                     <div class="section-title">照片上傳</div>
                     
                     <div class="form-group">
-                        <label>上傳新照片（可選擇）</label>
+                        <label>上傳新照片（可多張）</label>
                         <div class="photo-upload" id="photoUpload">
-                            <input type="file" id="photo" name="photo" accept="image/*">
+                            <input type="file" id="photo" name="photo" accept="image/*" multiple>
                             <div class="upload-icon">📷</div>
-                            <div class="upload-text">點擊上傳新照片</div>
-                            <img class="photo-preview" id="photoPreview">
+                            <div class="upload-text">點擊上傳新照片（可多張）</div>
                         </div>
-                        <div id="existingPhotoContainer" style="display:none;position:relative;margin-top:12px;">
-                            <img class="existing-photo" id="existingPhoto" style="max-width:100%;max-height:200px;border-radius:8px;">
-                            <button type="button" id="deletePhotoBtn" style="position:absolute;top:8px;right:8px;background:rgba(255,59,48,0.9);color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:0.75rem;">✕ 刪除</button>
-                        </div>
+                        <div id="photoPreviewContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
+                        <div id="existingPhotoContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
                     </div>
                 </div>
             </form>
@@ -468,6 +486,9 @@
     </div>
 
     <div class="overlay" id="overlay"></div>
+    <div class="modal" id="photoModal">
+        <img class="modal-img" id="modalImg" src="" alt="照片">
+    </div>
     <div class="success-message" id="successMessage">✓ 資料更新成功！</div>
     <div class="loading-message" id="loadingMessage">更新中...</div>
     <div class="error-message" id="errorMessage"></div>
@@ -495,7 +516,7 @@
 
         let currentUser = null;
         let currentDocId = null;
-        let existingPhotoUrl = null;
+        let existingPhotoUrls = [];
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -562,19 +583,37 @@
                 document.getElementById('dinner').value = data.晚餐 || '';
                 document.getElementById('note').value = data.備註 || '';
 
+                // 顯示現有照片
                 if (data.照片) {
-                    existingPhotoUrl = data.照片;
-                    const existingPhoto = document.getElementById('existingPhoto');
-                    existingPhoto.src = data.照片;
-                    document.getElementById('existingPhotoContainer').style.display = 'block';
+                    const photos = Array.isArray(data.照片) ? data.照片 : [data.照片];
+                    existingPhotoUrls = photos.filter(p => p);
+                    
+                    const container = document.getElementById('existingPhotoContainer');
+                    container.innerHTML = '';
+                    
+                    existingPhotoUrls.forEach((photoUrl, index) => {
+                        const imgContainer = document.createElement('div');
+                        imgContainer.style.cssText = 'position:relative;width:80px;height:80px;';
+                        
+                        const img = document.createElement('img');
+                        img.src = photoUrl;
+                        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:pointer;';
+                        img.onclick = () => showPhoto(photoUrl);
+                        
+                        const removeBtn = document.createElement('button');
+                        removeBtn.innerHTML = '✕';
+                        removeBtn.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;';
+                        removeBtn.onclick = (e) => {
+                            e.stopPropagation();
+                            existingPhotoUrls.splice(index, 1);
+                            imgContainer.remove();
+                        };
+                        
+                        imgContainer.appendChild(img);
+                        imgContainer.appendChild(removeBtn);
+                        container.appendChild(imgContainer);
+                    });
                 }
-
-                document.getElementById('deletePhotoBtn').addEventListener('click', () => {
-                    if (confirm('確定要刪除這張照片嗎？')) {
-                        existingPhotoUrl = null;
-                        document.getElementById('existingPhotoContainer').style.display = 'none';
-                    }
-                });
 
             } catch (error) {
                 console.error('載入資料失敗:', error);
@@ -607,22 +646,44 @@
 
         const photoUpload = document.getElementById('photoUpload');
         const photoInput = document.getElementById('photo');
-        const photoPreview = document.getElementById('photoPreview');
+        const photoPreviewContainer = document.getElementById('photoPreviewContainer');
 
         photoUpload.addEventListener('click', () => photoInput.click());
 
         photoInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
+            const files = Array.from(e.target.files);
+            photoPreviewContainer.innerHTML = '';
+            
+            files.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    photoPreview.src = e.target.result;
-                    photoPreview.classList.add('show');
-                    document.getElementById('existingPhotoContainer').style.display = 'none';
+                    const imgContainer = document.createElement('div');
+                    imgContainer.style.cssText = 'position:relative;width:80px;height:80px;';
+                    
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:8px;';
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;';
+                    removeBtn.onclick = () => {
+                        imgContainer.remove();
+                    };
+                    
+                    imgContainer.appendChild(img);
+                    imgContainer.appendChild(removeBtn);
+                    photoPreviewContainer.appendChild(imgContainer);
                 };
                 reader.readAsDataURL(file);
-            }
+            });
         });
+
+        // 顯示照片
+        window.showPhoto = function(url) {
+            document.getElementById('modalImg').src = url;
+            document.getElementById('photoModal').classList.add('show');
+        };
 
         // 表單提交處理
         function showMessage(element, duration = 3000) {
@@ -661,12 +722,17 @@
             showMessage(loadingMessage, 15000);
 
             try {
-                let photoUrl = existingPhotoUrl;
-                const photoFile = photoInput.files[0];
-                if (photoFile) {
-                    const photoRef = ref(storage, `photos/${currentUser.uid}/${Date.now()}_${photoFile.name}`);
+                // 收集所有照片URL
+                let allPhotoUrls = [...existingPhotoUrls];
+                
+                // 上傳新照片
+                const photoFiles = Array.from(photoInput.files);
+                for (let i = 0; i < photoFiles.length; i++) {
+                    const photoFile = photoFiles[i];
+                    const photoRef = ref(storage, `photos/${currentUser.uid}/${Date.now()}_${i}_${photoFile.name}`);
                     await uploadBytes(photoRef, photoFile);
-                    photoUrl = await getDownloadURL(photoRef);
+                    const url = await getDownloadURL(photoRef);
+                    allPhotoUrls.push(url);
                 }
 
                 const formData = {
@@ -677,7 +743,7 @@
                     午餐: document.getElementById('lunch').value.trim(),
                     晚餐: document.getElementById('dinner').value.trim(),
                     備註: document.getElementById('note').value.trim(),
-                    照片: photoUrl
+                    照片: allPhotoUrls
                 };
 
                 await updateDoc(doc(db, "每日體重三圍", currentDocId), formData);
