@@ -156,7 +156,7 @@
         
         <!-- 電腦版：並排顯示 -->
         <div id="desktopRecordsContainer" style="display:none;gap:20px;justify-content:center;">
-            <div style="width:400px;">
+            <div style="width:500px;">
                 <h3 style="font-size:1rem;margin-bottom:12px;">每日飲食紀錄</h3>
                 <div id="leftAlignedDisplay"></div>
             </div>
@@ -602,17 +602,13 @@
                 portionRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
                 const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
-                const formatDate = (dateStr) => {
-                    if (!dateStr) return '-';
-                    const d = new Date(dateStr);
-                    return `${d.getMonth() + 1}/${d.getDate()}`;
-                };
                 
                 let leftHtml = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 let rightHtml = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
-                // 左邊：顯示所有每日飲食紀錄
-                for (const daily of dietRecords) {
+                // 左邊：顯示所有每日飲食紀錄，每筆記錄右邊有按鈕
+                for (let i = 0; i < dietRecords.length; i++) {
+                    const daily = dietRecords[i];
                     const dailyDate = daily.紀錄日期;
                     
                     // 找出對應的飲食份數表
@@ -622,92 +618,37 @@
                         return dailyDate >= start && dailyDate <= end;
                     });
                     
+                    const portionId = matchedPortion ? `portion-${i}` : '';
+                    
                     leftHtml += `
-                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                            <div style="font-weight:600;margin-bottom:8px;">${dailyDate}</div>
-                            <div style="font-size:0.8rem;">
-                                <div>體重: ${daily.體重 || '-'} kg</div>
-                                <div>體脂: ${daily.體脂 || '-'}%</div>
-                                <div>早餐: ${daily.早餐 || '-'}</div>
-                                <div>午餐: ${daily.午餐 || '-'}</div>
-                                <div>晚餐: ${daily.晚餐 || '-'}</div>
+                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div style="flex:1;">
+                                <div style="font-weight:600;margin-bottom:8px;">${dailyDate}</div>
+                                <div style="font-size:0.8rem;">
+                                    <div>體重: ${daily.體重 || '-'} kg</div>
+                                    <div>體脂: ${daily.體脂 || '-'}%</div>
+                                    <div>早餐: ${daily.早餐 || '-'}</div>
+                                    <div>午餐: ${daily.午餐 || '-'}</div>
+                                    <div>晚餐: ${daily.晚餐 || '-'}</div>
+                                </div>
                             </div>
+                            <button onclick="showPortionDetail('${portionId}', '${dailyDate}')" style="background:#34C759;color:white;border:none;padding:8px 12px;border-radius:8px;font-size:0.75rem;cursor:pointer;margin-left:10px;white-space:nowrap;">📊 飲食份數表</button>
                         </div>
                     `;
                     
-                    // 右邊：對應的飲食份數表
-                    if (matchedPortion) {
-                        const startDate = matchedPortion.紀錄日期;
-                        const endDate = matchedPortion.結束日期 || startDate;
-                        const periodStr = `${formatDate(startDate)} 到 ${formatDate(endDate)}`;
-                        
-                        let portionHtml = '';
-                        for (const meal of meals) {
-                            const time = matchedPortion[`${meal}時間`] || '';
-                            const c = matchedPortion[`${meal}C`] || 0;
-                            const p = matchedPortion[`${meal}P`] || 0;
-                            const f = matchedPortion[`${meal}F`] || 0;
-                            const v = matchedPortion[`${meal}V`] || 0;
-                            portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
-                        }
-                        
-                        rightHtml += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                <div style="font-weight:600;margin-bottom:8px;">期間：${periodStr}</div>
-                                ${portionHtml}
-                            </div>
-                        `;
-                    } else {
-                        // 沒有對應的飲食份數表，顯示空白卡片
-                        rightHtml += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:100px;">
-                            </div>
-                        `;
-                    }
-                }
-                
-                // 右邊：額外顯示沒有對應每日紀錄的飲食份數表
-                for (const portion of portionRecords) {
-                    const startDate = portion.紀錄日期;
-                    const endDate = portion.結束日期 || startDate;
-                    
-                    // 檢查是否已經顯示過
-                    const hasMatch = dietRecords.some(d => {
-                        const dailyDate = d.紀錄日期;
-                        return dailyDate >= startDate && dailyDate <= endDate;
-                    });
-                    
-                    if (!hasMatch) {
-                        const periodStr = `${formatDate(startDate)} 到 ${formatDate(endDate)}`;
-                        
-                        // 左邊空白卡片
-                        leftHtml += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:100px;">
-                            </div>
-                        `;
-                        
-                        // 右邊顯示飲食份數表
-                        let portionHtml = '';
-                        for (const meal of meals) {
-                            const time = portion[`${meal}時間`] || '';
-                            const c = portion[`${meal}C`] || 0;
-                            const p = portion[`${meal}P`] || 0;
-                            const f = portion[`${meal}F`] || 0;
-                            const v = portion[`${meal}V`] || 0;
-                            portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
-                        }
-                        
-                        rightHtml += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                <div style="font-weight:600;margin-bottom:8px;">期間：${periodStr}</div>
-                                ${portionHtml}
-                            </div>
-                        `;
-                    }
+                    // 右邊：先顯示空白
+                    rightHtml += `
+                        <div id="${portionId}" style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:100px;display:none;">
+                        </div>
+                    `;
                 }
                 
                 leftHtml += '</div>';
                 rightHtml += '</div>';
+                
+                // 儲存飲食份數表資料供按鈕使用
+                window.portionRecordsData = portionRecords;
+                window.dietRecordsData = dietRecords;
                 
                 leftDiv.innerHTML = leftHtml;
                 rightDiv.innerHTML = rightHtml;
@@ -718,6 +659,51 @@
                 rightDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗</p>';
             }
         }
+        
+        // 顯示飲食份數表詳情
+        window.showPortionDetail = function(portionId, dailyDate) {
+            const portionRecords = window.portionRecordsData || [];
+            const dietRecords = window.dietRecordsData || [];
+            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+            
+            const matchedPortion = portionRecords.find(p => {
+                const start = p.紀錄日期;
+                const end = p.結束日期 || start;
+                return dailyDate >= start && dailyDate <= end;
+            });
+            
+            const targetDiv = document.getElementById(portionId);
+            if (!targetDiv) return;
+            
+            if (!matchedPortion) {
+                targetDiv.style.display = 'block';
+                targetDiv.innerHTML = '<p style="color:#999;text-align:center;">無對應的飲食份數表</p>';
+                return;
+            }
+            
+            const startDate = matchedPortion.紀錄日期;
+            const endDate = matchedPortion.結束日期 || startDate;
+            
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '-';
+                const d = new Date(dateStr);
+                return `${d.getMonth() + 1}/${d.getDate()}`;
+            };
+            
+            let portionHtml = `<div style="font-weight:600;margin-bottom:8px;">期間：${formatDate(startDate)} 到 ${formatDate(endDate)}</div>`;
+            
+            for (const meal of meals) {
+                const time = matchedPortion[`${meal}時間`] || '';
+                const c = matchedPortion[`${meal}C`] || 0;
+                const p = matchedPortion[`${meal}P`] || 0;
+                const f = matchedPortion[`${meal}F`] || 0;
+                const v = matchedPortion[`${meal}V`] || 0;
+                portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
+            }
+            
+            targetDiv.style.display = 'block';
+            targetDiv.innerHTML = portionHtml;
+        };
 
         // 自動載入飲食份數表
         async function loadPortionTable(latestDate) {
