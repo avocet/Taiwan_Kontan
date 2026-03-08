@@ -189,25 +189,16 @@
                 return;
             }
 
-            // 獲取用戶資料
-            console.log('user.uid:', user.uid);
-            const userDoc = await getDoc(doc(db, "users", user.uid));
+            // 獲取用戶資料 - 用 uid 欄位查詢
+            const usersQuery = query(collection(db, "users"), where("uid", "==", user.uid));
+            const usersSnapshot = await getDocs(usersQuery);
+            
             let userName = '';
             let userRole = 'customer';
             
-            console.log('userDoc exists:', userDoc.exists());
-            if (userDoc.exists()) {
-                console.log('userDoc data:', userDoc.data());
-                userRole = userDoc.data().role || 'customer';
-                console.log('userRole from users:', userRole);
-            }
-
-            // 檢查管理員collection
-            const adminDoc = await getDoc(doc(db, "管理員", user.uid));
-            console.log('adminDoc exists:', adminDoc.exists());
-            if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-                userRole = 'admin';
-                console.log('userRole from admin collection: admin');
+            if (!usersSnapshot.empty) {
+                const userData = usersSnapshot.docs[0].data();
+                userRole = userData.role || 'customer';
             }
 
             // 嘗試從客戶資料獲取姓名
@@ -218,8 +209,8 @@
             }
 
             // 如果沒有姓名，使用 username
-            if (!userName && userDoc.exists()) {
-                userName = userDoc.data().username || '';
+            if (!userName && !usersSnapshot.empty) {
+                userName = usersSnapshot.docs[0].data().username || '';
             }
 
             // 更新標題
@@ -231,7 +222,7 @@
             }
             
             // 管理員不能使用客戶中心，強制登出
-            if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+            if (userRole === 'admin') {
                 await signOut(auth);
                 alert('管理員請從後台登入');
                 window.location.href = 'index.html';
@@ -252,19 +243,16 @@
                 if (!user) {
                     window.location.replace('login.html');
                 } else {
-                    // 獲取用戶資料更新標題
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    // 用 uid 欄位查詢 users collection
+                    const usersQuery = query(collection(db, "users"), where("uid", "==", user.uid));
+                    const usersSnapshot = await getDocs(usersQuery);
+                    
                     let userName = '';
                     let userRole = 'customer';
                     
-                    if (userDoc.exists()) {
-                        userRole = userDoc.data().role || 'customer';
-                    }
-                    
-                    // 檢查管理員collection
-                    const adminDoc = await getDoc(doc(db, "管理員", user.uid));
-                    if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-                        userRole = 'admin';
+                    if (!usersSnapshot.empty) {
+                        const userData = usersSnapshot.docs[0].data();
+                        userRole = userData.role || 'customer';
                     }
                     
                     // 嘗試從客戶資料獲取姓名
@@ -275,8 +263,8 @@
                     }
                     
                     // 如果沒有姓名，使用 username
-                    if (!userName && userDoc.exists()) {
-                        userName = userDoc.data().username || '';
+                    if (!userName && !usersSnapshot.empty) {
+                        userName = usersSnapshot.docs[0].data().username || '';
                     }
                     
                     const headerTitle = document.getElementById('pageTitle');
@@ -287,7 +275,7 @@
                     }
 
                     // 管理員不能使用客戶中心
-                    if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                    if (userRole === 'admin') {
                         await signOut(auth);
                         window.location.replace('index.html');
                     }
@@ -302,8 +290,17 @@
                     if (!user) {
                         window.location.replace('login.html');
                     } else {
-                        const adminDoc = await getDoc(doc(db, "管理員", user.uid));
-                        if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                        // 用 uid 欄位查詢 users collection
+                        const usersQuery = query(collection(db, "users"), where("uid", "==", user.uid));
+                        const usersSnapshot = await getDocs(usersQuery);
+                        
+                        let userRole = 'customer';
+                        
+                        if (!usersSnapshot.empty) {
+                            userRole = usersSnapshot.docs[0].data().role || 'customer';
+                        }
+                        
+                        if (userRole === 'admin') {
                             await signOut(auth);
                             window.location.replace('index.html');
                         }
