@@ -126,7 +126,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>TWKT 客戶中心</h1>
+        <h1 id="pageTitle">體重管理班</h1>
         <a href="index.html" class="logout-btn" id="logoutBtn">登出</a>
     </div>
 
@@ -211,7 +211,7 @@
             }
 
             // 更新標題
-            const headerTitle = document.querySelector('.header h1');
+            const headerTitle = document.getElementById('pageTitle');
             if (userRole === 'admin') {
                 headerTitle.textContent = '體重管理班主任 ' + userName;
             } else {
