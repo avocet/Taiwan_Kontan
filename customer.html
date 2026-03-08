@@ -560,9 +560,14 @@
                 portionTableModal.style.display = 'flex';
             });
             
-            // 選擇起始日期後自動跳到結束日期
+            // 選擇起始日期後，自動填入結束日期並打開月曆
             document.getElementById('portionStartDate').addEventListener('change', function() {
-                document.getElementById('portionEndDate').focus();
+                const startVal = this.value;
+                if (startVal) {
+                    document.getElementById('portionEndDate').value = startVal;
+                    // 嘗試打開結束日期的月曆
+                    document.getElementById('portionEndDate').click();
+                }
             });
         }
 
