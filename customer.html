@@ -556,7 +556,7 @@
                         startDateEl.value = startDateStr;
                         endDateEl.value = today;
                     }
-                    loadPortionTable();
+                    loadPortionTable(latestDate);
                 }
                 
             } catch (error) {
@@ -567,7 +567,7 @@
         };
 
         // 自動載入飲食份數表
-        async function loadPortionTable() {
+        async function loadPortionTable(latestDate) {
             if (!currentStudentUid) return;
             
             const displayDiv = document.getElementById('portionTableDisplay');
@@ -592,16 +592,24 @@
                     records.push(doc.data());
                 });
                 
-                // 顯示所有記錄
-                const filteredRecords = records;
+                // 如果有最新日期，標記符合的記錄
+                let highlightedRecords = records;
+                if (latestDate) {
+                    highlightedRecords = records.map(r => {
+                        const start = r.紀錄日期;
+                        const end = r.結束日期 || start;
+                        const isMatch = latestDate >= start && latestDate <= end;
+                        return { ...r, _highlight: isMatch };
+                    });
+                }
                 
-                filteredRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+                highlightedRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
                 const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
                 
                 let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
-                for (const record of filteredRecords) {
+                for (const record of highlightedRecords) {
                     const startDate = record.紀錄日期 || '-';
                     const endDate = record.結束日期 || startDate;
                     
