@@ -511,18 +511,21 @@
         const forgotPasswordLink = document.getElementById('forgotPasswordLink');
         const closeForgotModal = document.getElementById('closeForgotModal');
         const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-        const resetBtn = document.getElementById('resetBtn');
 
-        forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            forgotPasswordModal.style.display = 'flex';
-        });
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                forgotPasswordModal.style.display = 'flex';
+            });
+        }
 
-        closeForgotModal.addEventListener('click', () => {
-            forgotPasswordModal.style.display = 'none';
-            hideMessage('resetMessage');
-            forgotPasswordForm.reset();
-        });
+        if (closeForgotModal) {
+            closeForgotModal.addEventListener('click', () => {
+                forgotPasswordModal.style.display = 'none';
+                hideMessage('resetMessage');
+                forgotPasswordForm.reset();
+            });
+        }
 
         forgotPasswordModal.addEventListener('click', (e) => {
             if (e.target === forgotPasswordModal) {
@@ -535,18 +538,23 @@
             e.preventDefault();
             
             const email = document.getElementById('resetEmail').value.trim();
+            const resetBtn = document.getElementById('resetBtn');
 
             if (!email) {
                 showMessage('resetMessage', '請輸入電子郵件', 'error');
                 return;
             }
 
-            resetBtn.disabled = true;
-            resetBtn.classList.add('loading');
+            if (resetBtn) {
+                resetBtn.disabled = true;
+                resetBtn.classList.add('loading');
+            }
 
             const timeout = setTimeout(() => {
-                resetBtn.disabled = false;
-                resetBtn.classList.remove('loading');
+                if (resetBtn) {
+                    resetBtn.disabled = false;
+                    resetBtn.classList.remove('loading');
+                }
                 showMessage('resetMessage', '網路連接超時，請檢查網絡', 'error');
             }, 10000);
 
@@ -568,8 +576,10 @@
                 }
                 showMessage('resetMessage', errorMessage, 'error');
             } finally {
-                resetBtn.disabled = false;
-                resetBtn.classList.remove('loading');
+                if (resetBtn) {
+                    resetBtn.disabled = false;
+                    resetBtn.classList.remove('loading');
+                }
             }
         });
     </script>
