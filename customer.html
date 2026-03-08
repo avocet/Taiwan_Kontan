@@ -754,6 +754,11 @@
                 
                 alert('儲存成功！');
                 portionTableModal.style.display = 'none';
+                
+                // 自動重新載入飲食份數表
+                if (document.getElementById('portionTableDisplay')) {
+                    loadPortionTable();
+                }
             } catch (error) {
                 console.error('儲存失敗:', error);
                 alert('儲存失敗：' + error.message);
