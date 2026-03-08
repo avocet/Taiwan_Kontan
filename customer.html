@@ -165,7 +165,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -195,8 +195,19 @@
             let userRole = 'customer';
             
             if (userDoc.exists()) {
-                userName = userDoc.data().姓名 || userDoc.data().username || '';
                 userRole = userDoc.data().role || 'customer';
+            }
+
+            // 嘗試從客戶資料獲取姓名
+            const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", user.uid));
+            const customerSnapshot = await getDocs(customerQuery);
+            if (!customerSnapshot.empty) {
+                userName = customerSnapshot.docs[0].data().姓名 || '';
+            }
+
+            // 如果沒有姓名，使用 username
+            if (!userName && userDoc.exists()) {
+                userName = userDoc.data().username || '';
             }
 
             // 更新標題
@@ -238,8 +249,19 @@
                     let userRole = 'customer';
                     
                     if (userDoc.exists()) {
-                        userName = userDoc.data().姓名 || userDoc.data().username || '';
                         userRole = userDoc.data().role || 'customer';
+                    }
+                    
+                    // 嘗試從客戶資料獲取姓名
+                    const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", user.uid));
+                    const customerSnapshot = await getDocs(customerQuery);
+                    if (!customerSnapshot.empty) {
+                        userName = customerSnapshot.docs[0].data().姓名 || '';
+                    }
+                    
+                    // 如果沒有姓名，使用 username
+                    if (!userName && userDoc.exists()) {
+                        userName = userDoc.data().username || '';
                     }
                     
                     const headerTitle = document.querySelector('.header h1');
