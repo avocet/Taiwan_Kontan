@@ -165,8 +165,12 @@
                 <button id="closePortionTableBtn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✕</button>
             </div>
             <div style="margin-bottom:16px;padding:12px;background:#f5f5f5;border-radius:8px;">
-                <label style="display:block;font-size:0.875rem;color:#666;margin-bottom:8px;">選擇日期</label>
-                <input type="date" id="portionDate" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:0.875rem;">
+                <label style="display:block;font-size:0.875rem;color:#666;margin-bottom:8px;">選擇日期範圍</label>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <input type="date" id="portionStartDate" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:0.875rem;">
+                    <span>至</span>
+                    <input type="date" id="portionEndDate" style="padding:8px;border:1px solid #ddd;border-radius:8px;font-size:0.875rem;">
+                </div>
             </div>
             <form id="portionTableForm">
                 <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
@@ -541,7 +545,10 @@
             showPortionTableBtn.addEventListener('click', () => {
                 // 設定今天日期為預設
                 const today = new Date().toISOString().split('T')[0];
-                document.getElementById('portionDate').value = today;
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - 7);
+                document.getElementById('portionStartDate').value = startDate.toISOString().split('T')[0];
+                document.getElementById('portionEndDate').value = today;
                 
                 // 清空表單
                 document.getElementById('portionTableForm').reset();
@@ -566,9 +573,11 @@
                 return;
             }
             
-            const date = document.getElementById('portionDate').value;
-            if (!date) {
-                alert('請選擇日期');
+            const startDate = document.getElementById('portionStartDate').value;
+            const endDate = document.getElementById('portionEndDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('請選擇日期範圍');
                 return;
             }
             
@@ -576,9 +585,11 @@
             const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
             const nutrients = ['C', 'P', 'F', 'V'];
             
+            // 儲存起始日期的資料
             const portionData = {
                 userId: currentStudentUid,
-                紀錄日期: date,
+                紀錄日期: startDate,
+                結束日期: endDate,
                 更新時間: new Date()
             };
             
@@ -598,7 +609,7 @@
                 const existingQuery = query(
                     collection(db, "飲食份數表"),
                     where("userId", "==", currentStudentUid),
-                    where("紀錄日期", "==", date)
+                    where("紀錄日期", "==", startDate)
                 );
                 const existingDocs = await getDocs(existingQuery);
                 
