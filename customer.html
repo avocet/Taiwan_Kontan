@@ -545,11 +545,14 @@
                 weekAgo.setDate(weekAgo.getDate() - 7);
                 const startDateStr = weekAgo.toISOString().split('T')[0];
                 
-                document.getElementById('portionStartDate2').value = startDateStr;
-                document.getElementById('portionEndDate2').value = today;
-                
-                // 自動載入飲食份數表
+                // 自動載入飲食份數表（電腦版）
                 if (document.getElementById('portionTableDisplay')) {
+                    const startDateEl = document.getElementById('portionStartDate2');
+                    const endDateEl = document.getElementById('portionEndDate2');
+                    if (startDateEl && endDateEl) {
+                        startDateEl.value = startDateStr;
+                        endDateEl.value = today;
+                    }
                     loadPortionTable();
                 }
                 
