@@ -596,26 +596,20 @@
                 });
                 records.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
-                // 格式化日期顯示為 月/日
-                const formatDate = (dateStr) => {
-                    if (!dateStr) return '-';
-                    const d = new Date(dateStr);
-                    return `${d.getMonth() + 1}/${d.getDate()}`;
-                };
-                
-                let html = '';
-                
-                // 顯示期間
-                if (records.length > 0) {
-                    const firstDate = formatDate(records[records.length - 1].紀錄日期);
-                    const lastDate = formatDate(records[0].紀錄日期);
-                    html += `<div style="margin-bottom:12px;font-size:0.875rem;color:#666;">期間：${firstDate} 到 ${lastDate}</div>`;
-                }
-                
-                html += '<div style="display:flex;flex-direction:column;gap:12px;">';
+                let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
                 for (const record of records) {
-                    const date = record.紀錄日期 || '-';
+                    const startDate = record.紀錄日期 || '-';
+                    const endDate = record.結束日期 || startDate;
+                    
+                    // 格式化日期顯示為 月/日
+                    const formatDate = (dateStr) => {
+                        if (!dateStr) return '-';
+                        const d = new Date(dateStr);
+                        return `${d.getMonth() + 1}/${d.getDate()}`;
+                    };
+                    
+                    const periodStr = `${formatDate(startDate)} 到 ${formatDate(endDate)}`;
                     
                     let mealsHtml = '';
                     for (const meal of meals) {
@@ -629,7 +623,7 @@
                     
                     html += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                            <div style="font-weight:600;margin-bottom:8px;">${date}</div>
+                            <div style="font-weight:600;margin-bottom:8px;">期間：${periodStr}</div>
                             ${mealsHtml}
                         </div>
                     `;
