@@ -302,7 +302,7 @@
                 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -316,9 +316,18 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
-        auth.languageCode = 'zh-TW';
+        
+        // 簡單的密碼雜湊函數
+        function hashPassword(password) {
+            let hash = 0;
+            for (let i = 0; i < password.length; i++) {
+                const char = password.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(16);
+        }
 
         function showMessage(elementId, text, type) {
             const element = document.getElementById(elementId);
@@ -357,44 +366,26 @@
             }, 10000);
 
             try {
-                // 嘗試直接登入（如果輸入的是 email）
-                let userCredential;
-                let loginMethod = 'email';
-                try {
-                    userCredential = await signInWithEmailAndPassword(auth, username, password);
-                } catch (authError) {
-                    // 如果失敗，嘗試用 username 查詢
-                    loginMethod = 'username';
-                    const usersRef = collection(db, "users");
-                    const q = query(usersRef, where("username", "==", username.toLowerCase()));
-                    console.log('Querying for username:', username.toLowerCase());
-                    const querySnapshot = await getDocs(q);
-                    console.log('Query result:', querySnapshot.size);
-                    
-                    if (querySnapshot.empty) {
-                        throw new Error('找不到此使用者名稱');
-                    }
-                    
-                    const userData = querySnapshot.docs[0].data();
-                    console.log('Found user:', userData);
-                    userCredential = await signInWithEmailAndPassword(auth, userData.email, password);
+                // 從 Firestore 查詢使用者
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("username", "==", username.toLowerCase()));
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    throw new Error('找不到此使用者名稱');
                 }
                 
-                const user = userCredential.user;
-                console.log('Login successful via:', loginMethod);
+                const userData = querySnapshot.docs[0].data();
+                const hashedPassword = hashPassword(password);
                 
-                // 檢查是否為管理員
-                const adminDoc = await getDoc(doc(db, "管理員", user.uid));
-                
-                if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-                    // 管理員不能登入客戶中心
-                    await signOut(auth);
-                    clearTimeout(timeout);
-                    showMessage('message', '管理員請從後台登入', 'error');
-                    return;
+                if (userData.password !== hashedPassword) {
+                    throw new Error('密碼錯誤');
                 }
                 
-                // 一般用戶可以登入客戶中心
+                // 登入成功，儲存登入狀態到 localStorage
+                localStorage.setItem('twkt_user_id', userData.uid);
+                localStorage.setItem('twkt_username', userData.username);
+                
                 clearTimeout(timeout);
                 showMessage('message', '登入成功！正在轉跳...', 'success');
                 setTimeout(() => {
@@ -403,15 +394,7 @@
             } catch (error) {
                 clearTimeout(timeout);
                 console.error('登入錯誤:', error);
-                let errorMessage = '登入失敗：' + error.message;
-                switch (error.code) {
-                    case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
-                    case 'auth/user-disabled': errorMessage = '此帳號已被停用'; break;
-                    case 'auth/user-not-found': errorMessage = '找不到此帳號'; break;
-                    case 'auth/wrong-password': errorMessage = '密碼錯誤'; break;
-                    case 'auth/invalid-credential': errorMessage = '電子郵件或密碼錯誤'; break;
-                }
-                showMessage('message', errorMessage, 'error');
+                showMessage('message', error.message || '登入失敗', 'error');
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.classList.remove('loading');
@@ -476,15 +459,25 @@
             }, 10000);
 
             try {
-                // 建立 Firebase Auth 帳戶
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                const user = userCredential.user;
+                // 檢查使用者名稱是否已被使用
+                const usersRef = collection(db, "users");
+                const q = query(usersRef, where("username", "==", username.toLowerCase()));
+                const querySnapshot = await getDocs(q);
                 
-                // 儲存使用者名稱到 Firestore（使用 uid 作為文檔 ID）
-                await setDoc(doc(db, "users", user.uid), {
-                    uid: user.uid,
-                    username: username,
+                if (!querySnapshot.empty) {
+                    throw new Error('此使用者名稱已被使用');
+                }
+                
+                // 產生 UID
+                const uid = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                const hashedPassword = hashPassword(password);
+                
+                // 儲存到 Firestore
+                await setDoc(doc(db, "users", uid), {
+                    uid: uid,
+                    username: username.toLowerCase(),
                     email: email,
+                    password: hashedPassword,
                     createdAt: serverTimestamp()
                 });
                 
@@ -496,13 +489,7 @@
             } catch (error) {
                 clearTimeout(timeout);
                 console.error('註冊錯誤:', error);
-                let errorMessage = '建立帳戶失敗：' + error.message;
-                switch (error.code) {
-                    case 'auth/email-already-in-use': errorMessage = '此電子郵件已被註冊'; break;
-                    case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
-                    case 'auth/weak-password': errorMessage = '密碼強度不足'; break;
-                }
-                showMessage('registerMessage', errorMessage, 'error');
+                showMessage('registerMessage', error.message || '建立帳戶失敗', 'error');
             } finally {
                 registerBtn.disabled = false;
                 registerBtn.classList.remove('loading');
