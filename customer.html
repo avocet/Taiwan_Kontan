@@ -130,36 +130,13 @@
         <a href="index.html" class="logout-btn" id="logoutBtn">登出</a>
     </div>
 
-    <div class="menu-grid">
-        <a href="客戶基本資料及記錄.html" class="menu-card">
-            <div class="menu-icon">📋</div>
-            <div class="menu-title">基本資料</div>
-            <div class="menu-desc">客戶基本資料及記錄</div>
-        </a>
+    <!-- 學員列表（管理員用） -->
+    <div id="studentList" style="display:none;padding:20px;max-width:600px;margin:0 auto;">
+        <h2 style="margin-bottom:16px;font-size:1.25rem;">學員列表</h2>
+        <div id="studentListContent"></div>
+    </div>
 
-        <a href="原始體重三圍.html" class="menu-card">
-            <div class="menu-icon">📝</div>
-            <div class="menu-title">原始體重三圍</div>
-            <div class="menu-desc">初始體重與尺寸</div>
-        </a>
-
-        <a href="每日飲食紀錄.html" class="menu-card">
-            <div class="menu-icon">⚖️</div>
-            <div class="menu-title">每日飲食紀錄</div>
-            <div class="menu-desc">體重與身體尺寸</div>
-        </a>
-
-        <a href="減肥歷史.html" class="menu-card">
-            <div class="menu-icon">📈</div>
-            <div class="menu-title">減肥歷史</div>
-            <div class="menu-desc">體重變化紀錄</div>
-        </a>
-
-        <a href="中醫體質四象限.html" class="menu-card">
-            <div class="menu-icon">🔮</div>
-            <div class="menu-title">中醫體質檢測</div>
-            <div class="menu-desc">中醫體質四象限</div>
-        </a>
+    <div class="menu-grid" id="menuGrid">
     </div>
 
     <script type="module">
@@ -223,12 +200,93 @@
 
             // 更新標題
             const headerTitle = document.getElementById('pageTitle');
+            const menuGrid = document.getElementById('menuGrid');
+            const studentList = document.getElementById('studentList');
+            
             if (userRole === 'admin') {
                 headerTitle.textContent = '體重管理班主任 ' + userName;
+                menuGrid.style.display = 'none';
+                studentList.style.display = 'block';
+                loadStudentList();
             } else {
                 headerTitle.textContent = '體重管理班學員 ' + userName;
+                menuGrid.style.display = 'grid';
+                studentList.style.display = 'none';
             }
         });
+
+        // 渲染菜單
+        function renderMenu() {
+            const menuGrid = document.getElementById('menuGrid');
+            menuGrid.innerHTML = `
+                <a href="客戶基本資料及記錄.html" class="menu-card">
+                    <div class="menu-icon">📋</div>
+                    <div class="menu-title">基本資料</div>
+                    <div class="menu-desc">客戶基本資料及記錄</div>
+                </a>
+                <a href="原始體重三圍.html" class="menu-card">
+                    <div class="menu-icon">📝</div>
+                    <div class="menu-title">原始體重三圍</div>
+                    <div class="menu-desc">初始體重與尺寸</div>
+                </a>
+                <a href="每日飲食紀錄.html" class="menu-card">
+                    <div class="menu-icon">⚖️</div>
+                    <div class="menu-title">每日飲食紀錄</div>
+                    <div class="menu-desc">體重與身體尺寸</div>
+                </a>
+                <a href="減肥歷史.html" class="menu-card">
+                    <div class="menu-icon">📈</div>
+                    <div class="menu-title">減肥歷史</div>
+                    <div class="menu-desc">體重變化紀錄</div>
+                </a>
+                <a href="中醫體質四象限.html" class="menu-card">
+                    <div class="menu-icon">🔮</div>
+                    <div class="menu-title">中醫體質檢測</div>
+                    <div class="menu-desc">中醫體質四象限</div>
+                </a>
+            `;
+        }
+        renderMenu();
+
+        // 載入學員列表
+        async function loadStudentList() {
+            const content = document.getElementById('studentListContent');
+            content.innerHTML = '<p>載入中...</p>';
+            
+            try {
+                const usersQuery = query(collection(db, "users"), where("role", "==", "customer"));
+                const usersSnapshot = await getDocs(usersQuery);
+                
+                if (usersSnapshot.empty) {
+                    content.innerHTML = '<p>目前沒有學員</p>';
+                    return;
+                }
+                
+                let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
+                
+                for (const doc of usersSnapshot.docs) {
+                    const userData = doc.data();
+                    // 取得學員姓名
+                    const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", userData.uid));
+                    const customerSnapshot = await getDocs(customerQuery);
+                    const studentName = customerSnapshot.empty ? (userData.username || '-') : (customerSnapshot.docs[0].data().姓名 || userData.username || '-');
+                    
+                    html += `
+                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight:600;font-size:1rem;">${studentName}</div>
+                            <div style="color:#8E8E93;font-size:0.875rem;">${userData.email || '-'}</div>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                content.innerHTML = html;
+                
+            } catch (error) {
+                console.error('載入學員列表失敗:', error);
+                content.innerHTML = '<p>載入失敗</p>';
+            }
+        }
 
         // 登出按鈕
         document.getElementById('logoutBtn').addEventListener('click', async (e) => {
