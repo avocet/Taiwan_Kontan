@@ -446,7 +446,13 @@
                 }
                 
                 const userData = userSnapshot.docs[0].data();
-                const userUid = userData.uid;
+                const userUid = userData.uid || userData.email?.split('@')[0];
+                
+                if (!userUid) {
+                    recordsContent.innerHTML = '<p>找不到學員 UID</p>';
+                    return;
+                }
+                
                 currentStudentUid = userUid;
                 console.log('userUid:', userUid);
                 
