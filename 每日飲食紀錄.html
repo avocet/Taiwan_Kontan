@@ -212,41 +212,6 @@
             margin-bottom: 16px;
         }
 
-        /* 照片 Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 2000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-img {
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 8px;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: white;
-            font-size: 2rem;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-
         @media screen and (max-width: 428px) {
             .header {
                 padding: 16px;
@@ -280,12 +245,6 @@
         </div>
         
         <div id="dataList"></div>
-    </div>
-
-    <!-- 照片 Modal -->
-    <div class="modal" id="photoModal">
-        <button class="modal-close" id="modalClose">&times;</button>
-        <img class="modal-img" id="modalImg" src="" alt="照片">
     </div>
 
     <script type="module">
@@ -397,7 +356,6 @@
         // 建立資料卡片
         function createDataCard(data, docId) {
             const date = data.紀錄日期 || '-';
-            const photoHtml = data.照片 ? `<img class="data-photo" src="${data.照片}" onclick="showPhoto('${data.照片}')" alt="照片">` : '';
             
             return `
                 <div class="data-card">
@@ -407,7 +365,6 @@
                             <button class="edit-btn" onclick="editData('${docId}')">編輯</button>
                             <button class="delete-btn" onclick="deleteData('${docId}')">刪除</button>
                         </div>
-                        ${photoHtml}
                     </div>
                     <div class="data-info">
                         <div class="data-item">
@@ -415,45 +372,28 @@
                             <span class="data-value">${data.體重 || '-'} kg</span>
                         </div>
                         <div class="data-item">
-                            <span class="data-label">胸圍</span>
-                            <span class="data-value">${data.胸圍 || '-'} cm</span>
+                            <span class="data-label">體脂</span>
+                            <span class="data-value">${data.體脂 || '-'} %</span>
                         </div>
-                        <div class="data-item">
-                            <span class="data-label">腰圍</span>
-                            <span class="data-value">${data.腰圍 || '-'} cm</span>
+                    </div>
+                    <div class="diet-records" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">
+                        <div class="data-item" style="margin-bottom:8px;">
+                            <span class="data-label">早餐</span>
+                            <span class="data-value">${data.早餐 || '-'}</span>
                         </div>
-                        <div class="data-item">
-                            <span class="data-label">臀圍</span>
-                            <span class="data-value">${data.臀圍 || '-'} cm</span>
+                        <div class="data-item" style="margin-bottom:8px;">
+                            <span class="data-label">午餐</span>
+                            <span class="data-value">${data.午餐 || '-'}</span>
                         </div>
-                        <div class="data-item">
-                            <span class="data-label">大腿圍</span>
-                            <span class="data-value">${data.大腿圍 || '-'} cm</span>
+                        <div class="data-item" style="margin-bottom:8px;">
+                            <span class="data-label">晚餐</span>
+                            <span class="data-value">${data.晚餐 || '-'}</span>
                         </div>
-                        <div class="data-item">
-                            <span class="data-label">手臂圍</span>
-                            <span class="data-value">${data.手臂圍 || '-'} cm</span>
-                        </div>
+                        ${data.備註 ? `<div class="data-item"><span class="data-label">備註</span><span class="data-value">${data.備註}</span></div>` : ''}
                     </div>
                 </div>
             `;
         }
-
-        // 顯示照片
-        window.showPhoto = function(url) {
-            document.getElementById('modalImg').src = url;
-            document.getElementById('photoModal').classList.add('show');
-        };
-
-        document.getElementById('modalClose').addEventListener('click', () => {
-            document.getElementById('photoModal').classList.remove('show');
-        });
-
-        document.getElementById('photoModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('photoModal')) {
-                document.getElementById('photoModal').classList.remove('show');
-            }
-        });
 
         window.editData = function(docId) {
             window.location.href = `每日飲食紀錄編輯.html?id=${docId}`;
