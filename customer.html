@@ -156,11 +156,11 @@
         <div id="desktopRecordsContainer" style="display:none;gap:20px;justify-content:center;">
             <div style="width:400px;">
                 <h3 style="font-size:1rem;margin-bottom:12px;">每日飲食紀錄</h3>
-                <div id="studentRecordsContent"></div>
+                <div id="combinedRecordsDisplay"></div>
             </div>
             <div style="width:auto;">
                 <h3 style="font-size:1rem;margin-bottom:12px;">飲食份數表</h3>
-                <div id="portionTableDisplay"></div>
+                <div id="combinedPortionDisplay"></div>
             </div>
         </div>
         
@@ -546,15 +546,15 @@
                 weekAgo.setDate(weekAgo.getDate() - 7);
                 const startDateStr = weekAgo.toISOString().split('T')[0];
                 
-                // 自動載入飲食份數表（電腦版）
-                if (document.getElementById('portionTableDisplay')) {
+                // 自動載入合併顯示（電腦版）
+                if (document.getElementById('combinedRecordsDisplay')) {
                     const startDateEl = document.getElementById('portionStartDate2');
                     const endDateEl = document.getElementById('portionEndDate2');
                     if (startDateEl && endDateEl) {
                         startDateEl.value = startDateStr;
                         endDateEl.value = today;
                     }
-                    loadPortionTable(latestDate);
+                    loadAlignedRecords(latestDate);
                 }
                 
             } catch (error) {
@@ -563,6 +563,116 @@
                 mobileRecordsContent.innerHTML = '<p>載入失敗</p>';
             }
         };
+
+        // 對齊顯示每日飲食紀錄和飲食份數表
+        async function loadAlignedRecords(latestDate) {
+            if (!currentStudentUid) return;
+            
+            const leftDiv = document.getElementById('combinedRecordsDisplay');
+            const rightDiv = document.getElementById('combinedPortionDisplay');
+            
+            if (!leftDiv || !rightDiv) return;
+            
+            leftDiv.innerHTML = '<p style="text-align:center;">載入中...</p>';
+            rightDiv.innerHTML = '<p style="text-align:center;">載入中...</p>';
+            
+            try {
+                // 取得每日飲食紀錄
+                const dietQuery = query(collection(db, "每日體重三圍"), where("userId", "==", currentStudentUid));
+                const dietSnapshot = await getDocs(dietQuery);
+                
+                const dietRecords = [];
+                dietSnapshot.forEach(doc => {
+                    dietRecords.push(doc.data());
+                });
+                dietRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+                
+                // 取得飲食份數表
+                const portionQuery = query(collection(db, "飲食份數表"), where("userId", "==", currentStudentUid));
+                const portionSnapshot = await getDocs(portionQuery);
+                
+                const portionRecords = [];
+                portionSnapshot.forEach(doc => {
+                    portionRecords.push(doc.data());
+                });
+                portionRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+                
+                const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+                
+                let leftHtml = '<div style="display:flex;flex-direction:column;gap:12px;">';
+                let rightHtml = '<div style="display:flex;flex-direction:column;gap:12px;">';
+                
+                // 為每筆飲食份數表建立對齊的兩欄
+                for (const portion of portionRecords) {
+                    const startDate = portion.紀錄日期;
+                    const endDate = portion.結束日期 || startDate;
+                    
+                    // 檢查最新日期是否在此期間
+                    const isMatch = latestDate ? (latestDate >= startDate && latestDate <= endDate) : false;
+                    
+                    // 格式化日期
+                    const formatDate = (dateStr) => {
+                        if (!dateStr) return '-';
+                        const d = new Date(dateStr);
+                        return `${d.getMonth() + 1}/${d.getDate()}`;
+                    };
+                    
+                    const periodStr = `${formatDate(startDate)} 到 ${formatDate(endDate)}`;
+                    
+                    // 左邊：每日飲食紀錄
+                    if (isMatch && dietRecords.length > 0) {
+                        const daily = dietRecords[0];
+                        leftHtml += `
+                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                                <div style="font-weight:600;margin-bottom:8px;">${daily.紀錄日期}</div>
+                                <div style="font-size:0.8rem;">
+                                    <div>體重: ${daily.體重 || '-'} kg</div>
+                                    <div>體脂: ${daily.體脂 || '-'}%</div>
+                                    <div>早餐: ${daily.早餐 || '-'}</div>
+                                    <div>午餐: ${daily.午餐 || '-'}</div>
+                                    <div>晚餐: ${daily.晚餐 || '-'}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // 顯示空白卡片
+                        leftHtml += `
+                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:100px;">
+                            </div>
+                        `;
+                    }
+                    
+                    // 右邊：飲食份數表內容
+                    let portionHtml = '';
+                    for (const meal of meals) {
+                        const time = portion[`${meal}時間`] || '';
+                        const c = portion[`${meal}C`] || 0;
+                        const p = portion[`${meal}P`] || 0;
+                        const f = portion[`${meal}F`] || 0;
+                        const v = portion[`${meal}V`] || 0;
+                        portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
+                    }
+                    
+                    rightHtml += `
+                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight:600;margin-bottom:8px;">期間：${periodStr}</div>
+                            ${portionHtml}
+                        </div>
+                    `;
+                }
+                
+                leftHtml += '</div>';
+                rightHtml += '</div>';
+                
+                leftDiv.innerHTML = leftHtml;
+                rightDiv.innerHTML = rightHtml;
+                
+            } catch (error) {
+                console.error('載入失敗:', error);
+                leftDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗</p>';
+                rightDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗</p>';
+            }
+        }
 
         // 自動載入飲食份數表
         async function loadPortionTable(latestDate) {
@@ -761,9 +871,9 @@
                 alert('儲存成功！');
                 portionTableModal.style.display = 'none';
                 
-                // 自動重新載入飲食份數表
-                if (document.getElementById('portionTableDisplay')) {
-                    loadPortionTable();
+                // 自動重新載入
+                if (document.getElementById('combinedRecordsDisplay')) {
+                    loadAlignedRecords();
                 }
             } catch (error) {
                 console.error('儲存失敗:', error);
