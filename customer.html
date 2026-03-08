@@ -189,6 +189,24 @@
                 return;
             }
 
+            // 獲取用戶資料
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            let userName = '';
+            let userRole = 'customer';
+            
+            if (userDoc.exists()) {
+                userName = userDoc.data().姓名 || userDoc.data().username || '';
+                userRole = userDoc.data().role || 'customer';
+            }
+
+            // 更新標題
+            const headerTitle = document.querySelector('.header h1');
+            if (userRole === 'admin') {
+                headerTitle.textContent = '體重管理班主任 ' + userName;
+            } else {
+                headerTitle.textContent = '體重管理班學員 ' + userName;
+            }
+
             // 檢查是否為管理員
             const adminDoc = await getDoc(doc(db, "管理員", user.uid));
             
@@ -214,6 +232,23 @@
                 if (!user) {
                     window.location.replace('login.html');
                 } else {
+                    // 獲取用戶資料更新標題
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    let userName = '';
+                    let userRole = 'customer';
+                    
+                    if (userDoc.exists()) {
+                        userName = userDoc.data().姓名 || userDoc.data().username || '';
+                        userRole = userDoc.data().role || 'customer';
+                    }
+                    
+                    const headerTitle = document.querySelector('.header h1');
+                    if (userRole === 'admin') {
+                        headerTitle.textContent = '體重管理班主任 ' + userName;
+                    } else {
+                        headerTitle.textContent = '體重管理班學員 ' + userName;
+                    }
+
                     // 檢查是否為管理員
                     const adminDoc = await getDoc(doc(db, "管理員", user.uid));
                     if (adminDoc.exists() && adminDoc.data().role === 'admin') {
