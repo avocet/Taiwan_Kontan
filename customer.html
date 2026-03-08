@@ -164,6 +164,9 @@
             </div>
         </div>
         
+        <!-- 手機版和電腦版左側備用 -->
+        <div id="studentRecordsContent"></div>
+        
         <!-- 手機版 -->
         <div id="mobileRecordsContent"></div>
     </div>
@@ -671,7 +674,7 @@
                 
             } catch (error) {
                 console.error('載入失敗:', error);
-                leftDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗</p>';
+                leftDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗: ' + error.message + '</p>';
                 rightDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗</p>';
             }
         }
