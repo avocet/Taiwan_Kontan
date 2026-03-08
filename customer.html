@@ -549,7 +549,9 @@
                 document.getElementById('portionEndDate2').value = today;
                 
                 // 自動載入飲食份數表
-                loadPortionTable();
+                if (document.getElementById('portionTableDisplay')) {
+                    loadPortionTable();
+                }
                 
             } catch (error) {
                 console.error('載入學員紀錄失敗:', error);
