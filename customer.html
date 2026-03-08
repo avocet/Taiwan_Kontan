@@ -647,7 +647,7 @@
                     rightHtml += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;justify-content:space-between;align-items:flex-start;">
                             <div style="flex:1;">${portionHtml}</div>
-                            <button onclick="editPortionRecord('${startDate}', '${endDate}')" style="background:#007AFF;color:white;border:none;padding:8px 12px;border-radius:8px;font-size:0.75rem;cursor:pointer;margin-left:10px;white-space:nowrap;">編輯</button>
+                            <button class="editPortionBtn" data-start="${startDate}" data-end="${endDate}" style="background:#007AFF;color:white;border:none;padding:8px 12px;border-radius:8px;font-size:0.75rem;cursor:pointer;margin-left:10px;white-space:nowrap;">編輯</button>
                         </div>
                     `;
                 }
@@ -655,8 +655,16 @@
                 leftHtml += '</div>';
                 rightHtml += '</div>';
                 
-                // 儲存資料供編輯使用
-                window.portionRecordsData = portionRecords;
+                // 渲染後綁定編輯按鈕事件
+                setTimeout(() => {
+                    document.querySelectorAll('.editPortionBtn').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const startDate = this.getAttribute('data-start');
+                            const endDate = this.getAttribute('data-end');
+                            editPortionRecord(startDate, endDate);
+                        });
+                    });
+                }, 100);
                 
                 leftDiv.innerHTML = leftHtml;
                 rightDiv.innerHTML = rightHtml;
@@ -1041,7 +1049,7 @@
         }
         
         // 編輯飲食份數表
-        window.editPortionRecord = function(startDate, endDate) {
+        function editPortionRecord(startDate, endDate) {
             // 找出對應的資料
             const portionRecords = window.portionRecordsData || [];
             const matchedPortion = portionRecords.find(p => p.紀錄日期 === startDate);
