@@ -228,13 +228,6 @@
             } else {
                 headerTitle.textContent = '體重管理班學員 ' + userName;
             }
-            
-            // 管理員不能使用客戶中心，強制登出
-            if (userRole === 'admin') {
-                await signOut(auth);
-                alert('管理員請從後台登入');
-                window.location.href = 'index.html';
-            }
         });
 
         // 登出按鈕
@@ -281,12 +274,6 @@
                     } else {
                         headerTitle.textContent = '體重管理班學員 ' + userName;
                     }
-
-                    // 管理員不能使用客戶中心
-                    if (userRole === 'admin') {
-                        await signOut(auth);
-                        window.location.replace('index.html');
-                    }
                 }
             });
         };
@@ -310,11 +297,6 @@
                             if (!usersSnapshot.empty) {
                                 userRole = usersSnapshot.docs[0].data().role || 'customer';
                             }
-                        }
-                        
-                        if (userRole === 'admin') {
-                            await signOut(auth);
-                            window.location.replace('index.html');
                         }
                     }
                 });
