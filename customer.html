@@ -596,10 +596,7 @@
                 snapshot.forEach(doc => {
                     records.push(doc.data());
                 });
-                records.sort((a, b) => new Date(a.紀錄日期) - new Date(b.紀錄日期));
-                
-                // 只顯示最近7天
-                const recentRecords = records.slice(-7);
+                records.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
                 // 格式化日期顯示為 月/日
                 const formatDate = (dateStr) => {
@@ -608,19 +605,18 @@
                     return `${d.getMonth() + 1}/${d.getDate()}`;
                 };
                 
-                // 顯示日期範圍
-                if (recentRecords.length > 0) {
-                    const firstDate = formatDate(recentRecords[0].紀錄日期);
-                    const lastDate = formatDate(recentRecords[recentRecords.length - 1].紀錄日期);
-                    html += `<th style="padding:8px 12px;border:1px solid #ddd;white-space:nowrap;text-align:center;">${firstDate} 到 ${lastDate}</th>`;
+                let html = '<table style="width:auto;margin:0 auto;table-layout:auto;border-collapse:collapse;font-size:0.75rem;">';
+                html += '<tr style="background:#007AFF;color:white;"><th style="padding:8px 12px;border:1px solid #ddd;white-space:nowrap;text-align:center;">餐別</th>';
+                
+                // 每個日期一欄
+                for (const r of records) {
+                    html += `<th style="padding:8px 12px;border:1px solid #ddd;white-space:nowrap;text-align:center;">${formatDate(r.紀錄日期)}</th>`;
                 }
                 html += '</tr>';
                 
                 for (const meal of meals) {
                     html += `<tr><td style="padding:8px 12px;border:1px solid #ddd;background:#f5f5f5;font-weight:600;white-space:nowrap;text-align:center;">${meal}</td>`;
-                    // 只顯示最新一筆資料
-                    if (recentRecords.length > 0) {
-                        const r = recentRecords[recentRecords.length - 1];
+                    for (const r of records) {
                         const c = r[`${meal}C`] || 0;
                         const p = r[`${meal}P`] || 0;
                         const f = r[`${meal}F`] || 0;
