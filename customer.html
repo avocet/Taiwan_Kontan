@@ -513,6 +513,7 @@
                 };
 
                 let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
+                const matchedPortionIds = new Set();
 
                 if (records.length === 0) {
                     html += '<p style="color:#666;">目前沒有每日飲食紀錄</p>';
@@ -546,6 +547,7 @@
                             portionSectionHtml += '<div style="font-size:0.85rem;color:#999;">此日期沒有對應的飲食份數表</div>';
                         } else {
                             for (const portion of matchedPortions) {
+                                matchedPortionIds.add(portion.id);
                                 const startDate = portion.紀錄日期;
                                 const endDate = portion.結束日期 || startDate;
                                 portionSectionHtml += `<div style="font-size:0.8rem;color:#666;margin-bottom:6px;">期間：${formatDate(startDate)} 到 ${formatDate(endDate)}</div>`;
@@ -575,6 +577,29 @@
                                 </div>
                                 ${photosHtml}
                                 ${portionSectionHtml}
+                            </div>
+                        `;
+                    }
+                }
+
+                const unmatchedPortions = portionRecordsMobile.filter(portion => !matchedPortionIds.has(portion.id));
+                if (unmatchedPortions.length > 0) {
+                    html += '<div style="font-weight:600;margin:8px 0 4px;color:#444;">未對應每日飲食紀錄的飲食份數表</div>';
+                    for (const portion of unmatchedPortions) {
+                        const startDate = portion.紀錄日期;
+                        const endDate = portion.結束日期 || startDate;
+                        let unmatchedHtml = `<div style="font-size:0.8rem;color:#666;margin-bottom:6px;">期間：${formatDate(startDate)} 到 ${formatDate(endDate)}</div>`;
+                        for (const meal of meals) {
+                            const time = portion[`${meal}時間`] || '';
+                            const c = portion[`${meal}C`] || 0;
+                            const p = portion[`${meal}P`] || 0;
+                            const f = portion[`${meal}F`] || 0;
+                            const v = portion[`${meal}V`] || 0;
+                            unmatchedHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
+                        }
+                        html += `
+                            <div style="background:#fffdf5;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border:1px solid #f1e2b8;">
+                                ${unmatchedHtml}
                             </div>
                         `;
                     }
