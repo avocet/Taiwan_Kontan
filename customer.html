@@ -591,8 +591,6 @@
                 });
                 dietRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
-                const latestDate = dietRecords.length > 0 ? dietRecords[0].紀錄日期 : null;
-                
                 // 取得飲食份數表
                 const portionQuery = query(collection(db, "飲食份數表"), where("userId", "==", currentStudentUid));
                 const portionSnapshot = await getDocs(portionQuery);
@@ -604,67 +602,108 @@
                 portionRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
                 const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '-';
+                    const d = new Date(dateStr);
+                    return `${d.getMonth() + 1}/${d.getDate()}`;
+                };
                 
                 let leftHtml = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 let rightHtml = '<div style="display:flex;flex-direction:column;gap:12px;">';
                 
-                // 為每筆飲食份數表建立對齊的兩欄
-                for (const portion of portionRecords) {
-                    const startDate = portion.紀錄日期;
-                    const endDate = portion.結束日期 || startDate;
+                // 左邊：顯示所有每日飲食紀錄
+                for (const daily of dietRecords) {
+                    const dailyDate = daily.紀錄日期;
                     
-                    // 檢查最新日期是否在此期間
-                    const isMatch = latestDate ? (latestDate >= startDate && latestDate <= endDate) : false;
+                    // 找出對應的飲食份數表
+                    const matchedPortion = portionRecords.find(p => {
+                        const start = p.紀錄日期;
+                        const end = p.結束日期 || start;
+                        return dailyDate >= start && dailyDate <= end;
+                    });
                     
-                    // 格式化日期
-                    const formatDate = (dateStr) => {
-                        if (!dateStr) return '-';
-                        const d = new Date(dateStr);
-                        return `${d.getMonth() + 1}/${d.getDate()}`;
-                    };
+                    leftHtml += `
+                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight:600;margin-bottom:8px;">${dailyDate}</div>
+                            <div style="font-size:0.8rem;">
+                                <div>體重: ${daily.體重 || '-'} kg</div>
+                                <div>體脂: ${daily.體脂 || '-'}%</div>
+                                <div>早餐: ${daily.早餐 || '-'}</div>
+                                <div>午餐: ${daily.午餐 || '-'}</div>
+                                <div>晚餐: ${daily.晚餐 || '-'}</div>
+                            </div>
+                        </div>
+                    `;
                     
-                    const periodStr = `${formatDate(startDate)} 到 ${formatDate(endDate)}`;
-                    
-                    // 左邊：每日飲食紀錄
-                    if (isMatch && dietRecords.length > 0) {
-                        const daily = dietRecords[0];
-                        leftHtml += `
+                    // 右邊：對應的飲食份數表
+                    if (matchedPortion) {
+                        const startDate = matchedPortion.紀錄日期;
+                        const endDate = matchedPortion.結束日期 || startDate;
+                        const periodStr = `${formatDate(startDate)} 到 ${formatDate(endDate)}`;
+                        
+                        let portionHtml = '';
+                        for (const meal of meals) {
+                            const time = matchedPortion[`${meal}時間`] || '';
+                            const c = matchedPortion[`${meal}C`] || 0;
+                            const p = matchedPortion[`${meal}P`] || 0;
+                            const f = matchedPortion[`${meal}F`] || 0;
+                            const v = matchedPortion[`${meal}V`] || 0;
+                            portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
+                        }
+                        
+                        rightHtml += `
                             <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                <div style="font-weight:600;margin-bottom:8px;">${daily.紀錄日期}</div>
-                                <div style="font-size:0.8rem;">
-                                    <div>體重: ${daily.體重 || '-'} kg</div>
-                                    <div>體脂: ${daily.體脂 || '-'}%</div>
-                                    <div>早餐: ${daily.早餐 || '-'}</div>
-                                    <div>午餐: ${daily.午餐 || '-'}</div>
-                                    <div>晚餐: ${daily.晚餐 || '-'}</div>
-                                </div>
+                                <div style="font-weight:600;margin-bottom:8px;">期間：${periodStr}</div>
+                                ${portionHtml}
                             </div>
                         `;
                     } else {
-                        // 顯示空白卡片
-                        leftHtml += `
+                        // 沒有對應的飲食份數表，顯示空白卡片
+                        rightHtml += `
                             <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:100px;">
                             </div>
                         `;
                     }
+                }
+                
+                // 右邊：額外顯示沒有對應每日紀錄的飲食份數表
+                for (const portion of portionRecords) {
+                    const startDate = portion.紀錄日期;
+                    const endDate = portion.結束日期 || startDate;
                     
-                    // 右邊：飲食份數表內容
-                    let portionHtml = '';
-                    for (const meal of meals) {
-                        const time = portion[`${meal}時間`] || '';
-                        const c = portion[`${meal}C`] || 0;
-                        const p = portion[`${meal}P`] || 0;
-                        const f = portion[`${meal}F`] || 0;
-                        const v = portion[`${meal}V`] || 0;
-                        portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
+                    // 檢查是否已經顯示過
+                    const hasMatch = dietRecords.some(d => {
+                        const dailyDate = d.紀錄日期;
+                        return dailyDate >= startDate && dailyDate <= endDate;
+                    });
+                    
+                    if (!hasMatch) {
+                        const periodStr = `${formatDate(startDate)} 到 ${formatDate(endDate)}`;
+                        
+                        // 左邊空白卡片
+                        leftHtml += `
+                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);min-height:100px;">
+                            </div>
+                        `;
+                        
+                        // 右邊顯示飲食份數表
+                        let portionHtml = '';
+                        for (const meal of meals) {
+                            const time = portion[`${meal}時間`] || '';
+                            const c = portion[`${meal}C`] || 0;
+                            const p = portion[`${meal}P`] || 0;
+                            const f = portion[`${meal}F`] || 0;
+                            const v = portion[`${meal}V`] || 0;
+                            portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
+                        }
+                        
+                        rightHtml += `
+                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+                                <div style="font-weight:600;margin-bottom:8px;">期間：${periodStr}</div>
+                                ${portionHtml}
+                            </div>
+                        `;
                     }
-                    
-                    rightHtml += `
-                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                            <div style="font-weight:600;margin-bottom:8px;">期間：${periodStr}</div>
-                            ${portionHtml}
-                        </div>
-                    `;
                 }
                 
                 leftHtml += '</div>';
