@@ -145,7 +145,54 @@
             <button id="backToListBtn" style="background:none;border:none;font-size:1rem;cursor:pointer;padding:8px;">← 返回</button>
             <h2 id="studentNameTitle" style="font-size:1.25rem;flex:1;text-align:center;margin-right:60px;">學員飲食紀錄</h2>
         </div>
+        <div style="margin-bottom:16px;">
+            <button id="showPortionTableBtn" style="background:#34C759;color:white;border:none;padding:12px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;width:100%;">📊 飲食份數表</button>
+        </div>
         <div id="studentRecordsContent"></div>
+    </div>
+
+    <!-- 飲食份數表 Modal -->
+    <div id="portionTableModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:16px;width:95%;max-width:500px;max-height:90vh;overflow-y:auto;margin:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="font-size:1.125rem;">飲食份數表</h3>
+                <button id="closePortionTableBtn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✕</button>
+            </div>
+            <div id="portionTableContent" style="font-size:0.875rem;line-height:1.8;">
+                <h4 style="margin:12px 0 8px;font-size:1rem;">🥩 蛋白質</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:0.8125rem;"><tr style="background:#f5f5f5;"><th style="padding:8px;border:1px solid #ddd;text-align:left;">食物</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">份量</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">熱量</th></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">雞胸肉</td><td style="padding:8px;border:1px solid #ddd;">100g</td><td style="padding:8px;border:1px solid #ddd;">165大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">魚肉</td><td style="padding:8px;border:1px solid #ddd;">100g</td><td style="padding:8px;border:1px solid #ddd;">100大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">豆腐</td><td style="padding:8px;border:1px solid #ddd;">100g</td><td style="padding:8px;border:1px solid #ddd;">76大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">蛋</td><td style="padding:8px;border:1px solid #ddd;">1顆(50g)</td><td style="padding:8px;border:1px solid #ddd;">70大卡</td></tr>
+                </table>
+                <h4 style="margin:12px 0 8px;font-size:1rem;">🍚 碳水化合物</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:0.8125rem;"><tr style="background:#f5f5f5;"><th style="padding:8px;border:1px solid #ddd;text-align:left;">食物</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">份量</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">熱量</th></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">白飯</td><td style="padding:8px;border:1px solid #ddd;">1碗(150g)</td><td style="padding:8px;border:1px solid #ddd;">220大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">全麥麵包</td><td style="padding:8px;border:1px solid #ddd;">1片(30g)</td><td style="padding:8px;border:1px solid #ddd;">80大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">地瓜</td><td style="padding:8px;border:1px solid #ddd;">100g</td><td style="padding:8px;border:1px solid #ddd;">86大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">燕麥</td><td style="padding:8px;border:1px solid #ddd;">40g</td><td style="padding:8px;border:1px solid #ddd;">150大卡</td></tr>
+                </table>
+                <h4 style="margin:12px 0 8px;font-size:1rem;">🥬 蔬菜</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:0.8125rem;"><tr style="background:#f5f5f5;"><th style="padding:8px;border:1px solid #ddd;text-align:left;">食物</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">份量</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">熱量</th></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">綠色蔬菜</td><td style="padding:8px;border:1px solid #ddd;">1)</td><td碗(100g style="padding:8px;border:1px solid #ddd;">25大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">番茄</td><td style="padding:8px;border:1px solid #ddd;">1顆(150g)</td><td style="padding:8px;border:1px solid #ddd;">25大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">黃瓜</td><td style="padding:8px;border:1px solid #ddd;">1條(100g)</td><td style="padding:8px;border:1px solid #ddd;">15大卡</td></tr>
+                </table>
+                <h4 style="margin:12px 0 8px;font-size:1rem;">🍎 水果</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:0.8125rem;"><tr style="background:#f5f5f5;"><th style="padding:8px;border:1px solid #ddd;text-align:left;">食物</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">份量</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">熱量</th></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">蘋果</td><td style="padding:8px;border:1px solid #ddd;">1顆(180g)</td><td style="padding:8px;border:1px solid #ddd;">95大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">香蕉</td><td style="padding:8px;border:1px solid #ddd;">1根(120g)</td><td style="padding:8px;border:1px solid #ddd;">105大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">橘子</td><td style="padding:8px;border:1px solid #ddd;">1顆(150g)</td><td style="padding:8px;border:1px solid #ddd;">45大卡</td></tr>
+                </table>
+                <h4 style="margin:12px 0 8px;font-size:1rem;">🥜 油脂</h4>
+                <table style="width:100%;border-collapse:collapse;font-size:0.8125rem;"><tr style="background:#f5f5f5;"><th style="padding:8px;border:1px solid #ddd;text-align:left;">食物</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">份量</th><th style="padding:8px;border:1px solid #ddd;text-align:left;">熱量</th></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">橄欖油</td><td style="padding:8px;border:1px solid #ddd;">1湯匙(14g)</td><td style="padding:8px;border:1px solid #ddd;">120大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">堅果</td><td style="padding:8px;border:1px solid #ddd;">30g</td><td style="padding:8px;border:1px solid #ddd;">170大卡</td></tr>
+                <tr><td style="padding:8px;border:1px solid #ddd;">花生醬</td><td style="padding:8px;border:1px solid #ddd;">1湯匙(16g)</td><td style="padding:8px;border:1px solid #ddd;">95大卡</td></tr>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- 新增學員 Modal -->
@@ -409,6 +456,31 @@
             document.getElementById('studentList').style.display = 'block';
             loadStudentList();
         });
+
+        // 飲食份數表功能
+        const portionTableModal = document.getElementById('portionTableModal');
+        const showPortionTableBtn = document.getElementById('showPortionTableBtn');
+        const closePortionTableBtn = document.getElementById('closePortionTableBtn');
+
+        if (showPortionTableBtn) {
+            showPortionTableBtn.addEventListener('click', () => {
+                portionTableModal.style.display = 'flex';
+            });
+        }
+
+        if (closePortionTableBtn) {
+            closePortionTableBtn.addEventListener('click', () => {
+                portionTableModal.style.display = 'none';
+            });
+        }
+
+        if (portionTableModal) {
+            portionTableModal.addEventListener('click', (e) => {
+                if (e.target === portionTableModal) {
+                    portionTableModal.style.display = 'none';
+                }
+            });
+        }
 
         // 新增學員功能
         const addStudentBtn = document.getElementById('addStudentBtn');
