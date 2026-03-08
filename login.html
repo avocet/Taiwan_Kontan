@@ -512,10 +512,27 @@
         const closeForgotModal = document.getElementById('closeForgotModal');
         const forgotPasswordForm = document.getElementById('forgotPasswordForm');
 
-        if (forgotPasswordLink) {
+        if (forgotPasswordLink && forgotPasswordModal) {
             forgotPasswordLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 forgotPasswordModal.style.display = 'flex';
+            });
+        }
+
+        if (closeForgotModal && forgotPasswordModal && forgotPasswordForm) {
+            closeForgotModal.addEventListener('click', () => {
+                forgotPasswordModal.style.display = 'none';
+                hideMessage('resetMessage');
+                forgotPasswordForm.reset();
+            });
+        }
+
+        if (forgotPasswordModal) {
+            forgotPasswordModal.addEventListener('click', (e) => {
+                if (e.target === forgotPasswordModal) {
+                    forgotPasswordModal.style.display = 'none';
+                    hideMessage('resetMessage');
+                }
             });
         }
 
