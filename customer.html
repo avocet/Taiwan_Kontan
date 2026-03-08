@@ -198,6 +198,12 @@
                 userRole = userDoc.data().role || 'customer';
             }
 
+            // 檢查管理員collection
+            const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+            if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                userRole = 'admin';
+            }
+
             // 嘗試從客戶資料獲取姓名
             const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", user.uid));
             const customerSnapshot = await getDocs(customerQuery);
@@ -217,12 +223,9 @@
             } else {
                 headerTitle.textContent = '體重管理班學員 ' + userName;
             }
-
-            // 檢查是否為管理員
-            const adminDoc = await getDoc(doc(db, "管理員", user.uid));
             
+            // 管理員不能使用客戶中心，強制登出
             if (adminDoc.exists() && adminDoc.data().role === 'admin') {
-                // 管理員不能使用客戶中心，強制登出
                 await signOut(auth);
                 alert('管理員請從後台登入');
                 window.location.href = 'index.html';
@@ -252,6 +255,12 @@
                         userRole = userDoc.data().role || 'customer';
                     }
                     
+                    // 檢查管理員collection
+                    const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+                    if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                        userRole = 'admin';
+                    }
+                    
                     // 嘗試從客戶資料獲取姓名
                     const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", user.uid));
                     const customerSnapshot = await getDocs(customerQuery);
@@ -264,15 +273,14 @@
                         userName = userDoc.data().username || '';
                     }
                     
-                    const headerTitle = document.querySelector('.header h1');
+                    const headerTitle = document.getElementById('pageTitle');
                     if (userRole === 'admin') {
                         headerTitle.textContent = '體重管理班主任 ' + userName;
                     } else {
                         headerTitle.textContent = '體重管理班學員 ' + userName;
                     }
 
-                    // 檢查是否為管理員
-                    const adminDoc = await getDoc(doc(db, "管理員", user.uid));
+                    // 管理員不能使用客戶中心
                     if (adminDoc.exists() && adminDoc.data().role === 'admin') {
                         await signOut(auth);
                         window.location.replace('index.html');
