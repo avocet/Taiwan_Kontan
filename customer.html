@@ -409,24 +409,33 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        async function redirectIfCourseCompleted(user, userRole) {
+        async function redirectIfCourseCompleted(user, userRole, savedUsername = '') {
             if (!user || userRole === 'admin') {
                 return false;
             }
-            const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", user.uid));
-            const customerSnapshot = await getDocs(customerQuery);
-            if (customerSnapshot.empty) {
-                return false;
+            const candidateKeys = [
+                user.uid,
+                savedUsername,
+                (user.email || '').split('@')[0]
+            ].filter(Boolean).map((k) => String(k).toLowerCase());
+
+            for (const key of [...new Set(candidateKeys)]) {
+                const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", key));
+                const customerSnapshot = await getDocs(customerQuery);
+                if (customerSnapshot.empty) {
+                    continue;
+                }
+                const customerData = customerSnapshot.docs[0].data();
+                if (customerData.課程狀態 !== '已完成') {
+                    continue;
+                }
+                await signOut(auth);
+                localStorage.removeItem('twkt_user_id');
+                localStorage.removeItem('twkt_username');
+                window.location.replace('course-completed.html');
+                return true;
             }
-            const customerData = customerSnapshot.docs[0].data();
-            if (customerData.課程狀態 !== '已完成') {
-                return false;
-            }
-            await signOut(auth);
-            localStorage.removeItem('twkt_user_id');
-            localStorage.removeItem('twkt_username');
-            window.location.replace('course-completed.html');
-            return true;
+            return false;
         }
 
         // 檢查用戶是否為管理員
@@ -458,7 +467,7 @@
                     }
                 }
 
-                if (await redirectIfCourseCompleted(user, userRole)) {
+                if (await redirectIfCourseCompleted(user, userRole, savedUsername || '')) {
                     return;
                 }
 
@@ -1329,7 +1338,7 @@
                         }
                     }
 
-                    if (await redirectIfCourseCompleted(user, userRole)) {
+                    if (await redirectIfCourseCompleted(user, userRole, savedUsername || '')) {
                         return;
                     }
                     

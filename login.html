@@ -275,13 +275,19 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        async function isCourseCompletedByUid(uid) {
-            const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", uid));
-            const customerSnapshot = await getDocs(customerQuery);
-            if (customerSnapshot.empty) {
-                return false;
+        async function isCourseCompletedByKeys(keys) {
+            const uniqueKeys = [...new Set((keys || []).filter(Boolean).map((k) => String(k).toLowerCase()))];
+            for (const key of uniqueKeys) {
+                const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", key));
+                const customerSnapshot = await getDocs(customerQuery);
+                if (!customerSnapshot.empty) {
+                    const customerData = customerSnapshot.docs[0].data();
+                    if (customerData.課程狀態 === '已完成') {
+                        return true;
+                    }
+                }
             }
-            return customerSnapshot.docs[0].data().課程狀態 === '已完成';
+            return false;
         }
 
         async function handleCourseCompletedLogin() {
@@ -361,7 +367,12 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
 
-                if (await isCourseCompletedByUid(user.uid)) {
+                const completed = await isCourseCompletedByKeys([
+                    user.uid,
+                    username.toLowerCase(),
+                    (email || '').split('@')[0]
+                ]);
+                if (completed) {
                     clearTimeout(timeout);
                     await handleCourseCompletedLogin();
                     return;
