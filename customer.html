@@ -1473,6 +1473,15 @@
                 // 左邊顯示所有每日飲食紀錄
                 for (const daily of dietRecords) {
                     const conversationHtml = renderAdviceConversationHtml(daily, true);
+                    let desktopPhotosHtml = '';
+                    if (daily.照片) {
+                        const photos = Array.isArray(daily.照片) ? daily.照片 : [daily.照片];
+                        desktopPhotosHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">';
+                        photos.forEach(photoUrl => {
+                            desktopPhotosHtml += `<img src="${photoUrl}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="showPhoto('${photoUrl}')">`;
+                        });
+                        desktopPhotosHtml += '</div>';
+                    }
                     leftHtml += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
                             <div style="font-weight:600;margin-bottom:8px;">${daily.紀錄日期}</div>
@@ -1483,6 +1492,7 @@
                                 <div>午餐: ${daily.午餐 || '-'}</div>
                                 <div>晚餐: ${daily.晚餐 || '-'}</div>
                             </div>
+                            ${desktopPhotosHtml}
                             <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e5e7eb;">
                                 <div style="font-weight:600;margin-bottom:8px;">建議對話</div>
                                 <div style="max-height:200px;overflow-y:auto;padding:8px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;">
