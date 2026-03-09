@@ -41,11 +41,84 @@
             padding: 20px;
         }
 
+        .form-layout {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
         .form-card {
             background: var(--card-background);
             border-radius: 16px;
             box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
             overflow: hidden;
+            flex: 1;
+        }
+
+        .portion-panel {
+            width: 320px;
+            background: #f8fbff;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(30, 64, 175, 0.08);
+            position: sticky;
+            top: 20px;
+        }
+
+        .portion-panel-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid #dbeafe;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #1d4ed8;
+        }
+
+        .portion-panel-body {
+            padding: 12px;
+            max-height: 70vh;
+            overflow: auto;
+            font-size: 0.8125rem;
+        }
+
+        .portion-empty {
+            color: var(--text-secondary);
+            background: #fff;
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .portion-card {
+            background: #fff;
+            border: 1px solid #d9e9ff;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .portion-period {
+            font-size: 0.75rem;
+            color: #1d4ed8;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .portion-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .portion-row-label {
+            font-weight: 600;
+            color: #111827;
+            white-space: nowrap;
+        }
+
+        .portion-row-value {
+            color: #374151;
+            font-variant-numeric: tabular-nums;
         }
 
         .form-header {
@@ -337,6 +410,7 @@
 
         @media screen and (max-width: 428px) {
             .container { padding: 12px; }
+            .form-layout { flex-direction: column; }
             .form-card { border-radius: 20px; }
             .form-header { padding: 16px; flex-wrap: wrap; gap: 10px; }
             .form-header h1 { font-size: 1.25rem; }
@@ -347,10 +421,11 @@
             input { padding: 12px 14px; font-size: 16px; }
             .form-actions { padding: 16px; flex-direction: column; gap: 10px; }
             .btn { padding: 14px 20px; }
+            .portion-panel { width: 100%; position: static; }
         }
 
         @media screen and (min-width: 429px) and (max-width: 1024px) {
-            .container { padding: 24px; max-width: 700px; }
+            .container { padding: 24px; max-width: 1040px; }
             .form-card { border-radius: 20px; }
             .form-header { padding: 28px 24px; }
             .form-header h1 { font-size: 1.625rem; }
@@ -358,16 +433,18 @@
             .form-section { margin-bottom: 32px; }
             .form-actions { padding: 24px; gap: 16px; }
             .btn { padding: 16px 28px; }
+            .portion-panel { width: 300px; }
         }
 
         @media screen and (min-width: 1025px) {
-            .container { padding: 40px; max-width: 800px; }
+            .container { padding: 40px; max-width: 1240px; }
             .form-card { border-radius: 24px; }
             .form-header { padding: 36px 32px; border-radius: 24px 24px 0 0; }
             .form-header h1 { font-size: 1.875rem; }
             .form-body { padding: 36px 32px; }
             .form-actions { padding: 28px 32px; gap: 16px; }
             .btn { max-width: 200px; margin: 0 auto; }
+            .portion-panel { width: 340px; }
         }
     </style>
 </head>
@@ -378,6 +455,7 @@
     </div>
 
     <div class="container">
+        <div class="form-layout">
         <div class="form-card">
             <div class="form-header">
                 <a href="每日飲食紀錄.html" class="back-btn">← 返回</a>
@@ -461,6 +539,13 @@
                 <button type="submit" class="btn btn-primary" id="submitBtn">儲存資料</button>
             </div>
         </div>
+        <aside class="portion-panel">
+            <div class="portion-panel-header">管理員飲食份數表</div>
+            <div class="portion-panel-body" id="portionPanelContent">
+                <div class="portion-empty">請先選擇紀錄日期</div>
+            </div>
+        </aside>
+        </div>
     </div>
 
     <div class="overlay" id="overlay"></div>
@@ -490,6 +575,8 @@
         const storage = getStorage(app);
 
         let currentUser = null;
+        let userPortionRecords = [];
+        const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -502,6 +589,8 @@
                 await signOut(auth);
                 window.location.replace('index.html');
             }
+            await loadUserPortionRecords();
+            renderPortionPanelByDate(document.getElementById('recordDate').value);
         });
 
         window.onpageshow = function(event) {
@@ -543,7 +632,61 @@
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('recordDate').value = today;
+            renderPortionPanelByDate(today);
         });
+
+        const recordDateInput = document.getElementById('recordDate');
+        recordDateInput.addEventListener('change', function() {
+            renderPortionPanelByDate(this.value);
+        });
+
+        async function loadUserPortionRecords() {
+            if (!currentUser) return;
+            const q = query(collection(db, "飲食份數表"), where("userId", "==", currentUser.uid));
+            const snapshot = await getDocs(q);
+            userPortionRecords = snapshot.docs.map(docSnap => ({
+                id: docSnap.id,
+                ...docSnap.data()
+            })).sort((a, b) => (b.紀錄日期 || '').localeCompare(a.紀錄日期 || ''));
+        }
+
+        function renderPortionPanelByDate(dateStr) {
+            const panel = document.getElementById('portionPanelContent');
+            if (!panel) return;
+            if (!dateStr) {
+                panel.innerHTML = '<div class="portion-empty">請先選擇紀錄日期</div>';
+                return;
+            }
+
+            const matched = userPortionRecords.filter(portion => {
+                const startDate = portion.紀錄日期 || '';
+                const endDate = portion.結束日期 || startDate;
+                return dateStr >= startDate && dateStr <= endDate;
+            });
+
+            if (matched.length === 0) {
+                panel.innerHTML = `<div class="portion-empty">${dateStr} 沒有對應的飲食份數表</div>`;
+                return;
+            }
+
+            let html = '';
+            matched.forEach(portion => {
+                const startDate = portion.紀錄日期 || '-';
+                const endDate = portion.結束日期 || startDate;
+                html += `<div class="portion-card"><div class="portion-period">期間：${startDate} 到 ${endDate}</div>`;
+                meals.forEach(meal => {
+                    const time = portion[`${meal}時間`] || '';
+                    const c = portion[`${meal}C`] || 0;
+                    const p = portion[`${meal}P`] || 0;
+                    const f = portion[`${meal}F`] || 0;
+                    const v = portion[`${meal}V`] || 0;
+                    html += `<div class="portion-row"><span class="portion-row-label">${meal}${time ? ' ' + time : ''}</span><span class="portion-row-value">C:${c} P:${p} F:${f} V:${v}</span></div>`;
+                });
+                html += '</div>';
+            });
+
+            panel.innerHTML = html;
+        }
 
         const photoUpload = document.getElementById('photoUpload');
         const photoInput = document.getElementById('photo');
@@ -672,6 +815,7 @@
                 uploadedPhotos = [];
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('recordDate').value = today;
+                renderPortionPanelByDate(today);
             }
         });
     </script>
