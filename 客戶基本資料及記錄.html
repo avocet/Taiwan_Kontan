@@ -183,6 +183,12 @@
             font-size: 0.875rem;
         }
 
+        .birthday-select-group {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 8px;
+        }
+
         .radio-group {
             display: flex;
             flex-wrap: wrap;
@@ -477,7 +483,18 @@
                     
                     <div class="form-group half-width">
                         <label class="required">生日</label>
-                        <input type="date" id="birthday" name="birthday" required>
+                        <div class="birthday-select-group">
+                            <select id="birthdayYear" required>
+                                <option value="">年份</option>
+                            </select>
+                            <select id="birthdayMonth" required>
+                                <option value="">月</option>
+                            </select>
+                            <select id="birthdayDay" required>
+                                <option value="">日</option>
+                            </select>
+                        </div>
+                        <input type="hidden" id="birthday" name="birthday">
                     </div>
 
                     <div class="form-group half-width">
@@ -601,7 +618,7 @@
                     
                     // 自動填充表單
                     if (data.姓名) document.getElementById('name').value = data.姓名;
-                    if (data.生日) document.getElementById('birthday').value = data.生日;
+                    if (data.生日) setBirthdaySelectors(data.生日);
                     if (data.手機) document.getElementById('mobile').value = data.手機;
                     if (data.性別) {
                         const genderRadio = document.querySelector(`input[name="gender"][value="${data.性別}"]`);
@@ -674,6 +691,88 @@
             }
         }
 
+        function daysInMonth(year, month) {
+            return new Date(year, month, 0).getDate();
+        }
+
+        function populateBirthdaySelectors() {
+            const yearSelect = document.getElementById('birthdayYear');
+            const monthSelect = document.getElementById('birthdayMonth');
+            if (yearSelect.options.length === 1) {
+                const currentYear = new Date().getFullYear();
+                for (let year = currentYear; year >= 1900; year -= 1) {
+                    const option = document.createElement('option');
+                    option.value = String(year);
+                    option.textContent = String(year);
+                    yearSelect.appendChild(option);
+                }
+            }
+            if (monthSelect.options.length === 1) {
+                for (let month = 1; month <= 12; month += 1) {
+                    const option = document.createElement('option');
+                    option.value = String(month).padStart(2, '0');
+                    option.textContent = String(month);
+                    monthSelect.appendChild(option);
+                }
+            }
+        }
+
+        function updateBirthdayDays() {
+            const daySelect = document.getElementById('birthdayDay');
+            const year = Number(document.getElementById('birthdayYear').value);
+            const month = Number(document.getElementById('birthdayMonth').value);
+            const previousDay = daySelect.value;
+            daySelect.innerHTML = '<option value="">日</option>';
+            if (!year || !month) return;
+            const totalDays = daysInMonth(year, month);
+            for (let day = 1; day <= totalDays; day += 1) {
+                const option = document.createElement('option');
+                option.value = String(day).padStart(2, '0');
+                option.textContent = String(day);
+                daySelect.appendChild(option);
+            }
+            if (previousDay && Number(previousDay) <= totalDays) {
+                daySelect.value = previousDay;
+            }
+        }
+
+        function setBirthdaySelectors(dateStr) {
+            populateBirthdaySelectors();
+            const yearSelect = document.getElementById('birthdayYear');
+            const monthSelect = document.getElementById('birthdayMonth');
+            const daySelect = document.getElementById('birthdayDay');
+            if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                yearSelect.value = '';
+                monthSelect.value = '';
+                daySelect.innerHTML = '<option value="">日</option>';
+                daySelect.value = '';
+                document.getElementById('birthday').value = '';
+                return;
+            }
+            const [year, month, day] = dateStr.split('-');
+            yearSelect.value = year;
+            monthSelect.value = month;
+            updateBirthdayDays();
+            daySelect.value = day;
+            document.getElementById('birthday').value = `${year}-${month}-${day}`;
+        }
+
+        function syncBirthdayFromSelectors() {
+            const year = document.getElementById('birthdayYear').value;
+            const month = document.getElementById('birthdayMonth').value;
+            const birthdayInput = document.getElementById('birthday');
+            if (year && month) {
+                updateBirthdayDays();
+            }
+            const day = document.getElementById('birthdayDay').value;
+            if (year && month && day) {
+                birthdayInput.value = `${year}-${month}-${day}`;
+            } else {
+                birthdayInput.value = '';
+            }
+            syncAgeFromBirthday();
+        }
+
         function calculateAgeByBirthday(birthdayStr) {
             if (!birthdayStr) return '';
             const birthDate = new Date(birthdayStr + 'T00:00:00');
@@ -695,8 +794,10 @@
             document.getElementById('age').value = age === '' ? '' : String(age);
         }
 
-        document.getElementById('birthday').addEventListener('change', syncAgeFromBirthday);
-        document.getElementById('birthday').addEventListener('input', syncAgeFromBirthday);
+        populateBirthdaySelectors();
+        document.getElementById('birthdayYear').addEventListener('change', syncBirthdayFromSelectors);
+        document.getElementById('birthdayMonth').addEventListener('change', syncBirthdayFromSelectors);
+        document.getElementById('birthdayDay').addEventListener('change', syncBirthdayFromSelectors);
 
         // 設備檢測
         function updateDeviceIndicator() {
@@ -806,6 +907,8 @@
         resetBtn.addEventListener('click', function() {
             if (confirm('確定要清除所有資料嗎？')) {
                 form.reset();
+                setBirthdaySelectors('');
+                syncAgeFromBirthday();
                 radioOptions.forEach(option => option.classList.remove('selected'));
                 document.getElementById('age').value = '';
                 toggleFemaleOnlyFields();
