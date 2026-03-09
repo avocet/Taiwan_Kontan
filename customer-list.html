@@ -166,12 +166,28 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
+        .search-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         .search-box input {
             width: 100%;
             border: none;
             font-size: 1rem;
             outline: none;
             background: transparent;
+        }
+
+        .status-filter {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 0.875rem;
+            background: #fff;
+            color: #333;
+            min-width: 120px;
         }
 
         .customer-list {
@@ -216,6 +232,41 @@
         .customer-arrow {
             color: var(--text-secondary);
             font-size: 1.25rem;
+        }
+
+        .customer-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .status-select {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 0.8125rem;
+            color: #333;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-in-progress {
+            background: #E8F3FF;
+            color: #0A58CA;
+        }
+
+        .status-completed {
+            background: #EAF8EF;
+            color: #1E7E34;
         }
 
         .loading {
@@ -264,6 +315,15 @@
             .customer-name {
                 font-size: 1rem;
             }
+
+            .search-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .status-filter {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -278,7 +338,14 @@
 
     <div class="content">
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="搜尋客戶姓名或電話...">
+            <div class="search-controls">
+                <input type="text" id="searchInput" placeholder="搜尋客戶姓名或電話...">
+                <select id="courseStatusFilter" class="status-filter">
+                    <option value="全部">全部狀態</option>
+                    <option value="課程中">課程中</option>
+                    <option value="已完成">已完成</option>
+                </select>
+            </div>
         </div>
         <div class="loading" id="loading">
             <div class="loading-spinner"></div>
@@ -312,7 +379,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, orderBy, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -329,6 +396,7 @@
         const db = getFirestore(app);
 
         let allCustomers = [];
+        const courseStatusFilter = document.getElementById('courseStatusFilter');
 
         onAuthStateChanged(auth, (user) => {
             if (!user) {
@@ -426,7 +494,7 @@
                     allCustomers.push({ id: doc.id, ...doc.data() });
                 });
                 
-                renderCustomers(allCustomers);
+                applyFilters();
                 
             } catch (error) {
                 console.error('載入客戶資料錯誤:', error);
@@ -452,33 +520,83 @@
             let html = '';
             customers.forEach((customer) => {
                 const date = customer.建立時間 ? new Date(customer.建立時間.seconds * 1000).toLocaleDateString('zh-TW') : '-';
+                const status = getCourseStatus(customer);
+                const badgeClass = status === '已完成' ? 'status-completed' : 'status-in-progress';
                 html += `
                     <div class="customer-card" onclick="goToAdmin('${customer.userId}', '${customer.姓名 || ''}')">
                         <div class="customer-info">
                             <div class="customer-name">${customer.姓名 || '-'}</div>
                             <div class="customer-detail">電話：${customer.電話 || '-'} | 手機：${customer.手機 || '-'} | 建立日期：${date}</div>
                         </div>
-                        <div class="customer-arrow">›</div>
+                        <div class="customer-right">
+                            <span class="status-badge ${badgeClass}">${status}</span>
+                            <select class="status-select" data-customer-id="${customer.id}" onclick="event.stopPropagation()">
+                                <option value="課程中" ${status === '課程中' ? 'selected' : ''}>課程中</option>
+                                <option value="已完成" ${status === '已完成' ? 'selected' : ''}>已完成</option>
+                            </select>
+                            <div class="customer-arrow">›</div>
+                        </div>
                     </div>
                 `;
             });
             document.getElementById('customerList').innerHTML = html;
+            bindStatusSelectEvents();
+        }
+
+        function getCourseStatus(customer) {
+            return customer.課程狀態 === '已完成' ? '已完成' : '課程中';
+        }
+
+        function applyFilters() {
+            const searchTerm = (document.getElementById('searchInput').value || '').toLowerCase();
+            const selectedStatus = courseStatusFilter.value;
+            const filtered = allCustomers.filter((customer) => {
+                const name = (customer.姓名 || '').toLowerCase();
+                const phone = (customer.電話 || '').toLowerCase();
+                const mobile = (customer.手機 || '').toLowerCase();
+                const status = getCourseStatus(customer);
+                const matchesSearch = name.includes(searchTerm) || phone.includes(searchTerm) || mobile.includes(searchTerm);
+                const matchesStatus = selectedStatus === '全部' ? true : status === selectedStatus;
+                return matchesSearch && matchesStatus;
+            });
+            renderCustomers(filtered);
+        }
+
+        function bindStatusSelectEvents() {
+            const selects = document.querySelectorAll('.status-select');
+            selects.forEach((select) => {
+                select.addEventListener('change', async (event) => {
+                    event.stopPropagation();
+                    const customerId = select.dataset.customerId;
+                    const newStatus = select.value;
+                    select.disabled = true;
+                    try {
+                        await updateDoc(doc(db, '客戶資料', customerId), {
+                            課程狀態: newStatus
+                        });
+                        allCustomers = allCustomers.map((customer) => {
+                            if (customer.id === customerId) {
+                                return { ...customer, 課程狀態: newStatus };
+                            }
+                            return customer;
+                        });
+                        applyFilters();
+                    } catch (error) {
+                        console.error('更新課程狀態失敗:', error);
+                        alert('更新課程狀態失敗，請稍後再試');
+                    } finally {
+                        select.disabled = false;
+                    }
+                });
+            });
         }
 
         window.goToAdmin = function(userId, customerName) {
             window.location.href = `admin.html?userId=${userId}&name=${encodeURIComponent(customerName)}`;
         };
 
-        document.getElementById('searchInput').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            const filtered = allCustomers.filter(customer => {
-                const name = (customer.姓名 || '').toLowerCase();
-                const phone = (customer.電話 || '').toLowerCase();
-                const mobile = (customer.手機 || '').toLowerCase();
-                return name.includes(searchTerm) || phone.includes(searchTerm) || mobile.includes(searchTerm);
-            });
-            renderCustomers(filtered);
-        });
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        courseStatusFilter.addEventListener('change', applyFilters);
     </script>
 </body>
 </html>
