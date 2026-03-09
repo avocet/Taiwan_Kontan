@@ -742,6 +742,10 @@
             
             try {
                 console.log('Querying for name:', name);
+                const escapeHtml = (value) => String(value || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
                 
                 // 先取得學員的 uid
                 const userQuery = query(collection(db, "users"), where("username", "==", username));
@@ -802,6 +806,8 @@
                         const breakfast = record.早餐 || '-';
                         const lunch = record.午餐 || '-';
                         const dinner = record.晚餐 || '-';
+                        const adminAdvice = record.管理員建議 || '';
+                        const adminAdviceEscaped = escapeHtml(adminAdvice);
                         const matchedPortions = portionRecordsMobile.filter(portion => {
                             const startDate = portion.紀錄日期;
                             const endDate = portion.結束日期 || startDate;
@@ -839,6 +845,16 @@
                             }
                         }
                         portionSectionHtml += '</div>';
+
+                        const adviceSectionHtml = `
+                            <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e5e7eb;">
+                                <div style="font-weight:600;margin-bottom:8px;">給學員的建議</div>
+                                <textarea data-advice-input="true" data-record-id="${record.id}" style="width:100%;min-height:76px;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:0.875rem;resize:vertical;">${adminAdviceEscaped}</textarea>
+                                <div style="margin-top:8px;display:flex;justify-content:flex-end;">
+                                    <button class="saveAdviceBtn" data-record-id="${record.id}" style="background:#007AFF;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:0.8125rem;cursor:pointer;">儲存建議</button>
+                                </div>
+                            </div>
+                        `;
                         
                         html += `
                             <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
@@ -854,6 +870,7 @@
                                 </div>
                                 ${photosHtml}
                                 ${portionSectionHtml}
+                                ${adviceSectionHtml}
                             </div>
                         `;
                     }
@@ -927,8 +944,11 @@
                 const dietSnapshot = await getDocs(dietQuery);
                 
                 const dietRecords = [];
-                dietSnapshot.forEach(doc => {
-                    dietRecords.push(doc.data());
+                dietSnapshot.forEach(docSnap => {
+                    dietRecords.push({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    });
                 });
                 dietRecords.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
                 
@@ -960,6 +980,11 @@
                 
                 // 左邊顯示所有每日飲食紀錄
                 for (const daily of dietRecords) {
+                    const adminAdvice = daily.管理員建議 || '';
+                    const adminAdviceEscaped = String(adminAdvice)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
                     leftHtml += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
                             <div style="font-weight:600;margin-bottom:8px;">${daily.紀錄日期}</div>
@@ -969,6 +994,13 @@
                                 <div>早餐: ${daily.早餐 || '-'}</div>
                                 <div>午餐: ${daily.午餐 || '-'}</div>
                                 <div>晚餐: ${daily.晚餐 || '-'}</div>
+                            </div>
+                            <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e5e7eb;">
+                                <div style="font-weight:600;margin-bottom:8px;">給學員的建議</div>
+                                <textarea data-advice-input="true" data-record-id="${daily.id}" style="width:100%;min-height:68px;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:0.8rem;resize:vertical;">${adminAdviceEscaped}</textarea>
+                                <div style="margin-top:8px;display:flex;justify-content:flex-end;">
+                                    <button class="saveAdviceBtn" data-record-id="${daily.id}" style="background:#007AFF;color:white;border:none;padding:6px 10px;border-radius:8px;font-size:0.75rem;cursor:pointer;">儲存建議</button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -1143,6 +1175,58 @@
                 const portionId = btn.getAttribute('data-portion-id');
                 if (!portionId) return;
                 editPortionRecordById(portionId);
+            });
+        }
+
+        async function saveAdminAdvice(recordId, adviceText, buttonEl) {
+            if (!recordId) return;
+            if (buttonEl) {
+                buttonEl.disabled = true;
+                buttonEl.textContent = '儲存中...';
+            }
+            try {
+                await updateDoc(doc(db, "每日體重三圍", recordId), {
+                    管理員建議: adviceText || '',
+                    建議更新時間: new Date()
+                });
+                if (buttonEl) buttonEl.textContent = '已儲存';
+                setTimeout(() => {
+                    if (buttonEl) {
+                        buttonEl.disabled = false;
+                        buttonEl.textContent = '儲存建議';
+                    }
+                }, 900);
+            } catch (error) {
+                console.error('儲存建議失敗:', error);
+                alert('儲存建議失敗，請稍後再試');
+                if (buttonEl) {
+                    buttonEl.disabled = false;
+                    buttonEl.textContent = '儲存建議';
+                }
+            }
+        }
+
+        const mobileRecordsContent = document.getElementById('mobileRecordsContent');
+        if (mobileRecordsContent) {
+            mobileRecordsContent.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.saveAdviceBtn');
+                if (!btn) return;
+                const recordId = btn.getAttribute('data-record-id');
+                const textarea = mobileRecordsContent.querySelector(`textarea[data-advice-input="true"][data-record-id="${recordId}"]`);
+                const adviceText = textarea ? textarea.value.trim() : '';
+                await saveAdminAdvice(recordId, adviceText, btn);
+            });
+        }
+
+        const leftAlignedDisplay = document.getElementById('leftAlignedDisplay');
+        if (leftAlignedDisplay) {
+            leftAlignedDisplay.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.saveAdviceBtn');
+                if (!btn) return;
+                const recordId = btn.getAttribute('data-record-id');
+                const textarea = leftAlignedDisplay.querySelector(`textarea[data-advice-input="true"][data-record-id="${recordId}"]`);
+                const adviceText = textarea ? textarea.value.trim() : '';
+                await saveAdminAdvice(recordId, adviceText, btn);
             });
         }
 
