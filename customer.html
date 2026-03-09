@@ -223,6 +223,13 @@
             <h2 style="font-size:1.25rem;">學員列表</h2>
             <button id="addStudentBtn" style="background:#007AFF;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;">+ 新增學員</button>
         </div>
+        <div style="margin-bottom:12px;display:flex;justify-content:flex-end;">
+            <select id="courseStatusFilter" style="border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:0.875rem;background:#fff;color:#333;min-width:140px;">
+                <option value="全部">全部狀態</option>
+                <option value="課程中">課程中</option>
+                <option value="已完成">已完成</option>
+            </select>
+        </div>
         <div id="studentListContent"></div>
     </div>
 
@@ -534,6 +541,54 @@
             `;
         }
         renderMenu();
+        document.getElementById('courseStatusFilter').addEventListener('change', applyStudentListFilter);
+
+        let allStudents = [];
+
+        function getDisplayCourseStatus(statusValue) {
+            return statusValue === '已完成' ? '已完成' : '課程中';
+        }
+
+        function renderStudentList(filteredStudents) {
+            const content = document.getElementById('studentListContent');
+            if (filteredStudents.length === 0) {
+                content.innerHTML = '<p>目前沒有符合篩選條件的學員</p>';
+                return;
+            }
+            let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
+            for (const student of filteredStudents) {
+                const status = getDisplayCourseStatus(student.課程狀態);
+                const badgeBg = status === '已完成' ? '#EAF8EF' : '#E8F3FF';
+                const badgeColor = status === '已完成' ? '#1E7E34' : '#0A58CA';
+                html += `
+                    <div onclick="viewStudentRecords('${student.username}', '${student.studentName}')" style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                        <div style="min-width:0;flex:1;">
+                            <div style="font-weight:600;font-size:1rem;">${student.studentName}</div>
+                            <div style="color:#8E8E93;font-size:0.875rem;">${student.email || '-'}</div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;" onclick="event.stopPropagation()">
+                            <span style="padding:4px 8px;border-radius:999px;font-size:0.75rem;font-weight:600;background:${badgeBg};color:${badgeColor};">${status}</span>
+                            <select data-customer-doc-id="${student.customerDocId || ''}" data-username="${student.username}" data-email-prefix="${student.emailPrefix || ''}" onchange="updateStudentCourseStatus(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
+                                <option value="課程中" ${status === '課程中' ? 'selected' : ''}>課程中</option>
+                                <option value="已完成" ${status === '已完成' ? 'selected' : ''}>已完成</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            }
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function applyStudentListFilter() {
+            const filterEl = document.getElementById('courseStatusFilter');
+            const selectedStatus = filterEl ? filterEl.value : '全部';
+            const filteredStudents = allStudents.filter((student) => {
+                const status = getDisplayCourseStatus(student.課程狀態);
+                return selectedStatus === '全部' ? true : status === selectedStatus;
+            });
+            renderStudentList(filteredStudents);
+        }
 
         // 載入學員列表
         async function loadStudentList() {
@@ -547,40 +602,95 @@
                 console.log('usersSnapshot size:', usersSnapshot.size);
                 
                 if (usersSnapshot.empty) {
+                    allStudents = [];
                     content.innerHTML = '<p>目前沒有學員</p>';
                     return;
                 }
                 
-                let html = '<div style="display:flex;flex-direction:column;gap:12px;">';
+                allStudents = [];
                 
-                for (const doc of usersSnapshot.docs) {
-                    const userData = doc.data();
+                for (const userDoc of usersSnapshot.docs) {
+                    const userData = userDoc.data();
                     console.log('userData:', userData);
                     
                     const username = userData.username || userData.email?.split('@')[0] || '-';
                     if (username === '-') continue;
-                    
-                    // 嘗試用 username 查詢客戶資料
-                    const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", username));
-                    const customerSnapshot = await getDocs(customerQuery);
-                    const studentName = customerSnapshot.empty ? username : (customerSnapshot.docs[0].data().姓名 || username);
-                    
-                    html += `
-                        <div onclick="viewStudentRecords('${userData.username}', '${studentName}')" style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;">
-                            <div style="font-weight:600;font-size:1rem;">${studentName}</div>
-                            <div style="color:#8E8E93;font-size:0.875rem;">${userData.email || '-'}</div>
-                        </div>
-                    `;
+
+                    const uid = userData.uid || '';
+                    const emailPrefix = userData.email?.split('@')[0] || '';
+                    const candidateKeys = [uid, username, emailPrefix].filter(Boolean).map((k) => String(k).toLowerCase());
+                    let customerDocId = '';
+                    let customerData = null;
+                    for (const key of [...new Set(candidateKeys)]) {
+                        const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", key));
+                        const customerSnapshot = await getDocs(customerQuery);
+                        if (!customerSnapshot.empty) {
+                            customerDocId = customerSnapshot.docs[0].id;
+                            customerData = customerSnapshot.docs[0].data();
+                            break;
+                        }
+                    }
+
+                    allStudents.push({
+                        username: userData.username || username,
+                        email: userData.email || '-',
+                        emailPrefix,
+                        studentName: customerData?.姓名 || username,
+                        customerDocId,
+                        課程狀態: customerData?.課程狀態 || '課程中'
+                    });
                 }
                 
-                html += '</div>';
-                content.innerHTML = html;
-                
+                applyStudentListFilter();
             } catch (error) {
                 console.error('載入學員列表失敗:', error);
                 content.innerHTML = '<p>載入失敗</p>';
             }
         }
+
+        window.updateStudentCourseStatus = async function(event) {
+            event.stopPropagation();
+            const select = event.target;
+            const customerDocId = select.dataset.customerDocId;
+            const username = (select.dataset.username || '').toLowerCase();
+            const emailPrefix = (select.dataset.emailPrefix || '').toLowerCase();
+            const newStatus = select.value;
+            select.disabled = true;
+            try {
+                if (customerDocId) {
+                    await updateDoc(doc(db, "客戶資料", customerDocId), { 課程狀態: newStatus });
+                } else {
+                    const candidateKeys = [username, emailPrefix].filter(Boolean);
+                    let updated = false;
+                    for (const key of candidateKeys) {
+                        const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", key));
+                        const customerSnapshot = await getDocs(customerQuery);
+                        if (!customerSnapshot.empty) {
+                            await updateDoc(doc(db, "客戶資料", customerSnapshot.docs[0].id), { 課程狀態: newStatus });
+                            updated = true;
+                            break;
+                        }
+                    }
+                    if (!updated) {
+                        alert('找不到此學員對應的客戶資料，無法標注狀態');
+                        return;
+                    }
+                }
+
+                allStudents = allStudents.map((student) => {
+                    if ((student.username || '').toLowerCase() === username) {
+                        return { ...student, 課程狀態: newStatus };
+                    }
+                    return student;
+                });
+                applyStudentListFilter();
+            } catch (error) {
+                console.error('更新學員課程狀態失敗:', error);
+                alert('更新狀態失敗，請稍後再試');
+            } finally {
+                select.disabled = false;
+            }
+        };
 
         let currentStudentUsername = null;
         let currentStudentName = null;
