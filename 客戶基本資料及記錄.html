@@ -893,6 +893,15 @@
                 
                 // 更新按鈕文字
                 submitBtn.textContent = '更新資料';
+
+                // 儲存成功後自動返回前一頁
+                setTimeout(() => {
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        window.location.href = 'customer.html';
+                    }
+                }, 1200);
                 
             } catch (error) {
                 console.error('錯誤: ', error);
