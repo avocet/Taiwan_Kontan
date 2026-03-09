@@ -270,6 +270,62 @@
             border: none;
         }
 
+        .portion-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .portion-title {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .portion-empty {
+            background: #f7f7f9;
+            border: 1px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+        }
+
+        .portion-card {
+            background: #f8fbff;
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+
+        .portion-period {
+            font-size: 0.75rem;
+            color: #1d4ed8;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .portion-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 4px;
+            font-size: 0.8125rem;
+        }
+
+        .portion-meal {
+            color: #111827;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .portion-values {
+            color: #374151;
+            font-variant-numeric: tabular-nums;
+        }
+
         @media screen and (max-width: 428px) {
             .header {
                 padding: 16px;
@@ -283,6 +339,12 @@
 
             .data-info {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .portion-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 2px;
             }
         }
     </style>
@@ -459,24 +521,25 @@
                 return `${d.getMonth() + 1}/${d.getDate()}`;
             };
 
-            let portionHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">';
-            portionHtml += '<div class="data-item" style="margin-bottom:8px;"><span class="data-label">管理員飲食份數表</span></div>';
+            let portionHtml = '<div class="portion-section">';
+            portionHtml += '<div class="portion-title">管理員飲食份數表</div>';
 
             if (matchedPortions.length === 0) {
-                portionHtml += '<div class="data-item"><span class="data-value" style="color:var(--text-secondary);">此日期沒有設定飲食份數表</span></div>';
+                portionHtml += '<div class="portion-empty">此日期沒有設定飲食份數表</div>';
             } else {
                 matchedPortions.forEach((portion) => {
                     const startDate = portion.紀錄日期 || '-';
                     const endDate = portion.結束日期 || startDate;
-                    portionHtml += `<div class="data-item" style="margin-bottom:8px;"><span class="data-label">期間</span><span class="data-value">${formatDate(startDate)} 到 ${formatDate(endDate)}</span></div>`;
+                    portionHtml += `<div class="portion-card"><div class="portion-period">期間：${formatDate(startDate)} 到 ${formatDate(endDate)}</div>`;
                     meals.forEach((meal) => {
                         const time = portion[`${meal}時間`] || '';
                         const c = portion[`${meal}C`] || 0;
                         const p = portion[`${meal}P`] || 0;
                         const f = portion[`${meal}F`] || 0;
                         const v = portion[`${meal}V`] || 0;
-                        portionHtml += `<div class="data-item" style="margin-bottom:6px;"><span class="data-label">${meal}${time ? ' ' + time : ''}</span><span class="data-value">C:${c} P:${p} F:${f} V:${v}</span></div>`;
+                        portionHtml += `<div class="portion-row"><span class="portion-meal">${meal}${time ? ' ' + time : ''}</span><span class="portion-values">C:${c} P:${p} F:${f} V:${v}</span></div>`;
                     });
+                    portionHtml += '</div>';
                 });
             }
             portionHtml += '</div>';
