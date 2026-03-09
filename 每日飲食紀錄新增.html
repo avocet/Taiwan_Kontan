@@ -576,6 +576,7 @@
 
         let currentUser = null;
         let userPortionRecords = [];
+        let portionRecordsLoaded = false;
         const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
 
         onAuthStateChanged(auth, async (user) => {
@@ -589,8 +590,7 @@
                 await signOut(auth);
                 window.location.replace('index.html');
             }
-            await loadUserPortionRecords();
-            renderPortionPanelByDate(document.getElementById('recordDate').value);
+            await refreshPortionPanel();
         });
 
         window.onpageshow = function(event) {
@@ -632,12 +632,15 @@
         document.addEventListener('DOMContentLoaded', function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('recordDate').value = today;
-            renderPortionPanelByDate(today);
+            refreshPortionPanel();
         });
 
         const recordDateInput = document.getElementById('recordDate');
         recordDateInput.addEventListener('change', function() {
-            renderPortionPanelByDate(this.value);
+            refreshPortionPanel();
+        });
+        recordDateInput.addEventListener('input', function() {
+            refreshPortionPanel();
         });
 
         async function loadUserPortionRecords() {
@@ -648,6 +651,25 @@
                 id: docSnap.id,
                 ...docSnap.data()
             })).sort((a, b) => (b.紀錄日期 || '').localeCompare(a.紀錄日期 || ''));
+            portionRecordsLoaded = true;
+        }
+
+        async function refreshPortionPanel() {
+            const dateStr = document.getElementById('recordDate').value;
+            if (!currentUser) {
+                renderPortionPanelByDate(dateStr);
+                return;
+            }
+            try {
+                if (!portionRecordsLoaded) {
+                    await loadUserPortionRecords();
+                }
+                renderPortionPanelByDate(dateStr);
+            } catch (error) {
+                console.error('載入飲食份數表失敗:', error);
+                const panel = document.getElementById('portionPanelContent');
+                if (panel) panel.innerHTML = '<div class="portion-empty">載入飲食份數表失敗</div>';
+            }
         }
 
         function renderPortionPanelByDate(dateStr) {
@@ -815,7 +837,7 @@
                 uploadedPhotos = [];
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('recordDate').value = today;
-                renderPortionPanelByDate(today);
+                refreshPortionPanel();
             }
         });
     </script>
