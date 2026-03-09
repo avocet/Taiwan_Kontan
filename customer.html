@@ -312,6 +312,7 @@
             <button type="button" class="mobile-info-btn" data-panel="basic">學員基本資料</button>
             <button type="button" class="mobile-info-btn" data-panel="initial">初始體重三圍</button>
             <button type="button" class="mobile-info-btn" data-panel="constitution">中醫體質檢測</button>
+            <button type="button" class="mobile-info-btn" data-panel="trend">體重曲線圖</button>
         </div>
         
         <!-- 電腦版：並排顯示 -->
@@ -329,6 +330,10 @@
                     </div>
                     <div id="studentConstitutionCard" style="background:white;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                         <div style="font-weight:600;margin-bottom:6px;">中醫體質檢測</div>
+                        <div style="font-size:0.8125rem;color:#6b7280;">載入中...</div>
+                    </div>
+                    <div id="studentTrendCard" style="background:white;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="font-weight:600;margin-bottom:6px;">體重紀錄曲線圖</div>
                         <div style="font-size:0.8125rem;color:#6b7280;">載入中...</div>
                     </div>
                 </div>
@@ -355,6 +360,18 @@
             <div class="mobile-info-modal-title" id="mobileInfoModalTitle">資料</div>
             <div id="mobileInfoModalBody" style="font-size:0.875rem;line-height:1.7;"></div>
             <button type="button" class="mobile-info-modal-close" id="mobileInfoModalClose">關閉</button>
+        </div>
+    </div>
+
+    <div class="mobile-info-modal" id="trendChartModal">
+        <div class="mobile-info-modal-card" style="width:min(860px,100%);">
+            <div class="mobile-info-modal-title">體重紀錄曲線圖</div>
+            <div style="font-size:0.8125rem;color:#6b7280;margin-bottom:8px;">依日期顯示體重(kg)與體脂(%)</div>
+            <div style="position:relative;height:min(58vh,420px);">
+                <canvas id="studentTrendChartCanvas"></canvas>
+            </div>
+            <div id="trendChartEmpty" style="display:none;font-size:0.8125rem;color:#9ca3af;margin-top:8px;">尚無可繪製資料</div>
+            <button type="button" class="mobile-info-modal-close" id="trendChartModalClose">關閉</button>
         </div>
     </div>
 
@@ -495,6 +512,7 @@
     <div class="menu-grid" id="menuGrid">
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
@@ -820,10 +838,12 @@
         let currentStudentEmail = '';
         let editingPortionDocId = null;
         window.portionRecordsData = [];
+        let studentTrendChart = null;
         let currentStudentSideData = {
             basicInfo: null,
             initialBody: null,
-            constitution: null
+            constitution: null,
+            trendRecords: []
         };
 
         function escapeHtml(value) {
@@ -989,6 +1009,117 @@
             `;
         }
 
+        function buildTrendPoints(records = []) {
+            return records
+                .filter((row) => row && row.紀錄日期)
+                .sort((a, b) => String(a.紀錄日期).localeCompare(String(b.紀錄日期)))
+                .map((row) => {
+                    const weight = Number(row.體重);
+                    const fat = Number(row.體脂);
+                    return {
+                        date: String(row.紀錄日期),
+                        weight: Number.isFinite(weight) ? weight : null,
+                        fat: Number.isFinite(fat) ? fat : null
+                    };
+                });
+        }
+
+        function renderStudentTrendCard(records = []) {
+            const card = document.getElementById('studentTrendCard');
+            if (!card) return;
+            const points = buildTrendPoints(records);
+            if (!points.length) {
+                card.innerHTML = `
+                    <div style="font-weight:600;margin-bottom:6px;">體重紀錄曲線圖</div>
+                    <div style="font-size:0.8125rem;color:#9ca3af;">尚無可繪製資料</div>
+                `;
+                return;
+            }
+            const firstDate = points[0].date;
+            const lastDate = points[points.length - 1].date;
+            const weightCount = points.filter((p) => p.weight !== null).length;
+            const fatCount = points.filter((p) => p.fat !== null).length;
+            card.innerHTML = `
+                <div style="font-weight:600;margin-bottom:6px;">體重紀錄曲線圖</div>
+                <div style="font-size:0.8125rem;line-height:1.6;">
+                    <div>期間：${escapeHtml(firstDate)} ~ ${escapeHtml(lastDate)}</div>
+                    <div>體重點數：${weightCount}</div>
+                    <div>體脂點數：${fatCount}</div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button type="button" class="mobile-info-btn openTrendChartBtn" style="width:100%;padding:8px 10px;">查看曲線圖</button>
+                </div>
+            `;
+        }
+
+        function renderTrendChart(records = []) {
+            const points = buildTrendPoints(records);
+            const emptyEl = document.getElementById('trendChartEmpty');
+            const canvas = document.getElementById('studentTrendChartCanvas');
+            if (!canvas) return;
+            if (studentTrendChart) {
+                studentTrendChart.destroy();
+                studentTrendChart = null;
+            }
+            if (!points.length) {
+                emptyEl.style.display = 'block';
+                return;
+            }
+            emptyEl.style.display = 'none';
+            const labels = points.map((p) => p.date);
+            const weight = points.map((p) => p.weight);
+            const fat = points.map((p) => p.fat);
+            const ctx = canvas.getContext('2d');
+            studentTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: '體重 (kg)',
+                            data: weight,
+                            borderColor: '#007AFF',
+                            backgroundColor: 'rgba(0,122,255,0.18)',
+                            borderWidth: 2,
+                            pointRadius: 2.5,
+                            tension: 0.28,
+                            spanGaps: true
+                        },
+                        {
+                            label: '體脂 (%)',
+                            data: fat,
+                            borderColor: '#FF2D55',
+                            backgroundColor: 'rgba(255,45,85,0.18)',
+                            borderWidth: 2,
+                            pointRadius: 2.5,
+                            tension: 0.28,
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'top' } },
+                    scales: {
+                        x: { ticks: { autoSkip: true, maxTicksLimit: 8 } },
+                        y: { beginAtZero: false }
+                    }
+                }
+            });
+        }
+
+        function openTrendChartModal() {
+            const records = currentStudentSideData.trendRecords || [];
+            renderTrendChart(records);
+            document.getElementById('trendChartModal').classList.add('show');
+        }
+
+        function closeTrendChartModal() {
+            document.getElementById('trendChartModal').classList.remove('show');
+        }
+
         function getMobilePanelHtml(panel) {
             if (panel === 'basic') {
                 const data = currentStudentSideData.basicInfo;
@@ -1012,6 +1143,19 @@
                     <div>臀圍：${escapeHtml(data.臀圍 || '-')} cm</div>
                 `;
             }
+            if (panel === 'trend') {
+                const points = buildTrendPoints(currentStudentSideData.trendRecords || []);
+                if (!points.length) return '<div style="color:#9ca3af;">尚無可繪製資料</div>';
+                const firstDate = points[0].date;
+                const lastDate = points[points.length - 1].date;
+                return `
+                    <div>期間：${escapeHtml(firstDate)} ~ ${escapeHtml(lastDate)}</div>
+                    <div>紀錄筆數：${points.length}</div>
+                    <div style="margin-top:8px;">
+                        <button type="button" class="mobile-info-btn openTrendChartBtn" style="width:100%;padding:8px 10px;">開啟曲線圖</button>
+                    </div>
+                `;
+            }
             const data = currentStudentSideData.constitution;
             if (!data) return '<div style="color:#9ca3af;">尚無檢測資料</div>';
             const constitutionType = resolveConstitutionType(data.冷熱體質分數, data.濕乾體質分數);
@@ -1027,7 +1171,8 @@
             const titleMap = {
                 basic: '學員基本資料',
                 initial: '初始體重三圍',
-                constitution: '中醫體質檢測'
+                constitution: '中醫體質檢測',
+                trend: '體重紀錄曲線圖'
             };
             document.getElementById('mobileInfoModalTitle').textContent = titleMap[panel] || '資料';
             document.getElementById('mobileInfoModalBody').innerHTML = getMobilePanelHtml(panel);
@@ -1047,6 +1192,7 @@
                 renderStudentBasicInfoCard(null);
                 renderStudentInitialBodyCard(null);
                 renderStudentConstitutionCard(null);
+                renderStudentTrendCard([]);
                 return;
             }
             const [basicInfo, initialBody, constitutionData] = await Promise.all([
@@ -1062,6 +1208,7 @@
             renderStudentBasicInfoCard(basicInfo);
             renderStudentInitialBodyCard(initialBody);
             renderStudentConstitutionCard(constitutionData);
+            renderStudentTrendCard(currentStudentSideData.trendRecords || []);
         }
 
         // 查看學員飲食紀錄
@@ -1117,6 +1264,8 @@
                     id: doc.id,
                     ...doc.data()
                 })).sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+                currentStudentSideData.trendRecords = records;
+                renderStudentTrendCard(records);
 
                 // 用 uid 查詢學員的飲食份數表（手機版也要顯示）
                 const portionQueryMobile = query(collection(db, "飲食份數表"), where("userId", "==", userUid));
@@ -1506,11 +1655,13 @@
         document.getElementById('backToListBtn').addEventListener('click', () => {
             document.getElementById('studentRecords').style.display = 'none';
             document.getElementById('studentList').style.display = 'block';
-            currentStudentSideData = { basicInfo: null, initialBody: null, constitution: null };
+            currentStudentSideData = { basicInfo: null, initialBody: null, constitution: null, trendRecords: [] };
             renderStudentBasicInfoCard(null);
             renderStudentInitialBodyCard(null);
             renderStudentConstitutionCard(null);
+            renderStudentTrendCard([]);
             closeMobileInfoModal();
+            closeTrendChartModal();
             loadStudentList();
         });
 
@@ -1521,7 +1672,11 @@
                 if (!btn) return;
                 const panel = btn.getAttribute('data-panel');
                 if (!panel) return;
-                openMobileInfoModal(panel);
+                if (panel === 'trend') {
+                    openTrendChartModal();
+                } else {
+                    openMobileInfoModal(panel);
+                }
             });
         }
 
@@ -1537,6 +1692,25 @@
         if (mobileInfoModalClose) {
             mobileInfoModalClose.addEventListener('click', closeMobileInfoModal);
         }
+
+        const trendChartModal = document.getElementById('trendChartModal');
+        if (trendChartModal) {
+            trendChartModal.addEventListener('click', (e) => {
+                if (e.target === trendChartModal) {
+                    closeTrendChartModal();
+                }
+            });
+        }
+        const trendChartModalClose = document.getElementById('trendChartModalClose');
+        if (trendChartModalClose) {
+            trendChartModalClose.addEventListener('click', closeTrendChartModal);
+        }
+
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.openTrendChartBtn');
+            if (!btn) return;
+            openTrendChartModal();
+        });
 
         const rightAlignedDisplay = document.getElementById('rightAlignedDisplay');
         if (rightAlignedDisplay) {
