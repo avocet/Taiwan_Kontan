@@ -367,6 +367,28 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .advice-section {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border: 1px solid #d1fae5;
+            background: #ecfdf5;
+            border-radius: 12px;
+        }
+
+        .advice-title {
+            font-size: 0.75rem;
+            color: #065f46;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .advice-content {
+            font-size: 0.875rem;
+            color: #064e3b;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
         @media screen and (max-width: 428px) {
             .header {
                 padding: 16px;
@@ -547,6 +569,10 @@
 
         // 建立資料卡片
         function createDataCard(data, docId, portionRecords = []) {
+            const escapeHtml = (value) => String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
             const date = data.紀錄日期 || '-';
             const matchedPortions = portionRecords.filter((portion) => {
                 const startDate = portion.紀錄日期 || '';
@@ -594,6 +620,10 @@
                 });
             }
             portionHtml += '</div>';
+
+            const adviceHtml = data.管理員建議
+                ? `<div class="advice-section"><div class="advice-title">管理者營養師建議</div><div class="advice-content">${escapeHtml(data.管理員建議)}</div></div>`
+                : '';
             
             return `
                 <div class="data-card">
@@ -630,6 +660,7 @@
                                 <span class="data-value">${data.晚餐 || '-'}</span>
                             </div>
                             ${data.備註 ? `<div class="data-item"><span class="data-label">備註</span><span class="data-value">${data.備註}</span></div>` : ''}
+                            ${adviceHtml}
                         </div>
                         ${portionHtml}
                     </div>
