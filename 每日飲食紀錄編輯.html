@@ -772,6 +772,26 @@
             }
         });
 
+        function updatePortionPopupButtonPosition() {
+            const isMobile = window.matchMedia('(max-width: 428px)').matches;
+            if (!isMobile) {
+                openPortionModalBtn.style.top = '';
+                return;
+            }
+            const baseTop = 10;
+            const vv = window.visualViewport;
+            const offsetTop = vv ? vv.offsetTop : 0;
+            openPortionModalBtn.style.top = `${baseTop + Math.max(0, offsetTop)}px`;
+        }
+
+        updatePortionPopupButtonPosition();
+        window.addEventListener('resize', updatePortionPopupButtonPosition);
+        window.addEventListener('orientationchange', updatePortionPopupButtonPosition);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updatePortionPopupButtonPosition);
+            window.visualViewport.addEventListener('scroll', updatePortionPopupButtonPosition);
+        }
+
         const recordDateInput = document.getElementById('recordDate');
         recordDateInput.addEventListener('change', function() {
             renderPortionPanelByDate(this.value);
