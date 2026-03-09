@@ -389,6 +389,134 @@
             white-space: pre-wrap;
         }
 
+        .advice-actions {
+            margin-top: 8px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .reply-btn {
+            background: #0f766e;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .reply-btn:hover {
+            background: #0d5e58;
+        }
+
+        .student-reply {
+            margin-top: 8px;
+            border: 1px solid #bfdbfe;
+            background: #eff6ff;
+            border-radius: 10px;
+            padding: 8px 10px;
+        }
+
+        .student-reply-title {
+            font-size: 0.75rem;
+            color: #1e3a8a;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .student-reply-content {
+            font-size: 0.875rem;
+            color: #1e3a8a;
+            white-space: pre-wrap;
+            line-height: 1.5;
+        }
+
+        .dialog-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 2500;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .dialog-modal.show {
+            display: flex;
+        }
+
+        .dialog-content {
+            width: min(520px, 100%);
+            background: #fff;
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .dialog-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .dialog-box {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            font-size: 0.875rem;
+        }
+
+        .dialog-box.admin {
+            background: #ecfdf5;
+            border-color: #a7f3d0;
+            color: #064e3b;
+        }
+
+        .dialog-box.student {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1e3a8a;
+        }
+
+        .reply-textarea {
+            width: 100%;
+            min-height: 92px;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 10px;
+            resize: vertical;
+            font-size: 0.875rem;
+            margin-bottom: 10px;
+        }
+
+        .dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .dialog-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.8125rem;
+        }
+
+        .dialog-btn.cancel {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .dialog-btn.save {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
         @media screen and (max-width: 428px) {
             .header {
                 padding: 16px;
@@ -446,10 +574,23 @@
         <img class="modal-img" id="modalImg" src="" alt="照片">
     </div>
 
+    <div class="dialog-modal" id="replyModal">
+        <div class="dialog-content">
+            <div class="dialog-title">回覆管理者營養師建議</div>
+            <div class="dialog-box admin" id="replyModalAdminAdvice">-</div>
+            <div class="dialog-box student" id="replyModalStudentReply">尚未回覆</div>
+            <textarea class="reply-textarea" id="replyInput" placeholder="請輸入你的回覆..."></textarea>
+            <div class="dialog-actions">
+                <button class="dialog-btn cancel" id="cancelReplyBtn">取消</button>
+                <button class="dialog-btn save" id="saveReplyBtn">送出回覆</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs, orderBy, doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, orderBy, doc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getStorage, ref, deleteObject } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
         const firebaseConfig = {
@@ -466,6 +607,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const storage = getStorage(app);
+        let replyingRecordId = '';
 
         // 檢查登入狀態
         let currentUser = null;
@@ -573,6 +715,12 @@
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
+            const escapeAttr = (value) => String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
             const date = data.紀錄日期 || '-';
             const matchedPortions = portionRecords.filter((portion) => {
                 const startDate = portion.紀錄日期 || '';
@@ -622,7 +770,16 @@
             portionHtml += '</div>';
 
             const adviceHtml = data.管理員建議
-                ? `<div class="advice-section"><div class="advice-title">管理者營養師建議</div><div class="advice-content">${escapeHtml(data.管理員建議)}</div></div>`
+                ? `
+                    <div class="advice-section">
+                        <div class="advice-title">管理者營養師建議</div>
+                        <div class="advice-content">${escapeHtml(data.管理員建議)}</div>
+                        ${data.學員回覆 ? `<div class="student-reply"><div class="student-reply-title">你的回覆</div><div class="student-reply-content">${escapeHtml(data.學員回覆)}</div></div>` : ''}
+                        <div class="advice-actions">
+                            <button class="reply-btn" data-record-id="${docId}" data-admin-advice="${escapeAttr(data.管理員建議)}" data-student-reply="${escapeAttr(data.學員回覆 || '')}">回覆建議</button>
+                        </div>
+                    </div>
+                `
                 : '';
             
             return `
@@ -684,6 +841,16 @@
             }
         });
 
+        document.getElementById('dataList').addEventListener('click', (e) => {
+            const btn = e.target.closest('.reply-btn');
+            if (!btn) return;
+            openReplyDialog(
+                btn.getAttribute('data-record-id') || '',
+                btn.getAttribute('data-admin-advice') || '',
+                btn.getAttribute('data-student-reply') || ''
+            );
+        });
+
         window.editData = function(docId) {
             window.location.href = `每日飲食紀錄編輯.html?id=${docId}`;
         };
@@ -719,6 +886,55 @@
                 alert('刪除失敗: ' + error.message);
             }
         };
+
+        window.openReplyDialog = function(recordId, adminAdvice = '', studentReply = '') {
+            const decodeHtml = (value) => {
+                const textarea = document.createElement('textarea');
+                textarea.innerHTML = value || '';
+                return textarea.value;
+            };
+            replyingRecordId = recordId;
+            const adminAdviceText = decodeHtml(adminAdvice);
+            const studentReplyText = decodeHtml(studentReply);
+            document.getElementById('replyModalAdminAdvice').textContent = adminAdviceText || '-';
+            document.getElementById('replyModalStudentReply').textContent = studentReplyText || '尚未回覆';
+            document.getElementById('replyInput').value = studentReplyText || '';
+            document.getElementById('replyModal').classList.add('show');
+        };
+
+        function closeReplyDialog() {
+            replyingRecordId = '';
+            document.getElementById('replyModal').classList.remove('show');
+        }
+
+        document.getElementById('cancelReplyBtn').addEventListener('click', closeReplyDialog);
+        document.getElementById('replyModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('replyModal')) {
+                closeReplyDialog();
+            }
+        });
+
+        document.getElementById('saveReplyBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('saveReplyBtn');
+            const replyText = document.getElementById('replyInput').value.trim();
+            if (!replyingRecordId) return;
+            btn.disabled = true;
+            btn.textContent = '送出中...';
+            try {
+                await updateDoc(doc(db, "每日體重三圍", replyingRecordId), {
+                    學員回覆: replyText,
+                    學員回覆更新時間: new Date()
+                });
+                closeReplyDialog();
+                await loadData(currentUser.uid);
+            } catch (error) {
+                console.error('送出回覆失敗:', error);
+                alert('送出回覆失敗，請稍後再試');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '送出回覆';
+            }
+        });
     </script>
 </body>
 </html>

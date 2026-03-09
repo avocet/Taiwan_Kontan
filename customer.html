@@ -807,7 +807,9 @@
                         const lunch = record.午餐 || '-';
                         const dinner = record.晚餐 || '-';
                         const adminAdvice = record.管理員建議 || '';
+                        const studentReply = record.學員回覆 || '';
                         const adminAdviceEscaped = escapeHtml(adminAdvice);
+                        const studentReplyEscaped = escapeHtml(studentReply);
                         const matchedPortions = portionRecordsMobile.filter(portion => {
                             const startDate = portion.紀錄日期;
                             const endDate = portion.結束日期 || startDate;
@@ -853,6 +855,7 @@
                                 <div style="margin-top:8px;display:flex;justify-content:flex-end;">
                                     <button class="saveAdviceBtn" data-record-id="${record.id}" style="background:#007AFF;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:0.8125rem;cursor:pointer;">儲存建議</button>
                                 </div>
+                                ${studentReply ? `<div style="margin-top:8px;padding:10px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:8px;"><div style="font-size:0.75rem;color:#1e3a8a;font-weight:600;margin-bottom:4px;">學員回覆</div><div style="font-size:0.875rem;color:#1e3a8a;white-space:pre-wrap;line-height:1.5;">${studentReplyEscaped}</div></div>` : ''}
                             </div>
                         `;
                         
@@ -981,7 +984,12 @@
                 // 左邊顯示所有每日飲食紀錄
                 for (const daily of dietRecords) {
                     const adminAdvice = daily.管理員建議 || '';
+                    const studentReply = daily.學員回覆 || '';
                     const adminAdviceEscaped = String(adminAdvice)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                    const studentReplyEscaped = String(studentReply)
                         .replace(/&/g, '&amp;')
                         .replace(/</g, '&lt;')
                         .replace(/>/g, '&gt;');
@@ -1001,6 +1009,7 @@
                                 <div style="margin-top:8px;display:flex;justify-content:flex-end;">
                                     <button class="saveAdviceBtn" data-record-id="${daily.id}" style="background:#007AFF;color:white;border:none;padding:6px 10px;border-radius:8px;font-size:0.75rem;cursor:pointer;">儲存建議</button>
                                 </div>
+                                ${studentReply ? `<div style="margin-top:8px;padding:8px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:8px;"><div style="font-size:0.72rem;color:#1e3a8a;font-weight:600;margin-bottom:4px;">學員回覆</div><div style="font-size:0.8rem;color:#1e3a8a;white-space:pre-wrap;line-height:1.5;">${studentReplyEscaped}</div></div>` : ''}
                             </div>
                         </div>
                     `;
