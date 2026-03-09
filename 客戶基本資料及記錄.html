@@ -484,7 +484,7 @@
                     
                     <div class="form-group half-width">
                         <label class="required">年齡</label>
-                        <input type="number" id="age" name="age" placeholder="請輸入年齡" min="1" max="150" required>
+                        <input type="number" id="age" name="age" placeholder="由生日自動計算" min="1" max="150" readonly>
                     </div>
                     
                     <div class="form-group half-width">
@@ -607,7 +607,6 @@
                     // 自動填充表單
                     if (data.姓名) document.getElementById('name').value = data.姓名;
                     if (data.電話) document.getElementById('phone').value = data.電話;
-                    if (data.年齡) document.getElementById('age').value = data.年齡;
                     if (data.生日) document.getElementById('birthday').value = data.生日;
                     if (data.手機) document.getElementById('mobile').value = data.手機;
                     if (data.性別) {
@@ -626,6 +625,7 @@
                     document.getElementById('submitBtn').textContent = '更新資料';
                     document.getElementById('formTitle').textContent = '體重管理班學員基本資料';
                 }
+                syncAgeFromBirthday();
                 toggleFemaleOnlyFields();
             } catch (error) {
                 console.error('載入資料失敗:', error);
@@ -680,6 +680,30 @@
             }
         }
 
+        function calculateAgeByBirthday(birthdayStr) {
+            if (!birthdayStr) return '';
+            const birthDate = new Date(birthdayStr + 'T00:00:00');
+            if (Number.isNaN(birthDate.getTime())) return '';
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            const dayDiff = today.getDate() - birthDate.getDate();
+            if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+                age -= 1;
+            }
+            if (age < 0) return '';
+            return age;
+        }
+
+        function syncAgeFromBirthday() {
+            const birthday = document.getElementById('birthday').value;
+            const age = calculateAgeByBirthday(birthday);
+            document.getElementById('age').value = age === '' ? '' : String(age);
+        }
+
+        document.getElementById('birthday').addEventListener('change', syncAgeFromBirthday);
+        document.getElementById('birthday').addEventListener('input', syncAgeFromBirthday);
+
         // 設備檢測
         function updateDeviceIndicator() {
             const width = window.innerWidth;
@@ -727,11 +751,11 @@
             
             const name = document.getElementById('name').value.trim();
             const phone = document.getElementById('phone').value.trim();
-            const age = document.getElementById('age').value.trim();
             const birthday = document.getElementById('birthday').value;
             const mobile = document.getElementById('mobile').value.trim();
+            const age = String(calculateAgeByBirthday(birthday) || '').trim();
             
-            if (!name || !phone || !age || !birthday || !mobile) {
+            if (!name || !phone || !birthday || !mobile || !age) {
                 alert('請填寫所有必填欄位');
                 return;
             }
@@ -791,6 +815,7 @@
             if (confirm('確定要清除所有資料嗎？')) {
                 form.reset();
                 radioOptions.forEach(option => option.classList.remove('selected'));
+                document.getElementById('age').value = '';
                 toggleFemaleOnlyFields();
             }
         });
