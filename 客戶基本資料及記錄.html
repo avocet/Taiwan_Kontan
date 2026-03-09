@@ -183,24 +183,6 @@
             font-size: 0.875rem;
         }
 
-        .birthday-helper {
-            margin-top: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .birthday-helper input {
-            max-width: 120px;
-            padding: 10px 12px;
-            font-size: 0.875rem;
-        }
-
-        .birthday-helper span {
-            font-size: 0.8125rem;
-            color: var(--text-secondary);
-        }
-
         .radio-group {
             display: flex;
             flex-wrap: wrap;
@@ -496,10 +478,6 @@
                     <div class="form-group half-width">
                         <label class="required">生日</label>
                         <input type="date" id="birthday" name="birthday" required>
-                        <div class="birthday-helper">
-                            <input type="number" id="birthdayYearInput" min="1900" max="2100" placeholder="年份">
-                            <span>可直接輸入年份</span>
-                        </div>
                     </div>
 
                     <div class="form-group half-width">
@@ -715,34 +693,10 @@
             const birthday = document.getElementById('birthday').value;
             const age = calculateAgeByBirthday(birthday);
             document.getElementById('age').value = age === '' ? '' : String(age);
-            const yearInput = document.getElementById('birthdayYearInput');
-            if (birthday) {
-                yearInput.value = birthday.split('-')[0] || '';
-            } else {
-                yearInput.value = '';
-            }
         }
 
         document.getElementById('birthday').addEventListener('change', syncAgeFromBirthday);
         document.getElementById('birthday').addEventListener('input', syncAgeFromBirthday);
-        document.getElementById('birthdayYearInput').addEventListener('input', function() {
-            const year = String(this.value || '').trim();
-            if (!/^\d{4}$/.test(year)) return;
-            const birthdayInput = document.getElementById('birthday');
-            const current = birthdayInput.value;
-            const today = new Date();
-            const fallbackMonth = String(today.getMonth() + 1).padStart(2, '0');
-            const fallbackDay = String(today.getDate()).padStart(2, '0');
-            let month = fallbackMonth;
-            let day = fallbackDay;
-            if (current && /^\d{4}-\d{2}-\d{2}$/.test(current)) {
-                const parts = current.split('-');
-                month = parts[1];
-                day = parts[2];
-            }
-            birthdayInput.value = `${year}-${month}-${day}`;
-            syncAgeFromBirthday();
-        });
 
         // 設備檢測
         function updateDeviceIndicator() {
