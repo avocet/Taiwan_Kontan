@@ -478,11 +478,6 @@
                     </div>
                     
                     <div class="form-group half-width">
-                        <label class="required">電話</label>
-                        <input type="tel" id="phone" name="phone" placeholder="02-XXXX-XXXX" required>
-                    </div>
-                    
-                    <div class="form-group half-width">
                         <label class="required">年齡</label>
                         <input type="number" id="age" name="age" placeholder="由生日自動計算" min="1" max="150" readonly>
                     </div>
@@ -503,7 +498,9 @@
                     
                     <div class="form-group half-width">
                         <label>營養師</label>
-                        <input type="text" id="nutritionist" name="nutritionist" placeholder="請輸入營養師姓名">
+                        <select id="nutritionist" name="nutritionist">
+                            <option value="Tracy">Tracy</option>
+                        </select>
                     </div>
                     
                     <div id="femaleOnlyFields" style="display:contents;">
@@ -606,7 +603,6 @@
                     
                     // 自動填充表單
                     if (data.姓名) document.getElementById('name').value = data.姓名;
-                    if (data.電話) document.getElementById('phone').value = data.電話;
                     if (data.生日) document.getElementById('birthday').value = data.生日;
                     if (data.手機) document.getElementById('mobile').value = data.手機;
                     if (data.性別) {
@@ -750,12 +746,11 @@
             e.preventDefault();
             
             const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
             const birthday = document.getElementById('birthday').value;
             const mobile = document.getElementById('mobile').value.trim();
             const age = String(calculateAgeByBirthday(birthday) || '').trim();
             
-            if (!name || !phone || !birthday || !mobile || !age) {
+            if (!name || !birthday || !mobile || !age) {
                 alert('請填寫所有必填欄位');
                 return;
             }
@@ -764,7 +759,6 @@
             const formData = {
                 userId: currentUser.uid,
                 姓名: name,
-                電話: phone,
                 年齡: age,
                 生日: birthday,
                 性別: document.querySelector('input[name="gender"]:checked')?.value || '',
