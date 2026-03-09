@@ -880,6 +880,30 @@
         window.portionTableModal = document.getElementById('portionTableModal');
         const showPortionTableBtn = document.getElementById('showPortionTableBtn');
         const closePortionTableBtn = document.getElementById('closePortionTableBtn');
+        
+        // 將時間輸入改為下拉選單（00:00 ~ 24:00）
+        function initPortionHourSelects() {
+            const form = document.getElementById('portionTableForm');
+            if (!form) return;
+            const timeInputs = form.querySelectorAll('input[name$="時間"]');
+            if (timeInputs.length === 0) return;
+
+            const optionsHtml = ['<option value="">請選擇</option>'];
+            for (let h = 0; h <= 24; h++) {
+                const hh = String(h).padStart(2, '0');
+                optionsHtml.push(`<option value="${hh}:00">${h}時</option>`);
+            }
+
+            timeInputs.forEach((inputEl) => {
+                const selectEl = document.createElement('select');
+                selectEl.name = inputEl.name;
+                selectEl.style.cssText = inputEl.style.cssText;
+                selectEl.innerHTML = optionsHtml.join('');
+                if (inputEl.value) selectEl.value = inputEl.value;
+                inputEl.replaceWith(selectEl);
+            });
+        }
+        initPortionHourSelects();
 
         if (showPortionTableBtn) {
             showPortionTableBtn.addEventListener('click', () => {
