@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>減重課程已完成</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --bg-color: #F2F2F7;
+            --card-color: #FFFFFF;
+            --text-main: #1C1C1E;
+            --text-sub: #636366;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        }
+
+        .card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--card-color);
+            border-radius: 20px;
+            padding: 28px 24px;
+            text-align: center;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+        }
+
+        .icon {
+            font-size: 2.4rem;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        p {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 18px;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon">🎓</div>
+        <h1>減重課程已完成</h1>
+        <p>你的減重課程已標注為「已完成」，目前無法再使用此學員帳號登入。<br>如需協助，請聯繫管理員。</p>
+        <a class="btn" href="login.html">返回登入頁</a>
+    </div>
+</body>
+</html>

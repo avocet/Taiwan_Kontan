@@ -258,8 +258,8 @@
                 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -274,6 +274,22 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        async function isCourseCompletedByUid(uid) {
+            const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", uid));
+            const customerSnapshot = await getDocs(customerQuery);
+            if (customerSnapshot.empty) {
+                return false;
+            }
+            return customerSnapshot.docs[0].data().課程狀態 === '已完成';
+        }
+
+        async function handleCourseCompletedLogin() {
+            await signOut(auth);
+            localStorage.removeItem('twkt_user_id');
+            localStorage.removeItem('twkt_username');
+            window.location.replace('course-completed.html');
+        }
 
         function showMessage(elementId, text, type) {
             const element = document.getElementById(elementId);
@@ -344,6 +360,12 @@
                 // 用 email 登入 Firebase Auth
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
+
+                if (await isCourseCompletedByUid(user.uid)) {
+                    clearTimeout(timeout);
+                    await handleCourseCompletedLogin();
+                    return;
+                }
                 
                 // 登入成功
                 localStorage.setItem('twkt_user_id', user.uid);

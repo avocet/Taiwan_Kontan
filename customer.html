@@ -409,6 +409,26 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        async function redirectIfCourseCompleted(user, userRole) {
+            if (!user || userRole === 'admin') {
+                return false;
+            }
+            const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", user.uid));
+            const customerSnapshot = await getDocs(customerQuery);
+            if (customerSnapshot.empty) {
+                return false;
+            }
+            const customerData = customerSnapshot.docs[0].data();
+            if (customerData.課程狀態 !== '已完成') {
+                return false;
+            }
+            await signOut(auth);
+            localStorage.removeItem('twkt_user_id');
+            localStorage.removeItem('twkt_username');
+            window.location.replace('course-completed.html');
+            return true;
+        }
+
         // 檢查用戶是否為管理員
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -425,22 +445,26 @@
             let userRole = 'customer';
             let usersSnapshot = null;
             
-            if (savedUsername) {
-                const usersQuery = query(collection(db, "users"), where("username", "==", savedUsername));
-                usersSnapshot = await getDocs(usersQuery);
+                if (savedUsername) {
+                    const usersQuery = query(collection(db, "users"), where("username", "==", savedUsername));
+                    usersSnapshot = await getDocs(usersQuery);
                 console.log('usersSnapshot empty:', usersSnapshot.empty);
                 
                 if (!usersSnapshot.empty) {
                     const userData = usersSnapshot.docs[0].data();
                     console.log('userData:', userData);
                     userRole = userData.role || 'customer';
-                    console.log('userRole:', userRole);
+                        console.log('userRole:', userRole);
+                    }
                 }
-            }
 
-            // 嘗試從客戶資料獲取姓名
-            const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", user.uid));
-            const customerSnapshot = await getDocs(customerQuery);
+                if (await redirectIfCourseCompleted(user, userRole)) {
+                    return;
+                }
+
+                // 嘗試從客戶資料獲取姓名
+                const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", user.uid));
+                const customerSnapshot = await getDocs(customerQuery);
             if (!customerSnapshot.empty) {
                 userName = customerSnapshot.docs[0].data().姓名 || '';
             }
@@ -1303,6 +1327,10 @@
                             userRole = userData.role || 'customer';
                             userName = userData.username || '';
                         }
+                    }
+
+                    if (await redirectIfCourseCompleted(user, userRole)) {
+                        return;
                     }
                     
                     // 嘗試從客戶資料獲取姓名
