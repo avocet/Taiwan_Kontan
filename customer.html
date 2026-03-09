@@ -376,6 +376,10 @@
                 <label for="newPasswordInput">新密碼</label>
                 <input type="password" id="newPasswordInput" autocomplete="new-password">
             </div>
+            <div class="password-field">
+                <label for="confirmNewPasswordInput">再次輸入新密碼</label>
+                <input type="password" id="confirmNewPasswordInput" autocomplete="new-password">
+            </div>
             <div class="password-modal-actions">
                 <button class="password-btn password-btn-cancel" id="cancelChangePasswordBtn" type="button">取消</button>
                 <button class="password-btn password-btn-submit" id="submitChangePasswordBtn" type="button">確認修改</button>
@@ -1228,9 +1232,11 @@
         const changePasswordModal = document.getElementById('changePasswordModal');
         const oldPasswordInput = document.getElementById('oldPasswordInput');
         const newPasswordInput = document.getElementById('newPasswordInput');
+        const confirmNewPasswordInput = document.getElementById('confirmNewPasswordInput');
         document.getElementById('changePasswordBtn').addEventListener('click', () => {
             oldPasswordInput.value = '';
             newPasswordInput.value = '';
+            confirmNewPasswordInput.value = '';
             changePasswordModal.style.display = 'flex';
         });
         document.getElementById('cancelChangePasswordBtn').addEventListener('click', () => {
@@ -1242,8 +1248,13 @@
         document.getElementById('submitChangePasswordBtn').addEventListener('click', async () => {
             const oldPassword = oldPasswordInput.value;
             const newPassword = newPasswordInput.value;
-            if (!oldPassword || !newPassword) {
-                alert('請輸入舊密碼與新密碼');
+            const confirmNewPassword = confirmNewPasswordInput.value;
+            if (!oldPassword || !newPassword || !confirmNewPassword) {
+                alert('請輸入舊密碼、新密碼與再次確認密碼');
+                return;
+            }
+            if (newPassword !== confirmNewPassword) {
+                alert('兩次輸入的新密碼不一致');
                 return;
             }
             if (newPassword.length < 6) {
