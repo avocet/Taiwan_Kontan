@@ -720,6 +720,7 @@
         let currentStudentUsername = null;
         let currentStudentName = null;
         let currentStudentUid = null;
+        let currentStudentEmail = '';
         let editingPortionDocId = null;
         window.portionRecordsData = [];
 
@@ -798,6 +799,7 @@
         window.viewStudentRecords = async function(username, name) {
             currentStudentUsername = username;
             currentStudentName = name;
+            currentStudentEmail = '';
             
             const studentList = document.getElementById('studentList');
             const studentRecords = document.getElementById('studentRecords');
@@ -825,6 +827,7 @@
                 
                 const userData = userSnapshot.docs[0].data();
                 const userUid = userData.uid || userData.email?.split('@')[0];
+                currentStudentEmail = userData.email || '';
                 
                 if (!userUid) {
                     recordsContent.innerHTML = '<p>找不到學員 UID</p>';
@@ -1270,6 +1273,31 @@
                     管理員建議: messageText,
                     建議更新時間: new Date()
                 });
+                if (currentStudentEmail) {
+                    const subject = `【體重管理班】管理者有新訊息`;
+                    const recordDate = recordData?.紀錄日期 || '-';
+                    const senderName = '管理者營養師';
+                    const html = `
+                        <div style="font-family:Arial,'PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.6;">
+                            <h3 style="margin:0 0 8px;">你收到管理者新的建議訊息</h3>
+                            <p style="margin:0 0 8px;">紀錄日期：${recordDate}</p>
+                            <p style="margin:0 0 8px;">發送者：${senderName}</p>
+                            <p style="margin:0 0 8px;">訊息內容：</p>
+                            <blockquote style="margin:0;padding:8px 10px;background:#f3f4f6;border-left:4px solid #9ca3af;white-space:pre-wrap;">${escapeHtml(messageText)}</blockquote>
+                        </div>
+                    `;
+                    const text = `你收到管理者新的建議訊息\n紀錄日期：${recordDate}\n發送者：${senderName}\n訊息內容：${messageText}`;
+                    try {
+                        await addDoc(collection(db, "mail"), {
+                            to: [currentStudentEmail],
+                            message: { subject, text, html },
+                            createdAt: new Date(),
+                            source: "admin-chat-message"
+                        });
+                    } catch (mailError) {
+                        console.error('寄送通知信失敗:', mailError);
+                    }
+                }
                 if (buttonEl) buttonEl.textContent = '已送出';
                 if (currentStudentUsername && currentStudentName) {
                     await viewStudentRecords(currentStudentUsername, currentStudentName);

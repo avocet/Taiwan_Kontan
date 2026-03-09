@@ -615,7 +615,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, collection, query, where, getDocs, orderBy, doc, getDoc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, orderBy, doc, getDoc, deleteDoc, updateDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getStorage, ref, deleteObject } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 
         const firebaseConfig = {
@@ -634,6 +634,7 @@
         const storage = getStorage(app);
         let replyingRecordId = '';
         let recordCache = new Map();
+        let cachedAdminEmails = [];
 
         // 檢查登入狀態
         let currentUser = null;
@@ -652,6 +653,7 @@
             }
             
             // 載入資料
+            await loadAdminEmails();
             loadData(user.uid);
         });
 
@@ -671,6 +673,46 @@
         };
 
         // 載入資料
+        async function loadAdminEmails() {
+            try {
+                const adminUsersQ = query(collection(db, "users"), where("role", "==", "admin"));
+                const adminUsersSnapshot = await getDocs(adminUsersQ);
+                cachedAdminEmails = adminUsersSnapshot.docs
+                    .map((docSnap) => (docSnap.data().email || '').trim())
+                    .filter(Boolean);
+            } catch (error) {
+                console.error('載入管理員 email 失敗:', error);
+                cachedAdminEmails = [];
+            }
+        }
+
+        async function queueEmailNotificationToAdmins(recordData, messageText) {
+            if (!cachedAdminEmails.length) return;
+            const recordDate = recordData?.紀錄日期 || '-';
+            const subject = `【體重管理班】學員有新回覆 (${recordDate})`;
+            const senderName = localStorage.getItem('twkt_username') || (currentUser?.email || '學員');
+            const html = `
+                <div style="font-family:Arial,'PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.6;">
+                    <h3 style="margin:0 0 8px;">學員有新的對話訊息</h3>
+                    <p style="margin:0 0 8px;">紀錄日期：${recordDate}</p>
+                    <p style="margin:0 0 8px;">發送者：${senderName}</p>
+                    <p style="margin:0 0 8px;">訊息內容：</p>
+                    <blockquote style="margin:0;padding:8px 10px;background:#f3f4f6;border-left:4px solid #9ca3af;white-space:pre-wrap;">${String(messageText || '')
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')}</blockquote>
+                </div>
+            `;
+            const text = `學員有新的對話訊息\n紀錄日期：${recordDate}\n發送者：${senderName}\n訊息內容：${messageText}`;
+
+            await addDoc(collection(db, "mail"), {
+                to: cachedAdminEmails,
+                message: { subject, text, html },
+                createdAt: new Date(),
+                source: "student-chat-reply"
+            });
+        }
+
         async function loadData(userId) {
             try {
                 const q = query(
@@ -1011,6 +1053,11 @@
                     學員回覆: replyText,
                     學員回覆更新時間: new Date()
                 });
+                try {
+                    await queueEmailNotificationToAdmins(recordData, replyText);
+                } catch (mailError) {
+                    console.error('寄送通知信失敗:', mailError);
+                }
                 recordCache.set(replyingRecordId, {
                     ...recordData,
                     建議對話: nextConversation,
