@@ -56,11 +56,13 @@
         }
 
         .portion-panel {
-            width: 100%;
+            width: 320px;
             background: #f8fbff;
             border: 1px solid #dbeafe;
             border-radius: 16px;
             box-shadow: 0 4px 16px rgba(30, 64, 175, 0.08);
+            position: sticky;
+            top: 20px;
         }
 
         .portion-panel-header {
@@ -336,9 +338,13 @@
             border: none;
             cursor: pointer;
             z-index: 1800;
-            display: flex;
+            display: none;
             align-items: center;
             gap: 6px;
+        }
+
+        .desktop-portion-panel {
+            display: block;
         }
 
         .portion-modal {
@@ -470,7 +476,8 @@
             input { padding: 12px 14px; font-size: 16px; }
             .form-actions { padding: 16px; flex-direction: column; gap: 10px; }
             .btn { padding: 14px 20px; }
-            .portion-popup-btn { top: 10px; right: 10px; }
+            .portion-popup-btn { top: 10px; right: 10px; display: flex; }
+            .desktop-portion-panel { display: none; }
         }
 
         @media screen and (min-width: 429px) and (max-width: 1024px) {
@@ -482,7 +489,8 @@
             .form-section { margin-bottom: 32px; }
             .form-actions { padding: 24px; gap: 16px; }
             .btn { padding: 16px 28px; }
-            .portion-popup-btn { top: 14px; right: 14px; }
+            .portion-popup-btn { top: 14px; right: 14px; display: none; }
+            .desktop-portion-panel { display: block; }
         }
 
         @media screen and (min-width: 1025px) {
@@ -493,7 +501,8 @@
             .form-body { padding: 36px 32px; }
             .form-actions { padding: 28px 32px; gap: 16px; }
             .btn { max-width: 200px; margin: 0 auto; }
-            .portion-popup-btn { top: 16px; right: 16px; }
+            .portion-popup-btn { top: 16px; right: 16px; display: none; }
+            .desktop-portion-panel { display: block; }
         }
     </style>
 </head>
@@ -587,6 +596,12 @@
             </div>
         </div>
         </div>
+        <aside class="portion-panel desktop-portion-panel">
+            <div class="portion-panel-header">管理員飲食份數表</div>
+            <div class="portion-panel-body" id="portionPanelContentDesktop">
+                <div class="portion-empty">請先選擇紀錄日期</div>
+            </div>
+        </aside>
     </div>
 
     <div class="portion-modal" id="portionModal">
@@ -595,7 +610,7 @@
                 <span>管理員飲食份數表</span>
                 <button type="button" id="closePortionModalBtn" style="border:none;background:none;font-size:1.25rem;cursor:pointer;color:#1d4ed8;">✕</button>
             </div>
-            <div class="portion-panel-body" id="portionPanelContent">
+            <div class="portion-panel-body" id="portionPanelContentModal">
                 <div class="portion-empty">請先選擇紀錄日期</div>
             </div>
         </div>
@@ -773,10 +788,12 @@
         }
 
         function renderPortionPanelByDate(dateStr) {
-            const panel = document.getElementById('portionPanelContent');
-            if (!panel) return;
+            const panels = getPortionPanels();
+            if (panels.length === 0) return;
             if (!dateStr) {
-                panel.innerHTML = '<div class="portion-empty">請先選擇紀錄日期</div>';
+                panels.forEach((panel) => {
+                    panel.innerHTML = '<div class="portion-empty">請先選擇紀錄日期</div>';
+                });
                 return;
             }
 
@@ -787,7 +804,9 @@
             });
 
             if (matched.length === 0) {
-                panel.innerHTML = `<div class="portion-empty">${dateStr} 沒有對應的飲食份數表</div>`;
+                panels.forEach((panel) => {
+                    panel.innerHTML = `<div class="portion-empty">${dateStr} 沒有對應的飲食份數表</div>`;
+                });
                 return;
             }
 
@@ -807,7 +826,16 @@
                 html += '</div>';
             });
 
-            panel.innerHTML = html;
+            panels.forEach((panel) => {
+                panel.innerHTML = html;
+            });
+        }
+
+        function getPortionPanels() {
+            return [
+                document.getElementById('portionPanelContentDesktop'),
+                document.getElementById('portionPanelContentModal')
+            ].filter(Boolean);
         }
 
         const photoUpload = document.getElementById('photoUpload');
