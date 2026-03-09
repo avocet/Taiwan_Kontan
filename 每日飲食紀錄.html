@@ -374,7 +374,20 @@
                     collection(db, "每日體重三圍"),
                     where("userId", "==", userId)
                 );
-                const querySnapshot = await getDocs(q);
+                const portionQ = query(
+                    collection(db, "飲食份數表"),
+                    where("userId", "==", userId)
+                );
+
+                const [querySnapshot, portionSnapshot] = await Promise.all([getDocs(q), getDocs(portionQ)]);
+                const portionRecords = portionSnapshot.docs.map((docSnap) => ({
+                    id: docSnap.id,
+                    ...docSnap.data()
+                })).sort((a, b) => {
+                    const dateA = a.紀錄日期 || '';
+                    const dateB = b.紀錄日期 || '';
+                    return dateB.localeCompare(dateA);
+                });
                 
                 document.getElementById('loading').style.display = 'none';
                 
@@ -403,7 +416,7 @@
                 
                 let html = '';
                 docsArray.forEach((item) => {
-                    html += createDataCard(item.data, item.id);
+                    html += createDataCard(item.data, item.id, portionRecords);
                 });
                 document.getElementById('dataList').innerHTML = html;
                 
@@ -420,8 +433,13 @@
         }
 
         // 建立資料卡片
-        function createDataCard(data, docId) {
+        function createDataCard(data, docId, portionRecords = []) {
             const date = data.紀錄日期 || '-';
+            const matchedPortions = portionRecords.filter((portion) => {
+                const startDate = portion.紀錄日期 || '';
+                const endDate = portion.結束日期 || startDate;
+                return date >= startDate && date <= endDate;
+            });
             
             let photoHtml = '';
             if (data.照片) {
@@ -433,6 +451,35 @@
                     photoHtml = `<img class="data-photo" src="${data.照片}" onclick="showPhoto('${data.照片}')" alt="照片">`;
                 }
             }
+
+            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '-';
+                const d = new Date(dateStr);
+                return `${d.getMonth() + 1}/${d.getDate()}`;
+            };
+
+            let portionHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">';
+            portionHtml += '<div class="data-item" style="margin-bottom:8px;"><span class="data-label">管理員飲食份數表</span></div>';
+
+            if (matchedPortions.length === 0) {
+                portionHtml += '<div class="data-item"><span class="data-value" style="color:var(--text-secondary);">此日期沒有設定飲食份數表</span></div>';
+            } else {
+                matchedPortions.forEach((portion) => {
+                    const startDate = portion.紀錄日期 || '-';
+                    const endDate = portion.結束日期 || startDate;
+                    portionHtml += `<div class="data-item" style="margin-bottom:8px;"><span class="data-label">期間</span><span class="data-value">${formatDate(startDate)} 到 ${formatDate(endDate)}</span></div>`;
+                    meals.forEach((meal) => {
+                        const time = portion[`${meal}時間`] || '';
+                        const c = portion[`${meal}C`] || 0;
+                        const p = portion[`${meal}P`] || 0;
+                        const f = portion[`${meal}F`] || 0;
+                        const v = portion[`${meal}V`] || 0;
+                        portionHtml += `<div class="data-item" style="margin-bottom:6px;"><span class="data-label">${meal}${time ? ' ' + time : ''}</span><span class="data-value">C:${c} P:${p} F:${f} V:${v}</span></div>`;
+                    });
+                });
+            }
+            portionHtml += '</div>';
             
             return `
                 <div class="data-card">
@@ -469,6 +516,7 @@
                         </div>
                         ${data.備註 ? `<div class="data-item"><span class="data-label">備註</span><span class="data-value">${data.備註}</span></div>` : ''}
                     </div>
+                    ${portionHtml}
                 </div>
             `;
         }
