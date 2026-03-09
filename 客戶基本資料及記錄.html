@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>客戶基本資料及記錄</title>
+    <title>體重管理班學員基本資料</title>
     <style>
         * {
             margin: 0;
@@ -444,25 +444,11 @@
         <div class="form-card">
             <div class="form-header">
                 <a href="customer.html" class="back-btn">← 返回</a>
-                <h1 id="formTitle">客戶基本資料及記錄</h1>
+                <h1 id="formTitle">體重管理班學員基本資料</h1>
                 <div style="width: 70px;"></div>
             </div>
             
             <form class="form-body" id="customerForm">
-                <div class="form-section">
-                    <div class="section-title">合約資訊</div>
-                    
-                    <div class="form-group half-width">
-                        <label>合約書編號</label>
-                        <input type="text" id="contractNo" name="contractNo" placeholder="例如：CON-2026-0001">
-                    </div>
-                    
-                    <div class="form-group half-width">
-                        <label class="required">紀錄日期</label>
-                        <input type="date" id="recordDate" name="recordDate" required>
-                    </div>
-                </div>
-                
                 <div class="form-section">
                     <div class="section-title">基本資料</div>
                     
@@ -625,8 +611,6 @@
                             genderRadio.closest('.radio-option').classList.add('selected');
                         }
                     }
-                    if (data.合約書編號) document.getElementById('contractNo').value = data.合約書編號;
-                    if (data.紀錄日期) document.getElementById('recordDate').value = data.紀錄日期;
                     if (data.營養師) document.getElementById('nutritionist').value = data.營養師;
                     if (data.產前體重) document.getElementById('prePregnancyWeight').value = data.產前體重;
                     if (data.產後體重) document.getElementById('postPregnancyWeight').value = data.產後體重;
@@ -634,7 +618,7 @@
                     if (data.email) document.getElementById('email').value = data.email;
                     
                     document.getElementById('submitBtn').textContent = '更新資料';
-                    document.getElementById('formTitle').textContent = '更新客戶基本資料';
+                    document.getElementById('formTitle').textContent = '體重管理班學員基本資料';
                 }
             } catch (error) {
                 console.error('載入資料失敗:', error);
@@ -698,12 +682,6 @@
         window.addEventListener('load', updateDeviceIndicator);
         window.addEventListener('resize', updateDeviceIndicator);
 
-        // 設置默認日期
-        document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('recordDate').value = today;
-        });
-
         // 表單提交
         const form = document.getElementById('customerForm');
         const submitBtn = document.getElementById('submitBtn');
@@ -730,9 +708,8 @@
             const age = document.getElementById('age').value.trim();
             const birthday = document.getElementById('birthday').value;
             const mobile = document.getElementById('mobile').value.trim();
-            const recordDate = document.getElementById('recordDate').value;
             
-            if (!name || !phone || !age || !birthday || !mobile || !recordDate) {
+            if (!name || !phone || !age || !birthday || !mobile) {
                 alert('請填寫所有必填欄位');
                 return;
             }
@@ -740,8 +717,6 @@
             // 收集表單數據
             const formData = {
                 userId: currentUser.uid,
-                合約書編號: document.getElementById('contractNo').value.trim(),
-                紀錄日期: recordDate,
                 姓名: name,
                 電話: phone,
                 年齡: age,
@@ -794,8 +769,6 @@
             if (confirm('確定要清除所有資料嗎？')) {
                 form.reset();
                 radioOptions.forEach(option => option.classList.remove('selected'));
-                const today = new Date().toISOString().split('T')[0];
-                document.getElementById('recordDate').value = today;
             }
         });
     </script>
