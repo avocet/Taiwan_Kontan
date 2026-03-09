@@ -260,6 +260,10 @@
                         <div style="font-weight:600;margin-bottom:6px;">初始體重三圍</div>
                         <div style="font-size:0.8125rem;color:#6b7280;">載入中...</div>
                     </div>
+                    <div id="studentConstitutionCard" style="background:white;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="font-weight:600;margin-bottom:6px;">中醫體質檢測</div>
+                        <div style="font-size:0.8125rem;color:#6b7280;">載入中...</div>
+                    </div>
                 </div>
             </div>
             <div style="width:500px;">
@@ -863,6 +867,40 @@
             `;
         }
 
+        function resolveConstitutionType(coldHotScore, wetDryScore) {
+            const coldHot = Number(coldHotScore);
+            const wetDry = Number(wetDryScore);
+            if (!Number.isFinite(coldHot) || !Number.isFinite(wetDry)) return '-';
+            const coldHotAvg = coldHot / 13;
+            const wetDryAvg = wetDry / 14;
+            if (coldHotAvg < 1.5 && wetDryAvg < 1.5) return '陽虛體質';
+            if (coldHotAvg < 1.5 && wetDryAvg >= 1.5) return '痰濕體質';
+            if (coldHotAvg >= 1.5 && wetDryAvg < 1.5) return '陰虛體質';
+            return '陽盛體質';
+        }
+
+        function renderStudentConstitutionCard(data) {
+            const card = document.getElementById('studentConstitutionCard');
+            if (!card) return;
+            if (!data) {
+                card.innerHTML = `
+                    <div style="font-weight:600;margin-bottom:6px;">中醫體質檢測</div>
+                    <div style="font-size:0.8125rem;color:#9ca3af;">尚無檢測資料</div>
+                `;
+                return;
+            }
+            const constitutionType = resolveConstitutionType(data.冷熱體質分數, data.濕乾體質分數);
+            card.innerHTML = `
+                <div style="font-weight:600;margin-bottom:6px;">中醫體質檢測</div>
+                <div style="font-size:0.8125rem;line-height:1.6;">
+                    <div>客戶姓名：${escapeHtml(data.客戶姓名 || '-')}</div>
+                    <div>冷熱分數：${escapeHtml(data.冷熱體質分數 || '-')} 分</div>
+                    <div>濕乾分數：${escapeHtml(data.濕乾體質分數 || '-')} 分</div>
+                    <div>結果：${escapeHtml(constitutionType)}</div>
+                </div>
+            `;
+        }
+
         async function loadStudentSideCards(userUid, username, emailPrefix) {
             const candidateKeys = [userUid, username, emailPrefix]
                 .filter(Boolean)
@@ -871,14 +909,17 @@
             if (!uniqueKeys.length) {
                 renderStudentBasicInfoCard(null);
                 renderStudentInitialBodyCard(null);
+                renderStudentConstitutionCard(null);
                 return;
             }
-            const [basicInfo, initialBody] = await Promise.all([
+            const [basicInfo, initialBody, constitutionData] = await Promise.all([
                 findFirstDocByUserKeys("客戶資料", uniqueKeys),
-                findFirstDocByUserKeys("原始體重三圍", uniqueKeys)
+                findFirstDocByUserKeys("原始體重三圍", uniqueKeys),
+                findFirstDocByUserKeys("中醫體質四象限", uniqueKeys)
             ]);
             renderStudentBasicInfoCard(basicInfo);
             renderStudentInitialBodyCard(initialBody);
+            renderStudentConstitutionCard(constitutionData);
         }
 
         // 查看學員飲食紀錄
@@ -1325,6 +1366,7 @@
             document.getElementById('studentList').style.display = 'block';
             renderStudentBasicInfoCard(null);
             renderStudentInitialBodyCard(null);
+            renderStudentConstitutionCard(null);
             loadStudentList();
         });
 
