@@ -987,22 +987,25 @@
                 if (editingPortionDocId) {
                     await updateDoc(doc(db, "飲食份數表", editingPortionDocId), portionData);
                 } else {
-                    // 檢查是否已有當天紀錄
+                    // 檢查是否與既有期間重疊（僅提示，不合併）
                     const existingQuery = query(
                         collection(db, "飲食份數表"),
-                        where("userId", "==", currentStudentUid),
-                        where("紀錄日期", "==", startDate)
+                        where("userId", "==", currentStudentUid)
                     );
                     const existingDocs = await getDocs(existingQuery);
+                    const hasOverlap = existingDocs.docs.some((docSnap) => {
+                        const data = docSnap.data();
+                        const existingStart = data.紀錄日期 || '';
+                        const existingEnd = data.結束日期 || existingStart;
+                        return startDate <= existingEnd && endDate >= existingStart;
+                    });
 
-                    if (existingDocs.empty) {
-                        // 新增
-                        await addDoc(collection(db, "飲食份數表"), portionData);
-                    } else {
-                        // 更新
-                        const docId = existingDocs.docs[0].id;
-                        await updateDoc(doc(db, "飲食份數表", docId), portionData);
+                    if (hasOverlap) {
+                        alert('提醒：此日期範圍與既有飲食份數表重疊，系統仍會新增為新的一筆資料。');
                     }
+
+                    // 每次新增都建立新紀錄，不自動合併
+                    await addDoc(collection(db, "飲食份數表"), portionData);
                 }
                 
                 alert('儲存成功！');
