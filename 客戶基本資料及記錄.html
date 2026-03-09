@@ -88,6 +88,9 @@
 
         .form-section {
             margin-bottom: 28px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
         }
 
         .form-section:last-child {
@@ -100,13 +103,13 @@
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 16px;
             padding-bottom: 8px;
             border-bottom: 1px solid var(--border-color);
+            grid-column: 1 / -1;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 0;
         }
 
         .form-group:last-child {
@@ -321,9 +324,8 @@
             .form-header { padding: 20px 16px; border-radius: 20px 20px 0 0; }
             .form-header h1 { font-size: 1.25rem; }
             .form-body { padding: 20px 16px; }
-            .form-section { margin-bottom: 24px; }
+            .form-section { margin-bottom: 24px; grid-template-columns: 1fr; gap: 14px; }
             .section-title { font-size: 0.75rem; }
-            .form-group { margin-bottom: 16px; }
             label { font-size: 0.875rem; }
             input, select, textarea { padding: 12px 14px; font-size: 16px; }
             .radio-group { flex-direction: column; gap: 8px; }
@@ -339,7 +341,7 @@
             .form-header { padding: 28px 24px; }
             .form-header h1 { font-size: 1.625rem; }
             .form-body { padding: 28px 24px; }
-            .form-section { margin-bottom: 32px; }
+            .form-section { margin-bottom: 32px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
             .form-actions { padding: 24px; gap: 16px; }
             .btn { padding: 16px 28px; }
             .device-indicator { display: flex; }
@@ -350,13 +352,9 @@
             .form-card { border-radius: 24px; }
             .form-header { padding: 36px 32px; border-radius: 24px 24px 0 0; }
             .form-header h1 { font-size: 1.875rem; }
-            .form-body { padding: 36px 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-            .form-section { margin-bottom: 0; }
-            .form-section:first-child { grid-column: 1 / -1; }
-            .form-group { margin-bottom: 20px; }
-            .form-group.full-width { grid-column: 1 / -1; }
-            .form-group.half-width { grid-column: span 1; }
-            .radio-group { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .form-body { padding: 36px 32px; }
+            .form-section { margin-bottom: 32px; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+            .radio-group { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .form-actions { padding: 28px 32px; gap: 16px; }
             .btn { max-width: 200px; margin: 0 auto; }
             .device-indicator { display: flex; }
