@@ -239,7 +239,6 @@
                     <span class="loading-spinner"></span>
                     <span class="btn-text">登 入</span>
                 </button>
-                <button type="button" class="btn btn-secondary" id="changePasswordBtn">修改密碼</button>
             </form>
             
             <div class="back-home">
@@ -250,7 +249,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -276,7 +275,6 @@
 
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
-        const changePasswordBtn = document.getElementById('changePasswordBtn');
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -335,23 +333,6 @@
             }
         });
 
-        if (changePasswordBtn) {
-            changePasswordBtn.addEventListener('click', async () => {
-                const emailInput = document.getElementById('email').value.trim();
-                const email = emailInput || prompt('請輸入管理員電子郵件以修改密碼');
-                if (!email) return;
-
-                try {
-                    await sendPasswordResetEmail(auth, email.trim());
-                    showMessage('修改密碼連結已寄到您的電子郵件', 'success');
-                } catch (error) {
-                    let errorMessage = '寄送失敗，請稍後再試';
-                    if (error.code === 'auth/invalid-email') errorMessage = '電子郵件格式錯誤';
-                    else if (error.code === 'auth/user-not-found') errorMessage = '找不到此帳號';
-                    showMessage(errorMessage, 'error');
-                }
-            });
-        }
     </script>
 </body>
 </html>

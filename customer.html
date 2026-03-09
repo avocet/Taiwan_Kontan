@@ -45,6 +45,12 @@
             font-weight: 600;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         .logout-btn {
             background: rgba(255,255,255,0.2);
             border: none;
@@ -134,7 +140,10 @@
 <body>
     <div class="header">
         <h1 id="pageTitle">體重管理班</h1>
-        <a href="index.html" class="logout-btn" id="logoutBtn">登出</a>
+        <div class="header-actions">
+            <button class="logout-btn" id="changePasswordBtn" type="button">修改密碼</button>
+            <a href="index.html" class="logout-btn" id="logoutBtn">登出</a>
+        </div>
     </div>
 
     <!-- 學員列表（管理員用） -->
@@ -290,7 +299,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -1124,6 +1133,34 @@
             await signOut(auth);
             // 使用 location.replace 防止後退
             window.location.replace('index.html');
+        });
+
+        // 修改密碼（寄送重設信）
+        document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+            try {
+                const user = auth.currentUser;
+                if (!user) {
+                    alert('請先重新登入');
+                    return;
+                }
+
+                let email = user.email || '';
+                if (!email) {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) email = userDoc.data().email || '';
+                }
+
+                if (!email) {
+                    alert('找不到帳號電子郵件，請聯繫管理員');
+                    return;
+                }
+
+                await sendPasswordResetEmail(auth, email);
+                alert('修改密碼連結已寄到您的電子郵件');
+            } catch (error) {
+                console.error('寄送修改密碼連結失敗:', error);
+                alert('寄送失敗：' + (error.message || '請稍後再試'));
+            }
         });
 
         // 防止頁面被緩存 - 每次頁面顯示時都檢查

@@ -253,13 +253,12 @@
                 </button>
             </form>
             
-            <button type="button" class="btn btn-secondary" id="changePasswordBtn">修改密碼</button>
         </div>
     </div>
                 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -291,7 +290,6 @@
         // ===== 登入 =====
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
-        const changePasswordBtn = document.getElementById('changePasswordBtn');
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -370,39 +368,6 @@
             }
         });
 
-        async function resolveResetEmail(identifier) {
-            const value = identifier.trim();
-            if (!value) return '';
-            if (value.includes('@')) return value;
-
-            const usersRef = collection(db, "users");
-            const q = query(usersRef, where("username", "==", value.toLowerCase()));
-            const querySnapshot = await getDocs(q);
-            if (querySnapshot.empty) return '';
-            return querySnapshot.docs[0].data().email || '';
-        }
-
-        if (changePasswordBtn) {
-            changePasswordBtn.addEventListener('click', async () => {
-                const inputVal = prompt('請輸入使用者名稱或電子郵件以修改密碼');
-                if (inputVal === null) return;
-
-                try {
-                    const email = await resolveResetEmail(inputVal);
-                    if (!email) {
-                        showMessage('message', '找不到對應帳號，請確認使用者名稱或電子郵件', 'error');
-                        return;
-                    }
-                    await sendPasswordResetEmail(auth, email);
-                    showMessage('message', '修改密碼連結已寄到您的電子郵件', 'success');
-                } catch (error) {
-                    let errorMessage = '寄送失敗，請稍後再試';
-                    if (error.code === 'auth/invalid-email') errorMessage = '電子郵件格式錯誤';
-                    else if (error.code === 'auth/user-not-found') errorMessage = '找不到此帳號';
-                    showMessage('message', errorMessage, 'error');
-                }
-            });
-        }
     </script>
 </body>
 </html>
