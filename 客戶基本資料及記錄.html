@@ -247,6 +247,10 @@
             font-size: 0.9375rem;
         }
 
+        .hidden {
+            display: none !important;
+        }
+
         .form-actions {
             padding: 20px;
             background: var(--card-background);
@@ -456,22 +460,7 @@
                         <label class="required">姓名</label>
                         <input type="text" id="name" name="name" placeholder="請輸入姓名" required>
                     </div>
-                    
-                    <div class="form-group half-width">
-                        <label class="required">電話</label>
-                        <input type="tel" id="phone" name="phone" placeholder="02-XXXX-XXXX" required>
-                    </div>
-                    
-                    <div class="form-group half-width">
-                        <label class="required">年齡</label>
-                        <input type="number" id="age" name="age" placeholder="請輸入年齡" min="1" max="150" required>
-                    </div>
-                    
-                    <div class="form-group half-width">
-                        <label class="required">生日</label>
-                        <input type="date" id="birthday" name="birthday" required>
-                    </div>
-                    
+
                     <div class="form-group half-width">
                         <label class="required">性別</label>
                         <div class="radio-group" id="gender">
@@ -489,6 +478,21 @@
                     </div>
                     
                     <div class="form-group half-width">
+                        <label class="required">電話</label>
+                        <input type="tel" id="phone" name="phone" placeholder="02-XXXX-XXXX" required>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label class="required">年齡</label>
+                        <input type="number" id="age" name="age" placeholder="請輸入年齡" min="1" max="150" required>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label class="required">生日</label>
+                        <input type="date" id="birthday" name="birthday" required>
+                    </div>
+                    
+                    <div class="form-group half-width">
                         <label class="required">手機</label>
                         <input type="tel" id="mobile" name="mobile" placeholder="09XX-XXX-XXX" required>
                     </div>
@@ -502,25 +506,27 @@
                         <input type="text" id="nutritionist" name="nutritionist" placeholder="請輸入營養師姓名">
                     </div>
                     
-                    <div class="form-group half-width">
-                        <label>產前體重</label>
-                        <div class="weight-group">
-                            <input type="number" id="prePregnancyWeight" name="prePregnancyWeight" placeholder="體重" step="0.1">
-                            <span>kg</span>
+                    <div id="femaleOnlyFields" style="display:contents;">
+                        <div class="form-group half-width">
+                            <label>產前體重</label>
+                            <div class="weight-group">
+                                <input type="number" id="prePregnancyWeight" name="prePregnancyWeight" placeholder="體重" step="0.1">
+                                <span>kg</span>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group half-width">
-                        <label>產後體重</label>
-                        <div class="weight-group">
-                            <input type="number" id="postPregnancyWeight" name="postPregnancyWeight" placeholder="體重" step="0.1">
-                            <span>kg</span>
+                        
+                        <div class="form-group half-width">
+                            <label>產後體重</label>
+                            <div class="weight-group">
+                                <input type="number" id="postPregnancyWeight" name="postPregnancyWeight" placeholder="體重" step="0.1">
+                                <span>kg</span>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-group half-width">
-                        <label>上月mc 週期</label>
-                        <input type="date" id="mcCycle" name="mcCycle">
+                        
+                        <div class="form-group half-width">
+                            <label>上個月MC 週期</label>
+                            <input type="date" id="mcCycle" name="mcCycle">
+                        </div>
                     </div>
                     
                     <div class="form-group half-width">
@@ -620,6 +626,7 @@
                     document.getElementById('submitBtn').textContent = '更新資料';
                     document.getElementById('formTitle').textContent = '體重管理班學員基本資料';
                 }
+                toggleFemaleOnlyFields();
             } catch (error) {
                 console.error('載入資料失敗:', error);
             }
@@ -650,6 +657,7 @@
                 });
                 this.classList.add('selected');
                 radio.checked = true;
+                toggleFemaleOnlyFields();
             });
             
             const radio = option.querySelector('input[type="radio"]');
@@ -657,6 +665,20 @@
                 option.classList.add('selected');
             }
         });
+        toggleFemaleOnlyFields();
+
+        function toggleFemaleOnlyFields() {
+            const femaleOnlyFields = document.getElementById('femaleOnlyFields');
+            const selectedGender = document.querySelector('input[name="gender"]:checked')?.value || '';
+            if (selectedGender === 'female') {
+                femaleOnlyFields.classList.remove('hidden');
+            } else {
+                femaleOnlyFields.classList.add('hidden');
+                document.getElementById('prePregnancyWeight').value = '';
+                document.getElementById('postPregnancyWeight').value = '';
+                document.getElementById('mcCycle').value = '';
+            }
+        }
 
         // 設備檢測
         function updateDeviceIndicator() {
@@ -724,9 +746,9 @@
                 性別: document.querySelector('input[name="gender"]:checked')?.value || '',
                 手機: mobile,
                 營養師: document.getElementById('nutritionist').value.trim(),
-                產前體重: document.getElementById('prePregnancyWeight').value.trim(),
-                產後體重: document.getElementById('postPregnancyWeight').value.trim(),
-                上月mc週期: document.getElementById('mcCycle').value,
+                產前體重: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('prePregnancyWeight').value.trim() : '',
+                產後體重: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('postPregnancyWeight').value.trim() : '',
+                上月mc週期: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('mcCycle').value : '',
                 email: document.getElementById('email').value.trim(),
                 建立時間: serverTimestamp()
             };
@@ -769,6 +791,7 @@
             if (confirm('確定要清除所有資料嗎？')) {
                 form.reset();
                 radioOptions.forEach(option => option.classList.remove('selected'));
+                toggleFemaleOnlyFields();
             }
         });
     </script>
