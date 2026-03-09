@@ -274,6 +274,9 @@
             margin-top: 12px;
             padding-top: 12px;
             border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
 
         .portion-title {
@@ -289,6 +292,9 @@
             padding: 10px 12px;
             font-size: 0.8125rem;
             color: var(--text-secondary);
+            display: inline-block;
+            max-width: 100%;
+            width: fit-content;
         }
 
         .portion-card {
@@ -297,6 +303,9 @@
             border-radius: 12px;
             padding: 10px 12px;
             margin-bottom: 8px;
+            display: inline-block;
+            max-width: 100%;
+            width: fit-content;
         }
 
         .portion-period {
@@ -308,9 +317,9 @@
 
         .portion-row {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: baseline;
-            gap: 10px;
+            gap: 8px;
             margin-bottom: 4px;
             font-size: 0.8125rem;
         }
