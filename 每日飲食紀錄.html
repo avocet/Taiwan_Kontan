@@ -460,23 +460,49 @@
             margin-bottom: 10px;
         }
 
-        .dialog-box {
+        .chat-list {
             border: 1px solid #e5e7eb;
             border-radius: 10px;
             padding: 10px;
             margin-bottom: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+
+        .chat-empty {
+            color: #6b7280;
+            font-size: 0.8125rem;
+        }
+
+        .chat-message {
+            margin-bottom: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .chat-meta {
+            font-size: 0.6875rem;
+            color: #6b7280;
+        }
+
+        .chat-bubble {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 8px 10px;
             white-space: pre-wrap;
             line-height: 1.5;
             font-size: 0.875rem;
         }
 
-        .dialog-box.admin {
+        .chat-bubble.admin {
             background: #ecfdf5;
             border-color: #a7f3d0;
             color: #064e3b;
         }
 
-        .dialog-box.student {
+        .chat-bubble.student {
             background: #eff6ff;
             border-color: #bfdbfe;
             color: #1e3a8a;
@@ -577,8 +603,7 @@
     <div class="dialog-modal" id="replyModal">
         <div class="dialog-content">
             <div class="dialog-title">回覆管理者營養師建議</div>
-            <div class="dialog-box admin" id="replyModalAdminAdvice">-</div>
-            <div class="dialog-box student" id="replyModalStudentReply">尚未回覆</div>
+            <div class="chat-list" id="replyModalChatList"></div>
             <textarea class="reply-textarea" id="replyInput" placeholder="請輸入你的回覆..."></textarea>
             <div class="dialog-actions">
                 <button class="dialog-btn cancel" id="cancelReplyBtn">取消</button>
@@ -608,6 +633,7 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
         let replyingRecordId = '';
+        let recordCache = new Map();
 
         // 檢查登入狀態
         let currentUser = null;
@@ -692,7 +718,9 @@
                 });
                 
                 let html = '';
+                recordCache = new Map();
                 docsArray.forEach((item) => {
+                    recordCache.set(item.id, item.data);
                     html += createDataCard(item.data, item.id, portionRecords);
                 });
                 document.getElementById('dataList').innerHTML = html;
@@ -715,12 +743,7 @@
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
-            const escapeAttr = (value) => String(value || '')
-                .replace(/&/g, '&amp;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;');
+            const conversation = normalizeConversation(data);
             const date = data.紀錄日期 || '-';
             const matchedPortions = portionRecords.filter((portion) => {
                 const startDate = portion.紀錄日期 || '';
@@ -769,14 +792,16 @@
             }
             portionHtml += '</div>';
 
-            const adviceHtml = data.管理員建議
+            const hasAdminAdvice = conversation.some((msg) => msg.role === 'admin') || !!data.管理員建議;
+            const latestStudentReply = [...conversation].reverse().find((msg) => msg.role === 'student');
+            const adviceHtml = hasAdminAdvice
                 ? `
                     <div class="advice-section">
-                        <div class="advice-title">管理者營養師建議</div>
-                        <div class="advice-content">${escapeHtml(data.管理員建議)}</div>
-                        ${data.學員回覆 ? `<div class="student-reply"><div class="student-reply-title">你的回覆</div><div class="student-reply-content">${escapeHtml(data.學員回覆)}</div></div>` : ''}
+                        <div class="advice-title">管理者營養師建議對話</div>
+                        <div class="advice-content">共 ${conversation.length} 則訊息，可持續回覆</div>
+                        ${latestStudentReply ? `<div class="student-reply"><div class="student-reply-title">你最近的回覆</div><div class="student-reply-content">${escapeHtml(latestStudentReply.text)}</div></div>` : ''}
                         <div class="advice-actions">
-                            <button class="reply-btn" data-record-id="${docId}" data-admin-advice="${escapeAttr(data.管理員建議)}" data-student-reply="${escapeAttr(data.學員回覆 || '')}">回覆建議</button>
+                            <button class="reply-btn" data-record-id="${docId}">開啟對話</button>
                         </div>
                     </div>
                 `
@@ -844,11 +869,7 @@
         document.getElementById('dataList').addEventListener('click', (e) => {
             const btn = e.target.closest('.reply-btn');
             if (!btn) return;
-            openReplyDialog(
-                btn.getAttribute('data-record-id') || '',
-                btn.getAttribute('data-admin-advice') || '',
-                btn.getAttribute('data-student-reply') || ''
-            );
+            openReplyDialog(btn.getAttribute('data-record-id') || '');
         });
 
         window.editData = function(docId) {
@@ -887,18 +908,75 @@
             }
         };
 
-        window.openReplyDialog = function(recordId, adminAdvice = '', studentReply = '') {
-            const decodeHtml = (value) => {
-                const textarea = document.createElement('textarea');
-                textarea.innerHTML = value || '';
-                return textarea.value;
-            };
+        function toMillis(value) {
+            if (!value) return 0;
+            if (typeof value === 'string') {
+                const n = Date.parse(value);
+                return Number.isNaN(n) ? 0 : n;
+            }
+            if (typeof value?.toMillis === 'function') return value.toMillis();
+            if (typeof value?.seconds === 'number') return value.seconds * 1000;
+            const n = Date.parse(String(value));
+            return Number.isNaN(n) ? 0 : n;
+        }
+
+        function normalizeConversation(recordData = {}) {
+            const chat = Array.isArray(recordData.建議對話) ? recordData.建議對話 : [];
+            const normalized = chat
+                .map((item) => ({
+                    role: item?.role === 'student' ? 'student' : 'admin',
+                    text: String(item?.text || '').trim(),
+                    createdAt: item?.createdAt || ''
+                }))
+                .filter((item) => item.text);
+
+            if (normalized.length === 0) {
+                if (recordData.管理員建議) {
+                    normalized.push({ role: 'admin', text: String(recordData.管理員建議), createdAt: recordData.建議更新時間 || '' });
+                }
+                if (recordData.學員回覆) {
+                    normalized.push({ role: 'student', text: String(recordData.學員回覆), createdAt: recordData.學員回覆更新時間 || '' });
+                }
+            }
+            return normalized.sort((a, b) => toMillis(a.createdAt) - toMillis(b.createdAt));
+        }
+
+        function formatChatTime(value) {
+            const ms = toMillis(value);
+            if (!ms) return '';
+            const d = new Date(ms);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${y}/${m}/${day} ${hh}:${mm}`;
+        }
+
+        function renderReplyModalConversation(conversation = []) {
+            const container = document.getElementById('replyModalChatList');
+            if (!conversation.length) {
+                container.innerHTML = '<div class="chat-empty">目前尚無建議內容</div>';
+                return;
+            }
+            container.innerHTML = conversation.map((msg) => `
+                <div class="chat-message">
+                    <div class="chat-meta">${msg.role === 'admin' ? '管理者營養師' : '你'} ${formatChatTime(msg.createdAt)}</div>
+                    <div class="chat-bubble ${msg.role === 'admin' ? 'admin' : 'student'}">${String(msg.text)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')}</div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        window.openReplyDialog = function(recordId) {
             replyingRecordId = recordId;
-            const adminAdviceText = decodeHtml(adminAdvice);
-            const studentReplyText = decodeHtml(studentReply);
-            document.getElementById('replyModalAdminAdvice').textContent = adminAdviceText || '-';
-            document.getElementById('replyModalStudentReply').textContent = studentReplyText || '尚未回覆';
-            document.getElementById('replyInput').value = studentReplyText || '';
+            const recordData = recordCache.get(recordId) || {};
+            const conversation = normalizeConversation(recordData);
+            renderReplyModalConversation(conversation);
+            document.getElementById('replyInput').value = '';
             document.getElementById('replyModal').classList.add('show');
         };
 
@@ -917,15 +995,30 @@
         document.getElementById('saveReplyBtn').addEventListener('click', async () => {
             const btn = document.getElementById('saveReplyBtn');
             const replyText = document.getElementById('replyInput').value.trim();
-            if (!replyingRecordId) return;
+            if (!replyingRecordId || !replyText) return;
             btn.disabled = true;
             btn.textContent = '送出中...';
             try {
+                const recordData = recordCache.get(replyingRecordId) || {};
+                const conversation = normalizeConversation(recordData);
+                const nextConversation = [...conversation, {
+                    role: 'student',
+                    text: replyText,
+                    createdAt: new Date().toISOString()
+                }];
                 await updateDoc(doc(db, "每日體重三圍", replyingRecordId), {
+                    建議對話: nextConversation,
                     學員回覆: replyText,
                     學員回覆更新時間: new Date()
                 });
-                closeReplyDialog();
+                recordCache.set(replyingRecordId, {
+                    ...recordData,
+                    建議對話: nextConversation,
+                    學員回覆: replyText,
+                    學員回覆更新時間: new Date().toISOString()
+                });
+                renderReplyModalConversation(nextConversation);
+                document.getElementById('replyInput').value = '';
                 await loadData(currentUser.uid);
             } catch (error) {
                 console.error('送出回覆失敗:', error);

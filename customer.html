@@ -723,6 +723,77 @@
         let editingPortionDocId = null;
         window.portionRecordsData = [];
 
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function toMillis(value) {
+            if (!value) return 0;
+            if (typeof value === 'string') {
+                const n = Date.parse(value);
+                return Number.isNaN(n) ? 0 : n;
+            }
+            if (typeof value?.toMillis === 'function') return value.toMillis();
+            if (typeof value?.seconds === 'number') return value.seconds * 1000;
+            const n = Date.parse(String(value));
+            return Number.isNaN(n) ? 0 : n;
+        }
+
+        function normalizeAdviceConversation(record = {}) {
+            const chat = Array.isArray(record.建議對話) ? record.建議對話 : [];
+            const normalized = chat
+                .map((item) => ({
+                    role: item?.role === 'student' ? 'student' : 'admin',
+                    text: String(item?.text || '').trim(),
+                    createdAt: item?.createdAt || ''
+                }))
+                .filter((item) => item.text);
+
+            if (normalized.length === 0) {
+                if (record.管理員建議) {
+                    normalized.push({ role: 'admin', text: String(record.管理員建議), createdAt: record.建議更新時間 || '' });
+                }
+                if (record.學員回覆) {
+                    normalized.push({ role: 'student', text: String(record.學員回覆), createdAt: record.學員回覆更新時間 || '' });
+                }
+            }
+
+            return normalized.sort((a, b) => toMillis(a.createdAt) - toMillis(b.createdAt));
+        }
+
+        function formatAdviceTime(value) {
+            const ms = toMillis(value);
+            if (!ms) return '';
+            const d = new Date(ms);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${y}/${m}/${day} ${hh}:${mm}`;
+        }
+
+        function renderAdviceConversationHtml(record, compact = false) {
+            const messages = normalizeAdviceConversation(record);
+            if (!messages.length) {
+                return `<div style="font-size:${compact ? '0.75rem' : '0.8rem'};color:#9ca3af;">尚無對話</div>`;
+            }
+            return messages.map((msg) => {
+                const isAdmin = msg.role === 'admin';
+                const metaSize = compact ? '0.68rem' : '0.72rem';
+                const bubbleSize = compact ? '0.78rem' : '0.82rem';
+                return `
+                    <div style="margin-bottom:6px;">
+                        <div style="font-size:${metaSize};color:#6b7280;margin-bottom:2px;">${isAdmin ? '管理者營養師' : '學員'} ${formatAdviceTime(msg.createdAt)}</div>
+                        <div style="font-size:${bubbleSize};line-height:1.5;white-space:pre-wrap;border:1px solid ${isAdmin ? '#a7f3d0' : '#bfdbfe'};background:${isAdmin ? '#ecfdf5' : '#eff6ff'};color:${isAdmin ? '#065f46' : '#1e3a8a'};border-radius:8px;padding:7px 8px;">${escapeHtml(msg.text)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // 查看學員飲食紀錄
         window.viewStudentRecords = async function(username, name) {
             currentStudentUsername = username;
@@ -742,10 +813,6 @@
             
             try {
                 console.log('Querying for name:', name);
-                const escapeHtml = (value) => String(value || '')
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;');
                 
                 // 先取得學員的 uid
                 const userQuery = query(collection(db, "users"), where("username", "==", username));
@@ -806,10 +873,7 @@
                         const breakfast = record.早餐 || '-';
                         const lunch = record.午餐 || '-';
                         const dinner = record.晚餐 || '-';
-                        const adminAdvice = record.管理員建議 || '';
-                        const studentReply = record.學員回覆 || '';
-                        const adminAdviceEscaped = escapeHtml(adminAdvice);
-                        const studentReplyEscaped = escapeHtml(studentReply);
+                        const conversationHtml = renderAdviceConversationHtml(record, false);
                         const matchedPortions = portionRecordsMobile.filter(portion => {
                             const startDate = portion.紀錄日期;
                             const endDate = portion.結束日期 || startDate;
@@ -850,12 +914,14 @@
 
                         const adviceSectionHtml = `
                             <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e5e7eb;">
-                                <div style="font-weight:600;margin-bottom:8px;">給學員的建議</div>
-                                <textarea data-advice-input="true" data-record-id="${record.id}" style="width:100%;min-height:76px;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:0.875rem;resize:vertical;">${adminAdviceEscaped}</textarea>
-                                <div style="margin-top:8px;display:flex;justify-content:flex-end;">
-                                    <button class="saveAdviceBtn" data-record-id="${record.id}" style="background:#007AFF;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:0.8125rem;cursor:pointer;">儲存建議</button>
+                                <div style="font-weight:600;margin-bottom:8px;">建議對話</div>
+                                <div style="max-height:230px;overflow-y:auto;padding:8px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;">
+                                    ${conversationHtml}
                                 </div>
-                                ${studentReply ? `<div style="margin-top:8px;padding:10px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:8px;"><div style="font-size:0.75rem;color:#1e3a8a;font-weight:600;margin-bottom:4px;">學員回覆</div><div style="font-size:0.875rem;color:#1e3a8a;white-space:pre-wrap;line-height:1.5;">${studentReplyEscaped}</div></div>` : ''}
+                                <textarea class="adviceChatInput" data-record-id="${record.id}" style="margin-top:8px;width:100%;min-height:76px;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:0.875rem;resize:vertical;" placeholder="輸入新訊息給學員..."></textarea>
+                                <div style="margin-top:8px;display:flex;justify-content:flex-end;">
+                                    <button class="sendAdviceMsgBtn" data-record-id="${record.id}" style="background:#007AFF;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:0.8125rem;cursor:pointer;">送出訊息</button>
+                                </div>
                             </div>
                         `;
                         
@@ -983,16 +1049,7 @@
                 
                 // 左邊顯示所有每日飲食紀錄
                 for (const daily of dietRecords) {
-                    const adminAdvice = daily.管理員建議 || '';
-                    const studentReply = daily.學員回覆 || '';
-                    const adminAdviceEscaped = String(adminAdvice)
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;');
-                    const studentReplyEscaped = String(studentReply)
-                        .replace(/&/g, '&amp;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;');
+                    const conversationHtml = renderAdviceConversationHtml(daily, true);
                     leftHtml += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
                             <div style="font-weight:600;margin-bottom:8px;">${daily.紀錄日期}</div>
@@ -1004,12 +1061,14 @@
                                 <div>晚餐: ${daily.晚餐 || '-'}</div>
                             </div>
                             <div style="margin-top:12px;padding-top:12px;border-top:1px dashed #e5e7eb;">
-                                <div style="font-weight:600;margin-bottom:8px;">給學員的建議</div>
-                                <textarea data-advice-input="true" data-record-id="${daily.id}" style="width:100%;min-height:68px;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:0.8rem;resize:vertical;">${adminAdviceEscaped}</textarea>
-                                <div style="margin-top:8px;display:flex;justify-content:flex-end;">
-                                    <button class="saveAdviceBtn" data-record-id="${daily.id}" style="background:#007AFF;color:white;border:none;padding:6px 10px;border-radius:8px;font-size:0.75rem;cursor:pointer;">儲存建議</button>
+                                <div style="font-weight:600;margin-bottom:8px;">建議對話</div>
+                                <div style="max-height:200px;overflow-y:auto;padding:8px;border:1px solid #e5e7eb;border-radius:8px;background:#fafafa;">
+                                    ${conversationHtml}
                                 </div>
-                                ${studentReply ? `<div style="margin-top:8px;padding:8px;border:1px solid #bfdbfe;background:#eff6ff;border-radius:8px;"><div style="font-size:0.72rem;color:#1e3a8a;font-weight:600;margin-bottom:4px;">學員回覆</div><div style="font-size:0.8rem;color:#1e3a8a;white-space:pre-wrap;line-height:1.5;">${studentReplyEscaped}</div></div>` : ''}
+                                <textarea class="adviceChatInput" data-record-id="${daily.id}" style="margin-top:8px;width:100%;min-height:68px;padding:8px;border:1px solid #d1d5db;border-radius:8px;font-size:0.8rem;resize:vertical;" placeholder="輸入新訊息給學員..."></textarea>
+                                <div style="margin-top:8px;display:flex;justify-content:flex-end;">
+                                    <button class="sendAdviceMsgBtn" data-record-id="${daily.id}" style="background:#007AFF;color:white;border:none;padding:6px 10px;border-radius:8px;font-size:0.75rem;cursor:pointer;">送出訊息</button>
+                                </div>
                             </div>
                         </div>
                     `;
@@ -1187,30 +1246,46 @@
             });
         }
 
-        async function saveAdminAdvice(recordId, adviceText, buttonEl) {
-            if (!recordId) return;
+        async function sendAdminAdviceMessage(recordId, messageText, buttonEl) {
+            if (!recordId || !messageText) return;
             if (buttonEl) {
                 buttonEl.disabled = true;
-                buttonEl.textContent = '儲存中...';
+                buttonEl.textContent = '送出中...';
             }
             try {
+                const recordRef = doc(db, "每日體重三圍", recordId);
+                const recordSnap = await getDoc(recordRef);
+                if (!recordSnap.exists()) {
+                    throw new Error('找不到紀錄');
+                }
+                const recordData = recordSnap.data();
+                const currentConversation = normalizeAdviceConversation(recordData);
+                const nextConversation = [...currentConversation, {
+                    role: 'admin',
+                    text: messageText,
+                    createdAt: new Date().toISOString()
+                }];
                 await updateDoc(doc(db, "每日體重三圍", recordId), {
-                    管理員建議: adviceText || '',
+                    建議對話: nextConversation,
+                    管理員建議: messageText,
                     建議更新時間: new Date()
                 });
-                if (buttonEl) buttonEl.textContent = '已儲存';
+                if (buttonEl) buttonEl.textContent = '已送出';
+                if (currentStudentUsername && currentStudentName) {
+                    await viewStudentRecords(currentStudentUsername, currentStudentName);
+                }
                 setTimeout(() => {
                     if (buttonEl) {
                         buttonEl.disabled = false;
-                        buttonEl.textContent = '儲存建議';
+                        buttonEl.textContent = '送出訊息';
                     }
                 }, 900);
             } catch (error) {
-                console.error('儲存建議失敗:', error);
-                alert('儲存建議失敗，請稍後再試');
+                console.error('送出訊息失敗:', error);
+                alert('送出訊息失敗，請稍後再試');
                 if (buttonEl) {
                     buttonEl.disabled = false;
-                    buttonEl.textContent = '儲存建議';
+                    buttonEl.textContent = '送出訊息';
                 }
             }
         }
@@ -1218,24 +1293,32 @@
         const mobileRecordsContent = document.getElementById('mobileRecordsContent');
         if (mobileRecordsContent) {
             mobileRecordsContent.addEventListener('click', async (e) => {
-                const btn = e.target.closest('.saveAdviceBtn');
+                const btn = e.target.closest('.sendAdviceMsgBtn');
                 if (!btn) return;
                 const recordId = btn.getAttribute('data-record-id');
-                const textarea = mobileRecordsContent.querySelector(`textarea[data-advice-input="true"][data-record-id="${recordId}"]`);
+                const textarea = mobileRecordsContent.querySelector(`textarea.adviceChatInput[data-record-id="${recordId}"]`);
                 const adviceText = textarea ? textarea.value.trim() : '';
-                await saveAdminAdvice(recordId, adviceText, btn);
+                if (!adviceText) {
+                    alert('請先輸入訊息內容');
+                    return;
+                }
+                await sendAdminAdviceMessage(recordId, adviceText, btn);
             });
         }
 
         const leftAlignedDisplay = document.getElementById('leftAlignedDisplay');
         if (leftAlignedDisplay) {
             leftAlignedDisplay.addEventListener('click', async (e) => {
-                const btn = e.target.closest('.saveAdviceBtn');
+                const btn = e.target.closest('.sendAdviceMsgBtn');
                 if (!btn) return;
                 const recordId = btn.getAttribute('data-record-id');
-                const textarea = leftAlignedDisplay.querySelector(`textarea[data-advice-input="true"][data-record-id="${recordId}"]`);
+                const textarea = leftAlignedDisplay.querySelector(`textarea.adviceChatInput[data-record-id="${recordId}"]`);
                 const adviceText = textarea ? textarea.value.trim() : '';
-                await saveAdminAdvice(recordId, adviceText, btn);
+                if (!adviceText) {
+                    alert('請先輸入訊息內容');
+                    return;
+                }
+                await sendAdminAdviceMessage(recordId, adviceText, btn);
             });
         }
 
