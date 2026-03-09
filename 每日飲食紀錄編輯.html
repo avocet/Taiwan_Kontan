@@ -56,13 +56,11 @@
         }
 
         .portion-panel {
-            width: 320px;
+            width: 100%;
             background: #f8fbff;
             border: 1px solid #dbeafe;
             border-radius: 16px;
             box-shadow: 0 4px 16px rgba(30, 64, 175, 0.08);
-            position: sticky;
-            top: 20px;
         }
 
         .portion-panel-header {
@@ -325,20 +323,50 @@
             background: #E5E5EA;
         }
 
-        .device-indicator {
+        .portion-popup-btn {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 12px;
+            right: 12px;
             padding: 8px 16px;
-            background: rgba(0, 0, 0, 0.7);
+            background: #1d4ed8;
             color: white;
             border-radius: 20px;
             font-size: 0.75rem;
-            font-weight: 500;
-            z-index: 1000;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            z-index: 1800;
             display: flex;
             align-items: center;
             gap: 6px;
+        }
+
+        .portion-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 1790;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 56px 12px 12px;
+        }
+
+        .portion-modal.show {
+            display: flex;
+        }
+
+        .portion-modal-card {
+            width: min(520px, 100%);
+            max-height: calc(100vh - 72px);
+            overflow: auto;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.2);
+            border: 1px solid #dbeafe;
         }
 
         .success-message {
@@ -442,7 +470,7 @@
             input { padding: 12px 14px; font-size: 16px; }
             .form-actions { padding: 16px; flex-direction: column; gap: 10px; }
             .btn { padding: 14px 20px; }
-            .portion-panel { width: 100%; position: static; }
+            .portion-popup-btn { top: 10px; right: 10px; }
         }
 
         @media screen and (min-width: 429px) and (max-width: 1024px) {
@@ -454,7 +482,7 @@
             .form-section { margin-bottom: 32px; }
             .form-actions { padding: 24px; gap: 16px; }
             .btn { padding: 16px 28px; }
-            .portion-panel { width: 300px; }
+            .portion-popup-btn { top: 14px; right: 14px; }
         }
 
         @media screen and (min-width: 1025px) {
@@ -465,15 +493,12 @@
             .form-body { padding: 36px 32px; }
             .form-actions { padding: 28px 32px; gap: 16px; }
             .btn { max-width: 200px; margin: 0 auto; }
-            .portion-panel { width: 340px; }
+            .portion-popup-btn { top: 16px; right: 16px; }
         }
     </style>
 </head>
 <body>
-    <div class="device-indicator" id="deviceIndicator">
-        <span class="device-icon" id="deviceIcon">💻</span>
-        <span id="deviceText">電腦版</span>
-    </div>
+    <button type="button" class="portion-popup-btn" id="openPortionModalBtn">管理員飲食份數表</button>
 
     <div class="container">
         <div class="form-layout">
@@ -561,12 +586,18 @@
                 <button type="submit" class="btn btn-primary" id="submitBtn">更新資料</button>
             </div>
         </div>
-        <aside class="portion-panel">
-            <div class="portion-panel-header">管理員飲食份數表</div>
+        </div>
+    </div>
+
+    <div class="portion-modal" id="portionModal">
+        <div class="portion-modal-card portion-panel">
+            <div class="portion-panel-header" style="display:flex;justify-content:space-between;align-items:center;">
+                <span>管理員飲食份數表</span>
+                <button type="button" id="closePortionModalBtn" style="border:none;background:none;font-size:1.25rem;cursor:pointer;color:#1d4ed8;">✕</button>
+            </div>
             <div class="portion-panel-body" id="portionPanelContent">
                 <div class="portion-empty">請先選擇紀錄日期</div>
             </div>
-        </aside>
         </div>
     </div>
 
@@ -711,27 +742,20 @@
             }
         }
 
-        function updateDeviceIndicator() {
-            const width = window.innerWidth;
-            const indicator = document.getElementById('deviceIndicator');
-            const icon = document.getElementById('deviceIcon');
-            const text = document.getElementById('deviceText');
-            
-            if (width <= 428) {
-                icon.textContent = '📱';
-                text.textContent = 'iPhone 版';
-            } else if (width <= 1024) {
-                icon.textContent = '📱';
-                text.textContent = 'iPad 版';
-            } else {
-                icon.textContent = '💻';
-                text.textContent = '電腦版';
+        const portionModal = document.getElementById('portionModal');
+        const openPortionModalBtn = document.getElementById('openPortionModalBtn');
+        const closePortionModalBtn = document.getElementById('closePortionModalBtn');
+        openPortionModalBtn.addEventListener('click', () => {
+            portionModal.classList.add('show');
+        });
+        closePortionModalBtn.addEventListener('click', () => {
+            portionModal.classList.remove('show');
+        });
+        portionModal.addEventListener('click', (e) => {
+            if (e.target === portionModal) {
+                portionModal.classList.remove('show');
             }
-            indicator.style.display = 'flex';
-        }
-
-        window.addEventListener('load', updateDeviceIndicator);
-        window.addEventListener('resize', updateDeviceIndicator);
+        });
 
         const recordDateInput = document.getElementById('recordDate');
         recordDateInput.addEventListener('change', function() {
