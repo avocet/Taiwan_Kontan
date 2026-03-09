@@ -193,6 +193,65 @@
             color: var(--text-secondary);
         }
 
+        .mobile-top-actions {
+            display: none;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .mobile-info-btn {
+            flex: 1;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 8px;
+            background: #007AFF;
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .mobile-info-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 2200;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+
+        .mobile-info-modal.show {
+            display: flex;
+        }
+
+        .mobile-info-modal-card {
+            width: min(520px, 100%);
+            max-height: 80vh;
+            overflow: auto;
+            background: #fff;
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .mobile-info-modal-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .mobile-info-modal-close {
+            margin-top: 10px;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            background: #e5e7eb;
+            color: #111827;
+            cursor: pointer;
+            font-size: 0.8125rem;
+        }
+
         @media screen and (max-width: 768px) {
             .menu-grid {
                 grid-template-columns: 1fr;
@@ -204,6 +263,7 @@
             #mobileRecordsContent { display: block !important; }
             #studentRecordsContent { display: none !important; }
             #studentRecords { max-width: 600px; }
+            .mobile-top-actions { display: flex; }
         }
         
         @media screen and (min-width: 769px) {
@@ -211,6 +271,7 @@
             #mobileRecordsContent { display: none !important; }
             #studentRecordsContent { display: none !important; }
             #showPortionTableBtn { display: block; }
+            .mobile-top-actions { display: none; }
         }
     </style>
 </head>
@@ -245,6 +306,12 @@
             <button id="backToListBtn" style="background:none;border:none;font-size:1rem;cursor:pointer;padding:8px;">← 返回</button>
             <h2 id="studentNameTitle" style="font-size:1.25rem;flex:1;text-align:center;margin-right:60px;">學員飲食紀錄</h2>
             <button id="showPortionTableBtn" style="background:#34C759;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:0.875rem;cursor:pointer;white-space:nowrap;">新增飲食份數表</button>
+        </div>
+
+        <div class="mobile-top-actions" id="mobileTopInfoActions">
+            <button type="button" class="mobile-info-btn" data-panel="basic">學員基本資料</button>
+            <button type="button" class="mobile-info-btn" data-panel="initial">初始體重三圍</button>
+            <button type="button" class="mobile-info-btn" data-panel="constitution">中醫體質檢測</button>
         </div>
         
         <!-- 電腦版：並排顯示 -->
@@ -281,6 +348,14 @@
         
         <!-- 手機版 -->
         <div id="mobileRecordsContent"></div>
+    </div>
+
+    <div class="mobile-info-modal" id="mobileInfoModal">
+        <div class="mobile-info-modal-card">
+            <div class="mobile-info-modal-title" id="mobileInfoModalTitle">資料</div>
+            <div id="mobileInfoModalBody" style="font-size:0.875rem;line-height:1.7;"></div>
+            <button type="button" class="mobile-info-modal-close" id="mobileInfoModalClose">關閉</button>
+        </div>
     </div>
 
     <!-- 照片 Modal -->
@@ -740,6 +815,11 @@
         let currentStudentEmail = '';
         let editingPortionDocId = null;
         window.portionRecordsData = [];
+        let currentStudentSideData = {
+            basicInfo: null,
+            initialBody: null,
+            constitution: null
+        };
 
         function escapeHtml(value) {
             return String(value || '')
@@ -833,15 +913,16 @@
                 `;
                 return;
             }
+            const bodyHtml = `
+                <div>姓名：${escapeHtml(data.姓名 || '-')}</div>
+                <div>性別：${escapeHtml(data.性別 || '-')}</div>
+                <div>手機：${escapeHtml(data.手機 || '-')}</div>
+                <div>Email：${escapeHtml(data.email || '-')}</div>
+                <div>營養師：${escapeHtml(data.營養師 || '-')}</div>
+            `;
             card.innerHTML = `
                 <div style="font-weight:600;margin-bottom:6px;">學員基本資料</div>
-                <div style="font-size:0.8125rem;line-height:1.6;">
-                    <div>姓名：${escapeHtml(data.姓名 || '-')}</div>
-                    <div>性別：${escapeHtml(data.性別 || '-')}</div>
-                    <div>手機：${escapeHtml(data.手機 || '-')}</div>
-                    <div>Email：${escapeHtml(data.email || '-')}</div>
-                    <div>營養師：${escapeHtml(data.營養師 || '-')}</div>
-                </div>
+                <div style="font-size:0.8125rem;line-height:1.6;">${bodyHtml}</div>
             `;
         }
 
@@ -855,15 +936,16 @@
                 `;
                 return;
             }
+            const bodyHtml = `
+                <div>日期：${escapeHtml(data.紀錄日期 || '-')}</div>
+                <div>體重：${escapeHtml(data.體重 || '-')} kg</div>
+                <div>胸圍：${escapeHtml(data.胸圍 || '-')} cm</div>
+                <div>腰圍：${escapeHtml(data.腰圍 || '-')} cm</div>
+                <div>臀圍：${escapeHtml(data.臀圍 || '-')} cm</div>
+            `;
             card.innerHTML = `
                 <div style="font-weight:600;margin-bottom:6px;">初始體重三圍</div>
-                <div style="font-size:0.8125rem;line-height:1.6;">
-                    <div>日期：${escapeHtml(data.紀錄日期 || '-')}</div>
-                    <div>體重：${escapeHtml(data.體重 || '-')} kg</div>
-                    <div>胸圍：${escapeHtml(data.胸圍 || '-')} cm</div>
-                    <div>腰圍：${escapeHtml(data.腰圍 || '-')} cm</div>
-                    <div>臀圍：${escapeHtml(data.臀圍 || '-')} cm</div>
-                </div>
+                <div style="font-size:0.8125rem;line-height:1.6;">${bodyHtml}</div>
             `;
         }
 
@@ -890,15 +972,65 @@
                 return;
             }
             const constitutionType = resolveConstitutionType(data.冷熱體質分數, data.濕乾體質分數);
+            const bodyHtml = `
+                <div>客戶姓名：${escapeHtml(data.客戶姓名 || '-')}</div>
+                <div>冷熱分數：${escapeHtml(data.冷熱體質分數 || '-')} 分</div>
+                <div>濕乾分數：${escapeHtml(data.濕乾體質分數 || '-')} 分</div>
+                <div>結果：${escapeHtml(constitutionType)}</div>
+            `;
             card.innerHTML = `
                 <div style="font-weight:600;margin-bottom:6px;">中醫體質檢測</div>
-                <div style="font-size:0.8125rem;line-height:1.6;">
-                    <div>客戶姓名：${escapeHtml(data.客戶姓名 || '-')}</div>
-                    <div>冷熱分數：${escapeHtml(data.冷熱體質分數 || '-')} 分</div>
-                    <div>濕乾分數：${escapeHtml(data.濕乾體質分數 || '-')} 分</div>
-                    <div>結果：${escapeHtml(constitutionType)}</div>
-                </div>
+                <div style="font-size:0.8125rem;line-height:1.6;">${bodyHtml}</div>
             `;
+        }
+
+        function getMobilePanelHtml(panel) {
+            if (panel === 'basic') {
+                const data = currentStudentSideData.basicInfo;
+                if (!data) return '<div style="color:#9ca3af;">尚無基本資料</div>';
+                return `
+                    <div>姓名：${escapeHtml(data.姓名 || '-')}</div>
+                    <div>性別：${escapeHtml(data.性別 || '-')}</div>
+                    <div>手機：${escapeHtml(data.手機 || '-')}</div>
+                    <div>Email：${escapeHtml(data.email || '-')}</div>
+                    <div>營養師：${escapeHtml(data.營養師 || '-')}</div>
+                `;
+            }
+            if (panel === 'initial') {
+                const data = currentStudentSideData.initialBody;
+                if (!data) return '<div style="color:#9ca3af;">尚無初始紀錄</div>';
+                return `
+                    <div>日期：${escapeHtml(data.紀錄日期 || '-')}</div>
+                    <div>體重：${escapeHtml(data.體重 || '-')} kg</div>
+                    <div>胸圍：${escapeHtml(data.胸圍 || '-')} cm</div>
+                    <div>腰圍：${escapeHtml(data.腰圍 || '-')} cm</div>
+                    <div>臀圍：${escapeHtml(data.臀圍 || '-')} cm</div>
+                `;
+            }
+            const data = currentStudentSideData.constitution;
+            if (!data) return '<div style="color:#9ca3af;">尚無檢測資料</div>';
+            const constitutionType = resolveConstitutionType(data.冷熱體質分數, data.濕乾體質分數);
+            return `
+                <div>客戶姓名：${escapeHtml(data.客戶姓名 || '-')}</div>
+                <div>冷熱分數：${escapeHtml(data.冷熱體質分數 || '-')} 分</div>
+                <div>濕乾分數：${escapeHtml(data.濕乾體質分數 || '-')} 分</div>
+                <div>結果：${escapeHtml(constitutionType)}</div>
+            `;
+        }
+
+        function openMobileInfoModal(panel) {
+            const titleMap = {
+                basic: '學員基本資料',
+                initial: '初始體重三圍',
+                constitution: '中醫體質檢測'
+            };
+            document.getElementById('mobileInfoModalTitle').textContent = titleMap[panel] || '資料';
+            document.getElementById('mobileInfoModalBody').innerHTML = getMobilePanelHtml(panel);
+            document.getElementById('mobileInfoModal').classList.add('show');
+        }
+
+        function closeMobileInfoModal() {
+            document.getElementById('mobileInfoModal').classList.remove('show');
         }
 
         async function loadStudentSideCards(userUid, username, emailPrefix) {
@@ -917,6 +1049,11 @@
                 findFirstDocByUserKeys("原始體重三圍", uniqueKeys),
                 findFirstDocByUserKeys("中醫體質四象限", uniqueKeys)
             ]);
+            currentStudentSideData = {
+                basicInfo,
+                initialBody,
+                constitution: constitutionData
+            };
             renderStudentBasicInfoCard(basicInfo);
             renderStudentInitialBodyCard(initialBody);
             renderStudentConstitutionCard(constitutionData);
@@ -1364,11 +1501,37 @@
         document.getElementById('backToListBtn').addEventListener('click', () => {
             document.getElementById('studentRecords').style.display = 'none';
             document.getElementById('studentList').style.display = 'block';
+            currentStudentSideData = { basicInfo: null, initialBody: null, constitution: null };
             renderStudentBasicInfoCard(null);
             renderStudentInitialBodyCard(null);
             renderStudentConstitutionCard(null);
+            closeMobileInfoModal();
             loadStudentList();
         });
+
+        const mobileTopInfoActions = document.getElementById('mobileTopInfoActions');
+        if (mobileTopInfoActions) {
+            mobileTopInfoActions.addEventListener('click', (e) => {
+                const btn = e.target.closest('.mobile-info-btn');
+                if (!btn) return;
+                const panel = btn.getAttribute('data-panel');
+                if (!panel) return;
+                openMobileInfoModal(panel);
+            });
+        }
+
+        const mobileInfoModal = document.getElementById('mobileInfoModal');
+        if (mobileInfoModal) {
+            mobileInfoModal.addEventListener('click', (e) => {
+                if (e.target === mobileInfoModal) {
+                    closeMobileInfoModal();
+                }
+            });
+        }
+        const mobileInfoModalClose = document.getElementById('mobileInfoModalClose');
+        if (mobileInfoModalClose) {
+            mobileInfoModalClose.addEventListener('click', closeMobileInfoModal);
+        }
 
         const rightAlignedDisplay = document.getElementById('rightAlignedDisplay');
         if (rightAlignedDisplay) {
