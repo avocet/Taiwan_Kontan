@@ -249,6 +249,19 @@
         
         <!-- 電腦版：並排顯示 -->
         <div id="desktopRecordsContainer" style="display:none;gap:20px;justify-content:center;">
+            <div style="width:260px;">
+                <h3 style="font-size:1rem;margin-bottom:12px;">學員項目</h3>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div id="studentBasicInfoCard" style="background:white;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="font-weight:600;margin-bottom:6px;">學員基本資料</div>
+                        <div style="font-size:0.8125rem;color:#6b7280;">載入中...</div>
+                    </div>
+                    <div id="studentInitialBodyCard" style="background:white;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="font-weight:600;margin-bottom:6px;">初始體重三圍</div>
+                        <div style="font-size:0.8125rem;color:#6b7280;">載入中...</div>
+                    </div>
+                </div>
+            </div>
             <div style="width:500px;">
                 <h3 style="font-size:1rem;margin-bottom:12px;">每日飲食紀錄</h3>
                 <div id="leftAlignedDisplay"></div>
@@ -795,6 +808,79 @@
             }).join('');
         }
 
+        async function findFirstDocByUserKeys(collectionName, candidateKeys) {
+            for (const key of candidateKeys) {
+                const q = query(collection(db, collectionName), where("userId", "==", key));
+                const snapshot = await getDocs(q);
+                if (!snapshot.empty) {
+                    return snapshot.docs[0].data();
+                }
+            }
+            return null;
+        }
+
+        function renderStudentBasicInfoCard(data) {
+            const card = document.getElementById('studentBasicInfoCard');
+            if (!card) return;
+            if (!data) {
+                card.innerHTML = `
+                    <div style="font-weight:600;margin-bottom:6px;">學員基本資料</div>
+                    <div style="font-size:0.8125rem;color:#9ca3af;">尚無基本資料</div>
+                `;
+                return;
+            }
+            card.innerHTML = `
+                <div style="font-weight:600;margin-bottom:6px;">學員基本資料</div>
+                <div style="font-size:0.8125rem;line-height:1.6;">
+                    <div>姓名：${escapeHtml(data.姓名 || '-')}</div>
+                    <div>性別：${escapeHtml(data.性別 || '-')}</div>
+                    <div>手機：${escapeHtml(data.手機 || '-')}</div>
+                    <div>Email：${escapeHtml(data.email || '-')}</div>
+                    <div>營養師：${escapeHtml(data.營養師 || '-')}</div>
+                </div>
+            `;
+        }
+
+        function renderStudentInitialBodyCard(data) {
+            const card = document.getElementById('studentInitialBodyCard');
+            if (!card) return;
+            if (!data) {
+                card.innerHTML = `
+                    <div style="font-weight:600;margin-bottom:6px;">初始體重三圍</div>
+                    <div style="font-size:0.8125rem;color:#9ca3af;">尚無初始紀錄</div>
+                `;
+                return;
+            }
+            card.innerHTML = `
+                <div style="font-weight:600;margin-bottom:6px;">初始體重三圍</div>
+                <div style="font-size:0.8125rem;line-height:1.6;">
+                    <div>日期：${escapeHtml(data.紀錄日期 || '-')}</div>
+                    <div>體重：${escapeHtml(data.體重 || '-')} kg</div>
+                    <div>胸圍：${escapeHtml(data.胸圍 || '-')} cm</div>
+                    <div>腰圍：${escapeHtml(data.腰圍 || '-')} cm</div>
+                    <div>臀圍：${escapeHtml(data.臀圍 || '-')} cm</div>
+                </div>
+            `;
+        }
+
+        async function loadStudentSideCards(userUid, username, emailPrefix) {
+            const candidateKeys = [userUid, username, emailPrefix]
+                .filter(Boolean)
+                .map((v) => String(v).toLowerCase());
+            const uniqueKeys = [...new Set(candidateKeys)];
+            if (!uniqueKeys.length) {
+                renderStudentBasicInfoCard(null);
+                renderStudentInitialBodyCard(null);
+                return;
+            }
+            const [basicInfo, initialBody] = await Promise.all([
+                findFirstDocByUserKeys("客戶資料", uniqueKeys),
+                findFirstDocByUserKeys("原始體重三圍", uniqueKeys)
+            ]);
+            renderStudentBasicInfoCard(basicInfo);
+            renderStudentInitialBodyCard(initialBody);
+        }
+
         // 查看學員飲食紀錄
         window.viewStudentRecords = async function(username, name) {
             currentStudentUsername = username;
@@ -827,6 +913,7 @@
                 
                 const userData = userSnapshot.docs[0].data();
                 const userUid = userData.uid || userData.email?.split('@')[0];
+                const emailPrefix = userData.email?.split('@')[0] || '';
                 currentStudentEmail = userData.email || '';
                 
                 if (!userUid) {
@@ -835,6 +922,7 @@
                 }
                 
                 currentStudentUid = userUid;
+                await loadStudentSideCards(userUid, username, emailPrefix);
                 console.log('userUid:', userUid);
                 
                 // 用 uid 查詢學員的每日飲食紀錄
@@ -1235,6 +1323,8 @@
         document.getElementById('backToListBtn').addEventListener('click', () => {
             document.getElementById('studentRecords').style.display = 'none';
             document.getElementById('studentList').style.display = 'block';
+            renderStudentBasicInfoCard(null);
+            renderStudentInitialBodyCard(null);
             loadStudentList();
         });
 
