@@ -253,15 +253,13 @@
                 </button>
             </form>
             
-            <div class="link-buttons">
-                <a href="#" id="forgotPasswordLink">忘記密碼？</a>
-            </div>
+            <button type="button" class="btn btn-secondary" id="changePasswordBtn">修改密碼</button>
         </div>
     </div>
                 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -293,6 +291,7 @@
         // ===== 登入 =====
         const loginForm = document.getElementById('loginForm');
         const loginBtn = document.getElementById('loginBtn');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -371,100 +370,36 @@
             }
         });
 
-        // ===== 忘記密碼 =====
-        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
-        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-        const closeForgotModal = document.getElementById('closeForgotModal');
-        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        async function resolveResetEmail(identifier) {
+            const value = identifier.trim();
+            if (!value) return '';
+            if (value.includes('@')) return value;
 
-        if (forgotPasswordLink && forgotPasswordModal) {
-            forgotPasswordLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                forgotPasswordModal.style.display = 'flex';
-            });
+            const usersRef = collection(db, "users");
+            const q = query(usersRef, where("username", "==", value.toLowerCase()));
+            const querySnapshot = await getDocs(q);
+            if (querySnapshot.empty) return '';
+            return querySnapshot.docs[0].data().email || '';
         }
 
-        if (closeForgotModal && forgotPasswordModal && forgotPasswordForm) {
-            closeForgotModal.addEventListener('click', () => {
-                forgotPasswordModal.style.display = 'none';
-                hideMessage('resetMessage');
-                forgotPasswordForm.reset();
-            });
-        }
-
-        if (forgotPasswordModal) {
-            forgotPasswordModal.addEventListener('click', (e) => {
-                if (e.target === forgotPasswordModal) {
-                    forgotPasswordModal.style.display = 'none';
-                    hideMessage('resetMessage');
-                }
-            });
-        }
-
-        if (closeForgotModal) {
-            closeForgotModal.addEventListener('click', () => {
-                forgotPasswordModal.style.display = 'none';
-                hideMessage('resetMessage');
-                forgotPasswordForm.reset();
-            });
-        }
-
-        if (forgotPasswordModal) {
-            forgotPasswordModal.addEventListener('click', (e) => {
-                if (e.target === forgotPasswordModal) {
-                    forgotPasswordModal.style.display = 'none';
-                    hideMessage('resetMessage');
-                }
-            });
-        }
-
-        if (forgotPasswordForm) {
-            forgotPasswordForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const email = document.getElementById('resetEmail').value.trim();
-                const resetBtn = document.getElementById('resetBtn');
-
-                if (!email) {
-                    showMessage('resetMessage', '請輸入電子郵件', 'error');
-                    return;
-                }
-
-                if (resetBtn) {
-                    resetBtn.disabled = true;
-                    resetBtn.classList.add('loading');
-                }
-
-                const timeout = setTimeout(() => {
-                    if (resetBtn) {
-                        resetBtn.disabled = false;
-                        resetBtn.classList.remove('loading');
-                    }
-                    showMessage('resetMessage', '網路連接超時，請檢查網絡', 'error');
-                }, 10000);
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', async () => {
+                const inputVal = prompt('請輸入使用者名稱或電子郵件以修改密碼');
+                if (inputVal === null) return;
 
                 try {
+                    const email = await resolveResetEmail(inputVal);
+                    if (!email) {
+                        showMessage('message', '找不到對應帳號，請確認使用者名稱或電子郵件', 'error');
+                        return;
+                    }
                     await sendPasswordResetEmail(auth, email);
-                    clearTimeout(timeout);
-                    showMessage('resetMessage', '密碼重設連結已發送到您的電子郵件！', 'success');
-                    setTimeout(() => {
-                        if (forgotPasswordModal) forgotPasswordModal.style.display = 'none';
-                        hideMessage('resetMessage');
-                        forgotPasswordForm.reset();
-                    }, 3000);
+                    showMessage('message', '修改密碼連結已寄到您的電子郵件', 'success');
                 } catch (error) {
-                    clearTimeout(timeout);
-                    let errorMessage = '發送失敗，請稍後再試';
-                    switch (error.code) {
-                        case 'auth/invalid-email': errorMessage = '電子郵件格式錯誤'; break;
-                        case 'auth/user-not-found': errorMessage = '找不到此帳號'; break;
-                    }
-                    showMessage('resetMessage', errorMessage, 'error');
-                } finally {
-                    if (resetBtn) {
-                        resetBtn.disabled = false;
-                        resetBtn.classList.remove('loading');
-                    }
+                    let errorMessage = '寄送失敗，請稍後再試';
+                    if (error.code === 'auth/invalid-email') errorMessage = '電子郵件格式錯誤';
+                    else if (error.code === 'auth/user-not-found') errorMessage = '找不到此帳號';
+                    showMessage('message', errorMessage, 'error');
                 }
             });
         }
