@@ -99,6 +99,9 @@
             padding: 16px;
             margin-bottom: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: inline-block;
+            width: fit-content;
+            max-width: 100%;
         }
 
         .data-header {
@@ -163,6 +166,8 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
             font-size: 0.8125rem;
+            width: fit-content;
+            max-width: 100%;
         }
 
         .data-item {
@@ -270,13 +275,32 @@
             border: none;
         }
 
-        .portion-section {
+        .records-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
             margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border-color);
+        }
+
+        .diet-records {
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: #fafafa;
+            width: fit-content;
+            max-width: 100%;
+        }
+
+        .portion-section {
+            padding: 10px 12px;
+            border: 1px solid #dbeafe;
+            border-radius: 12px;
+            background: #f8fbff;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            width: fit-content;
+            max-width: 100%;
         }
 
         .portion-title {
@@ -298,8 +322,8 @@
         }
 
         .portion-card {
-            background: #f8fbff;
-            border: 1px solid #dbeafe;
+            background: #ffffff;
+            border: 1px solid #d9e9ff;
             border-radius: 12px;
             padding: 10px 12px;
             margin-bottom: 8px;
@@ -348,6 +372,16 @@
 
             .data-info {
                 grid-template-columns: repeat(2, 1fr);
+            }
+
+            .records-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .diet-records,
+            .portion-section {
+                width: 100%;
             }
 
             .portion-row {
@@ -573,22 +607,24 @@
                             <span class="data-value">${data.體脂 || '-'} %</span>
                         </div>
                     </div>
-                    <div class="diet-records" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border-color);">
-                        <div class="data-item" style="margin-bottom:8px;">
-                            <span class="data-label">早餐</span>
-                            <span class="data-value">${data.早餐 || '-'}</span>
+                    <div class="records-row">
+                        <div class="diet-records">
+                            <div class="data-item" style="margin-bottom:8px;">
+                                <span class="data-label">早餐</span>
+                                <span class="data-value">${data.早餐 || '-'}</span>
+                            </div>
+                            <div class="data-item" style="margin-bottom:8px;">
+                                <span class="data-label">午餐</span>
+                                <span class="data-value">${data.午餐 || '-'}</span>
+                            </div>
+                            <div class="data-item" style="margin-bottom:8px;">
+                                <span class="data-label">晚餐</span>
+                                <span class="data-value">${data.晚餐 || '-'}</span>
+                            </div>
+                            ${data.備註 ? `<div class="data-item"><span class="data-label">備註</span><span class="data-value">${data.備註}</span></div>` : ''}
                         </div>
-                        <div class="data-item" style="margin-bottom:8px;">
-                            <span class="data-label">午餐</span>
-                            <span class="data-value">${data.午餐 || '-'}</span>
-                        </div>
-                        <div class="data-item" style="margin-bottom:8px;">
-                            <span class="data-label">晚餐</span>
-                            <span class="data-value">${data.晚餐 || '-'}</span>
-                        </div>
-                        ${data.備註 ? `<div class="data-item"><span class="data-label">備註</span><span class="data-value">${data.備註}</span></div>` : ''}
+                        ${portionHtml}
                     </div>
-                    ${portionHtml}
                 </div>
             `;
         }
