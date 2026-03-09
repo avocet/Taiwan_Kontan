@@ -1288,7 +1288,7 @@
                     `;
                     const text = `你收到管理者新的建議訊息\n紀錄日期：${recordDate}\n發送者：${senderName}\n訊息內容：${messageText}`;
                     try {
-                        await addDoc(collection(db, "mail"), {
+                        await addDoc(collection(db, "emailNotifications"), {
                             to: [currentStudentEmail],
                             message: { subject, text, html },
                             createdAt: new Date(),

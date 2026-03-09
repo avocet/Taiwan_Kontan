@@ -705,7 +705,7 @@
             `;
             const text = `學員有新的對話訊息\n紀錄日期：${recordDate}\n發送者：${senderName}\n訊息內容：${messageText}`;
 
-            await addDoc(collection(db, "mail"), {
+            await addDoc(collection(db, "emailNotifications"), {
                 to: cachedAdminEmails,
                 message: { subject, text, html },
                 createdAt: new Date(),
