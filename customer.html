@@ -568,7 +568,7 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;" onclick="event.stopPropagation()">
                             <span style="padding:4px 8px;border-radius:999px;font-size:0.75rem;font-weight:600;background:${badgeBg};color:${badgeColor};">${status}</span>
-                            <select data-customer-doc-id="${student.customerDocId || ''}" data-username="${student.username}" data-email-prefix="${student.emailPrefix || ''}" onchange="updateStudentCourseStatus(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
+                            <select data-customer-doc-id="${student.customerDocId || ''}" data-uid="${student.uid || ''}" data-username="${student.username}" data-student-name="${student.studentName || ''}" data-email-prefix="${student.emailPrefix || ''}" onchange="updateStudentCourseStatus(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
                                 <option value="課程中" ${status === '課程中' ? 'selected' : ''}>課程中</option>
                                 <option value="已完成" ${status === '已完成' ? 'selected' : ''}>已完成</option>
                             </select>
@@ -632,6 +632,7 @@
                     }
 
                     allStudents.push({
+                        uid,
                         username: userData.username || username,
                         email: userData.email || '-',
                         emailPrefix,
@@ -652,34 +653,52 @@
             event.stopPropagation();
             const select = event.target;
             const customerDocId = select.dataset.customerDocId;
+            const uid = (select.dataset.uid || '').toLowerCase();
             const username = (select.dataset.username || '').toLowerCase();
+            const studentName = select.dataset.studentName || '';
             const emailPrefix = (select.dataset.emailPrefix || '').toLowerCase();
             const newStatus = select.value;
+            let resolvedCustomerDocId = customerDocId || '';
             select.disabled = true;
             try {
                 if (customerDocId) {
                     await updateDoc(doc(db, "客戶資料", customerDocId), { 課程狀態: newStatus });
                 } else {
-                    const candidateKeys = [username, emailPrefix].filter(Boolean);
+                    const candidateKeys = [uid, username, emailPrefix].filter(Boolean);
                     let updated = false;
+                    let resolvedDocId = '';
                     for (const key of candidateKeys) {
                         const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", key));
                         const customerSnapshot = await getDocs(customerQuery);
                         if (!customerSnapshot.empty) {
-                            await updateDoc(doc(db, "客戶資料", customerSnapshot.docs[0].id), { 課程狀態: newStatus });
+                            resolvedDocId = customerSnapshot.docs[0].id;
+                            await updateDoc(doc(db, "客戶資料", resolvedDocId), { 課程狀態: newStatus });
                             updated = true;
                             break;
                         }
                     }
                     if (!updated) {
-                        alert('找不到此學員對應的客戶資料，無法標注狀態');
-                        return;
+                        const userIdForCreate = uid || username || emailPrefix;
+                        if (!userIdForCreate) {
+                            alert('找不到此學員可用識別資料，無法標注狀態');
+                            return;
+                        }
+                        const createdDoc = await addDoc(collection(db, "客戶資料"), {
+                            userId: userIdForCreate,
+                            姓名: studentName || username || '-',
+                            課程狀態: newStatus,
+                            建立時間: serverTimestamp()
+                        });
+                        resolvedDocId = createdDoc.id;
                     }
+
+                    select.dataset.customerDocId = resolvedDocId;
+                    resolvedCustomerDocId = resolvedDocId;
                 }
 
                 allStudents = allStudents.map((student) => {
                     if ((student.username || '').toLowerCase() === username) {
-                        return { ...student, 課程狀態: newStatus };
+                        return { ...student, 課程狀態: newStatus, customerDocId: resolvedCustomerDocId || student.customerDocId };
                     }
                     return student;
                 });
