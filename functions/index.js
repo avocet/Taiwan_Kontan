@@ -1,6 +1,7 @@
 "use strict";
 
 const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { defineSecret } = require("firebase-functions/params");
 const { logger } = require("firebase-functions");
 const admin = require("firebase-admin");
@@ -21,6 +22,29 @@ function normalizeRecipients(rawTo) {
     return single ? [single] : [];
   }
   return [];
+}
+
+async function collectDocsByUserKeys(db, collectionName, userKeys) {
+  const deduped = new Map();
+  for (const key of userKeys) {
+    if (!key) continue;
+    const snapshot = await db.collection(collectionName).where("userId", "==", key).get();
+    snapshot.forEach((docSnap) => {
+      deduped.set(docSnap.ref.path, docSnap.ref);
+    });
+  }
+  return Array.from(deduped.values());
+}
+
+async function batchDeleteDocs(docRefs) {
+  const db = admin.firestore();
+  const chunkSize = 400;
+  for (let i = 0; i < docRefs.length; i += chunkSize) {
+    const chunk = docRefs.slice(i, i + chunkSize);
+    const batch = db.batch();
+    chunk.forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
 }
 
 exports.sendEmailNotification = onDocumentCreated(
@@ -114,5 +138,82 @@ exports.sendEmailNotification = onDocumentCreated(
       status: "processed",
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
+  }
+);
+
+exports.deleteStudentAccountData = onCall(
+  { region: MAIL_REGION, timeoutSeconds: 120, memory: "512MiB" },
+  async (request) => {
+    if (!request.auth?.uid) {
+      throw new HttpsError("unauthenticated", "需要先登入管理員帳號");
+    }
+
+    const callerUid = request.auth.uid;
+    const db = admin.firestore();
+
+    const callerDoc = await db.collection("users").doc(callerUid).get();
+    if (!callerDoc.exists || callerDoc.data()?.role !== "admin") {
+      throw new HttpsError("permission-denied", "僅管理員可執行此操作");
+    }
+
+    const payload = request.data || {};
+    const targetUid = String(payload.uid || "").trim();
+    const targetUsername = String(payload.username || "").trim().toLowerCase();
+    const targetEmail = String(payload.email || "").trim().toLowerCase();
+    const targetEmailPrefix = targetEmail.includes("@") ? targetEmail.split("@")[0] : "";
+
+    if (!targetUid && !targetUsername && !targetEmailPrefix) {
+      throw new HttpsError("invalid-argument", "缺少學員識別資料");
+    }
+
+    let resolvedUid = targetUid;
+    if (!resolvedUid && targetUsername) {
+      const userByUsername = await db.collection("users").where("username", "==", targetUsername).limit(1).get();
+      if (!userByUsername.empty) {
+        resolvedUid = userByUsername.docs[0].id;
+      }
+    }
+
+    if (!resolvedUid && targetEmail) {
+      const userByEmail = await db.collection("users").where("email", "==", targetEmail).limit(1).get();
+      if (!userByEmail.empty) {
+        resolvedUid = userByEmail.docs[0].id;
+      }
+    }
+
+    const userKeys = Array.from(
+      new Set([resolvedUid, targetUid, targetUsername, targetEmailPrefix].filter(Boolean).map((v) => String(v).toLowerCase()))
+    );
+
+    const collectionsToDelete = ["客戶資料", "每日體重三圍", "飲食份數表", "原始體重三圍", "中醫體質四象限", "減肥歷史"];
+    let refsToDelete = [];
+    for (const name of collectionsToDelete) {
+      const refs = await collectDocsByUserKeys(db, name, userKeys);
+      refsToDelete = refsToDelete.concat(refs);
+    }
+
+    if (resolvedUid) {
+      refsToDelete.push(db.collection("users").doc(resolvedUid));
+    }
+
+    const dedupRefs = Array.from(new Map(refsToDelete.map((r) => [r.path, r])).values());
+    await batchDeleteDocs(dedupRefs);
+
+    if (resolvedUid) {
+      try {
+        await admin.auth().deleteUser(resolvedUid);
+      } catch (error) {
+        if (error?.code !== "auth/user-not-found") {
+          logger.error("Delete auth user failed", { uid: resolvedUid, message: error?.message || String(error) });
+          throw new HttpsError("internal", "刪除 Auth 帳號失敗");
+        }
+      }
+    }
+
+    return {
+      success: true,
+      deletedDocs: dedupRefs.length,
+      deletedAuthUid: resolvedUid || ""
+    };
   }
 );

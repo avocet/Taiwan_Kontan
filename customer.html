@@ -487,6 +487,21 @@
         </div>
     </div>
 
+    <div id="deleteStudentModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1200;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:16px;width:90%;max-width:420px;margin:20px;">
+            <h3 style="margin-bottom:10px;font-size:1.125rem;">刪除學員帳號</h3>
+            <p id="deleteStudentHint" style="font-size:0.875rem;color:#666;margin-bottom:12px;">請輸入管理員密碼以確認刪除。</p>
+            <div style="margin-bottom:12px;">
+                <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">管理員密碼</label>
+                <input type="password" id="deleteStudentPassword" autocomplete="current-password" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+            </div>
+            <div style="display:flex;gap:10px;margin-top:20px;">
+                <button type="button" id="cancelDeleteStudentBtn" style="flex:1;padding:12px;border:1px solid #ddd;background:white;border-radius:8px;cursor:pointer;">取消</button>
+                <button type="button" id="confirmDeleteStudentBtn" style="flex:1;padding:12px;background:#FF3B30;color:white;border:none;border-radius:8px;cursor:pointer;">確認刪除</button>
+            </div>
+        </div>
+    </div>
+
     <div class="password-modal" id="changePasswordModal">
         <div class="password-modal-content">
             <div class="password-modal-title">修改密碼</div>
@@ -517,6 +532,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-functions.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -531,6 +547,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const functions = getFunctions(app, "asia-east1");
 
         async function redirectIfCourseCompleted(user, userRole, savedUsername = '') {
             if (!user || userRole === 'admin') {
@@ -693,6 +710,7 @@
                                 <option value="課程中" ${status === '課程中' ? 'selected' : ''}>課程中</option>
                                 <option value="已完成" ${status === '已完成' ? 'selected' : ''}>已完成</option>
                             </select>
+                            <button type="button" class="deleteStudentBtn" data-uid="${student.uid || ''}" data-username="${student.username || ''}" data-email="${student.email || ''}" data-student-name="${student.studentName || ''}" style="border:none;border-radius:8px;padding:6px 8px;font-size:0.75rem;background:#FF3B30;color:#fff;cursor:pointer;white-space:nowrap;">刪除帳號</button>
                         </div>
                     </div>
                 `;
@@ -837,6 +855,7 @@
         let currentStudentUid = null;
         let currentStudentEmail = '';
         let editingPortionDocId = null;
+        let pendingDeleteStudent = null;
         window.portionRecordsData = [];
         let studentTrendChart = null;
         let currentStudentSideData = {
@@ -1995,6 +2014,11 @@
         const addStudentForm = document.getElementById('addStudentForm');
         const cancelAddStudent = document.getElementById('cancelAddStudent');
         const submitAddStudent = document.getElementById('submitAddStudent');
+        const deleteStudentModal = document.getElementById('deleteStudentModal');
+        const deleteStudentHint = document.getElementById('deleteStudentHint');
+        const deleteStudentPassword = document.getElementById('deleteStudentPassword');
+        const cancelDeleteStudentBtn = document.getElementById('cancelDeleteStudentBtn');
+        const confirmDeleteStudentBtn = document.getElementById('confirmDeleteStudentBtn');
 
         if (addStudentBtn) {
             addStudentBtn.addEventListener('click', () => {
@@ -2072,6 +2096,91 @@
                 } finally {
                     submitAddStudent.disabled = false;
                     submitAddStudent.textContent = '新增';
+                }
+            });
+        }
+
+        function openDeleteStudentModal(student) {
+            pendingDeleteStudent = student;
+            deleteStudentPassword.value = '';
+            deleteStudentHint.textContent = `請輸入管理員密碼以刪除「${student.studentName || student.username || '學員'}」帳號與相關資料。`;
+            deleteStudentModal.style.display = 'flex';
+        }
+
+        function closeDeleteStudentModal() {
+            pendingDeleteStudent = null;
+            deleteStudentPassword.value = '';
+            deleteStudentModal.style.display = 'none';
+        }
+
+        const studentListContent = document.getElementById('studentListContent');
+        if (studentListContent) {
+            studentListContent.addEventListener('click', (e) => {
+                const btn = e.target.closest('.deleteStudentBtn');
+                if (!btn) return;
+                e.stopPropagation();
+                openDeleteStudentModal({
+                    uid: btn.getAttribute('data-uid') || '',
+                    username: btn.getAttribute('data-username') || '',
+                    email: btn.getAttribute('data-email') || '',
+                    studentName: btn.getAttribute('data-student-name') || ''
+                });
+            });
+        }
+
+        if (cancelDeleteStudentBtn) {
+            cancelDeleteStudentBtn.addEventListener('click', closeDeleteStudentModal);
+        }
+        if (deleteStudentModal) {
+            deleteStudentModal.addEventListener('click', (e) => {
+                if (e.target === deleteStudentModal) {
+                    closeDeleteStudentModal();
+                }
+            });
+        }
+        if (confirmDeleteStudentBtn) {
+            confirmDeleteStudentBtn.addEventListener('click', async () => {
+                if (!pendingDeleteStudent) return;
+                const password = deleteStudentPassword.value || '';
+                if (!password.trim()) {
+                    alert('請輸入管理員密碼');
+                    return;
+                }
+
+                const user = auth.currentUser;
+                if (!user || !user.email) {
+                    alert('目前登入資訊異常，請重新登入後再試');
+                    return;
+                }
+
+                const originalText = confirmDeleteStudentBtn.textContent;
+                confirmDeleteStudentBtn.disabled = true;
+                confirmDeleteStudentBtn.textContent = '刪除中...';
+                try {
+                    const credential = EmailAuthProvider.credential(user.email, password);
+                    await reauthenticateWithCredential(user, credential);
+
+                    const deleteStudentCallable = httpsCallable(functions, "deleteStudentAccountData");
+                    await deleteStudentCallable({
+                        uid: pendingDeleteStudent.uid || '',
+                        username: pendingDeleteStudent.username || '',
+                        email: pendingDeleteStudent.email || ''
+                    });
+
+                    closeDeleteStudentModal();
+                    alert('學員帳號與相關資料已刪除');
+                    await loadStudentList();
+                } catch (error) {
+                    console.error('刪除學員失敗:', error);
+                    const code = error?.code || '';
+                    if (code.includes('auth/wrong-password') || code.includes('auth/invalid-credential')) {
+                        alert('管理員密碼錯誤');
+                    } else {
+                        alert('刪除失敗：' + (error?.message || '請稍後再試'));
+                    }
+                } finally {
+                    confirmDeleteStudentBtn.disabled = false;
+                    confirmDeleteStudentBtn.textContent = originalText;
                 }
             });
         }
