@@ -2115,9 +2115,11 @@
 
         const studentListContent = document.getElementById('studentListContent');
         if (studentListContent) {
+            // Use capture phase so this still works when inner controls stop propagation.
             studentListContent.addEventListener('click', (e) => {
                 const btn = e.target.closest('.deleteStudentBtn');
                 if (!btn) return;
+                e.preventDefault();
                 e.stopPropagation();
                 openDeleteStudentModal({
                     uid: btn.getAttribute('data-uid') || '',
@@ -2125,7 +2127,7 @@
                     email: btn.getAttribute('data-email') || '',
                     studentName: btn.getAttribute('data-student-name') || ''
                 });
-            });
+            }, true);
         }
 
         if (cancelDeleteStudentBtn) {
