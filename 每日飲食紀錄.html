@@ -408,6 +408,14 @@
             margin-left: 0;
         }
 
+        .portion-legend {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: left;
+            line-height: 1.5;
+        }
+
         .advice-section {
             margin-top: 10px;
             padding: 10px 12px;
@@ -843,6 +851,7 @@
                 return `
                     <div class="portion-row portion-summary-row"><span class="portion-meal">Total</span><span class="portion-values">C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</span></div>
                     <div class="portion-row"><span class="portion-meal">Kcal</span><span class="portion-values portion-summary-value"><span class="portion-kcal-total">總熱量 ${totalKcal}</span><span class="portion-kcal-breakdown">${kcalText}</span></span></div>
+                    <div class="portion-legend">C=全穀雜糧類　P=豆魚蛋肉類　F=水果類　V=蔬菜類</div>
                 `;
             };
             const conversation = normalizeConversation(data);
