@@ -552,6 +552,14 @@
                                 <span>%</span>
                             </div>
                         </div>
+
+                        <div class="form-group">
+                            <label>水</label>
+                            <div class="input-group">
+                                <input type="number" id="waterIntake" name="waterIntake" placeholder="請輸入喝水量" step="1" min="0">
+                                <span>cc / 天</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -937,6 +945,7 @@
                     紀錄日期: recordDate,
                     體重: parseFloat(weight),
                     體脂: document.getElementById('bodyFat').value ? parseFloat(document.getElementById('bodyFat').value) : null,
+                    喝水量: document.getElementById('waterIntake').value ? parseFloat(document.getElementById('waterIntake').value) : null,
                     早餐時間: document.getElementById('breakfastTime').value || '',
                     早餐: document.getElementById('breakfast').value.trim(),
                     早點時間: document.getElementById('morningSnackTime').value || '',
