@@ -855,15 +855,26 @@
             });
         });
 
-        document.getElementById('openConstitutionCalibrationBtn')?.addEventListener('click', () => {
+        function activateTab(tabId) {
+            const targetTab = document.querySelector(`.tab[data-tab="${tabId}"]`);
+            const targetContent = document.getElementById(tabId);
+            if (!targetTab || !targetContent) return false;
             tabs.forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
-            const calibrationTab = document.querySelector('.tab[data-tab="constitutionCalibration"]');
-            const calibrationContent = document.getElementById('constitutionCalibration');
-            if (calibrationTab) calibrationTab.classList.add('active');
-            if (calibrationContent) calibrationContent.classList.add('active');
+            targetTab.classList.add('active');
+            targetContent.classList.add('active');
+            return true;
+        }
+
+        const initialTab = new URLSearchParams(window.location.search).get('tab');
+        if (initialTab) {
+            activateTab(initialTab);
+        }
+
+        document.getElementById('openConstitutionCalibrationBtn')?.addEventListener('click', () => {
+            activateTab('constitutionCalibration');
         });
 
         document.querySelectorAll('input[name="calibrationAxis"]').forEach((input) => {
