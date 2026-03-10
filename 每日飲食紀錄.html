@@ -388,14 +388,21 @@
         }
 
         .portion-kcal-breakdown {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-            gap: 4px 8px;
+            display: block;
+            max-width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
         }
 
         .portion-kcal-item {
             white-space: nowrap;
+            display: inline-block;
+            margin-left: 8px;
+        }
+
+        .portion-kcal-item:first-child {
+            margin-left: 0;
         }
 
         .advice-section {

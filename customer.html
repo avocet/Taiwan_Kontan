@@ -979,7 +979,7 @@
             return `
                 <div style="font-size:${fontSize};margin-top:8px;padding-top:8px;border-top:1px dashed #dbeafe;"><strong>Total:</strong> C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</div>
                 <div style="font-size:${fontSize};margin-top:4px;"><strong>Kcal:</strong> 總熱量 ${totalKcal}</div>
-                <div style="font-size:${fontSize};margin-top:2px;color:#4b5563;line-height:1.6;">${kcalBreakdown}</div>
+                <div style="font-size:${fontSize};margin-top:2px;color:#4b5563;line-height:1.6;white-space:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;">${kcalBreakdown}</div>
             `;
         }
 
