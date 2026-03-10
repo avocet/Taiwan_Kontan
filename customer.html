@@ -463,10 +463,7 @@
                     </tr>
                     <tr style="background:#fff7ed;font-weight:600;">
                         <td colspan="2" style="padding:8px;border:1px solid #ddd;text-align:center;">Kcal</td>
-                        <td id="portionKcalC" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
-                        <td id="portionKcalP" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
-                        <td id="portionKcalF" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
-                        <td id="portionKcalV" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
+                        <td colspan="4" id="portionKcalTotal" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
                     </tr>
                 </table>
                 <div style="margin-top:16px;text-align:right;">
@@ -1960,10 +1957,14 @@
 
             Object.keys(totals).forEach((nutrient) => {
                 const totalEl = document.getElementById(`portionTotal${nutrient}`);
-                const kcalEl = document.getElementById(`portionKcal${nutrient}`);
                 if (totalEl) totalEl.textContent = String(totals[nutrient]);
-                if (kcalEl) kcalEl.textContent = String(totals[nutrient] * kcalRates[nutrient]);
             });
+
+            const totalKcal = Object.keys(totals).reduce((sum, nutrient) => {
+                return sum + (totals[nutrient] * kcalRates[nutrient]);
+            }, 0);
+            const kcalTotalEl = document.getElementById('portionKcalTotal');
+            if (kcalTotalEl) kcalTotalEl.textContent = String(totalKcal);
         }
 
         const portionTableFormEl = document.getElementById('portionTableForm');
