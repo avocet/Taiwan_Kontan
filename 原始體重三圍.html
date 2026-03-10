@@ -487,6 +487,7 @@
             };
             
             try {
+                const isUpdating = Boolean(existingDocId);
                 if (existingDocId) {
                     await setDoc(doc(db, "原始體重三圍", existingDocId), data, { merge: true });
                 } else {
@@ -494,10 +495,16 @@
                 }
                 
                 const successMsg = document.getElementById('successMessage');
+                successMsg.textContent = isUpdating ? '✓ 資料已更新！' : '✓ 資料已儲存！';
                 successMsg.classList.add('show');
                 setTimeout(() => {
                     successMsg.classList.remove('show');
-                }, 3000);
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        window.location.href = 'customer.html';
+                    }
+                }, 1200);
                 
             } catch (error) {
                 console.error('儲存失敗:', error);
