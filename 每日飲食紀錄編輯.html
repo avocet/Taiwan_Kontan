@@ -1160,7 +1160,7 @@
                 }).join(' ');
                 return `<div class="portion-row portion-summary-row"><span class="portion-row-label">Total</span><span class="portion-row-value">C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</span></div>
                     <div class="portion-row"><span class="portion-row-label">Kcal</span><span class="portion-row-value portion-summary-value"><span class="portion-kcal-total">總熱量 ${totalKcal}</span><span class="portion-kcal-breakdown">${kcalText}</span></span></div>
-                    <div class="portion-legend">C=全穀雜糧類　P=豆魚蛋肉類　F=水果類　V=蔬菜類</div>`;
+                    <div class="portion-legend">C 碳水　P 蛋白質　F 水果　V 蔬菜</div>`;
             };
             matched.forEach(portion => {
                 const startDate = portion.紀錄日期 || '-';
