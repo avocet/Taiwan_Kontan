@@ -198,7 +198,7 @@
 
         input[type="date"],
         input[type="number"],
-        input[type="time"] {
+        select {
             width: 100%;
             padding: 14px 16px;
             font-size: 1rem;
@@ -263,8 +263,20 @@
         }
 
         .meal-time-input {
-            width: 150px;
+            width: 190px;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .meal-time-input select {
+            padding: 10px 12px;
+        }
+
+        .meal-time-separator {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
         }
 
         .photo-upload {
@@ -590,7 +602,12 @@
                     <div class="meal-entry">
                         <div class="meal-entry-header">
                             <label for="breakfast">早餐</label>
-                            <input type="time" id="breakfastTime" name="breakfastTime" class="meal-time-input">
+                            <div class="meal-time-input">
+                                <select id="breakfastHour"></select>
+                                <span class="meal-time-separator">時</span>
+                                <select id="breakfastMinute"></select>
+                                <span class="meal-time-separator">分</span>
+                            </div>
                         </div>
                         <textarea id="breakfast" name="breakfast" rows="3" placeholder="記錄早餐內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
@@ -598,7 +615,12 @@
                     <div class="meal-entry">
                         <div class="meal-entry-header">
                             <label for="morningSnack">早點</label>
-                            <input type="time" id="morningSnackTime" name="morningSnackTime" class="meal-time-input">
+                            <div class="meal-time-input">
+                                <select id="morningSnackHour"></select>
+                                <span class="meal-time-separator">時</span>
+                                <select id="morningSnackMinute"></select>
+                                <span class="meal-time-separator">分</span>
+                            </div>
                         </div>
                         <textarea id="morningSnack" name="morningSnack" rows="3" placeholder="記錄早點內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
@@ -606,7 +628,12 @@
                     <div class="meal-entry">
                         <div class="meal-entry-header">
                             <label for="lunch">午餐</label>
-                            <input type="time" id="lunchTime" name="lunchTime" class="meal-time-input">
+                            <div class="meal-time-input">
+                                <select id="lunchHour"></select>
+                                <span class="meal-time-separator">時</span>
+                                <select id="lunchMinute"></select>
+                                <span class="meal-time-separator">分</span>
+                            </div>
                         </div>
                         <textarea id="lunch" name="lunch" rows="3" placeholder="記錄午餐內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
@@ -614,7 +641,12 @@
                     <div class="meal-entry">
                         <div class="meal-entry-header">
                             <label for="afternoonTea">午茶</label>
-                            <input type="time" id="afternoonTeaTime" name="afternoonTeaTime" class="meal-time-input">
+                            <div class="meal-time-input">
+                                <select id="afternoonTeaHour"></select>
+                                <span class="meal-time-separator">時</span>
+                                <select id="afternoonTeaMinute"></select>
+                                <span class="meal-time-separator">分</span>
+                            </div>
                         </div>
                         <textarea id="afternoonTea" name="afternoonTea" rows="3" placeholder="記錄午茶內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
@@ -622,7 +654,12 @@
                     <div class="meal-entry">
                         <div class="meal-entry-header">
                             <label for="dinner">晚餐</label>
-                            <input type="time" id="dinnerTime" name="dinnerTime" class="meal-time-input">
+                            <div class="meal-time-input">
+                                <select id="dinnerHour"></select>
+                                <span class="meal-time-separator">時</span>
+                                <select id="dinnerMinute"></select>
+                                <span class="meal-time-separator">分</span>
+                            </div>
                         </div>
                         <textarea id="dinner" name="dinner" rows="3" placeholder="記錄晚餐內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
@@ -630,7 +667,12 @@
                     <div class="meal-entry">
                         <div class="meal-entry-header">
                             <label for="lateNightSnack">宵夜</label>
-                            <input type="time" id="lateNightSnackTime" name="lateNightSnackTime" class="meal-time-input">
+                            <div class="meal-time-input">
+                                <select id="lateNightSnackHour"></select>
+                                <span class="meal-time-separator">時</span>
+                                <select id="lateNightSnackMinute"></select>
+                                <span class="meal-time-separator">分</span>
+                            </div>
                         </div>
                         <textarea id="lateNightSnack" name="lateNightSnack" rows="3" placeholder="記錄宵夜內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
@@ -717,6 +759,51 @@
         let existingPhotoUrls = [];
         let userPortionRecords = [];
         const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+        const mealTimeFields = {
+            breakfast: { hour: 'breakfastHour', minute: 'breakfastMinute' },
+            morningSnack: { hour: 'morningSnackHour', minute: 'morningSnackMinute' },
+            lunch: { hour: 'lunchHour', minute: 'lunchMinute' },
+            afternoonTea: { hour: 'afternoonTeaHour', minute: 'afternoonTeaMinute' },
+            dinner: { hour: 'dinnerHour', minute: 'dinnerMinute' },
+            lateNightSnack: { hour: 'lateNightSnackHour', minute: 'lateNightSnackMinute' }
+        };
+
+        function buildSelectOptions(selectId, values, placeholder) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            select.innerHTML = `<option value="">${placeholder}</option>` + values.map((value) => (
+                `<option value="${value}">${value}</option>`
+            )).join('');
+        }
+
+        function initializeMealTimeSelects() {
+            const hours = Array.from({ length: 25 }, (_, i) => String(i).padStart(2, '0'));
+            const minutes = ['00', '10', '20', '30', '40', '50'];
+            Object.values(mealTimeFields).forEach(({ hour, minute }) => {
+                buildSelectOptions(hour, hours, '時');
+                buildSelectOptions(minute, minutes, '分');
+            });
+        }
+
+        function getMealTimeValue(key) {
+            const fields = mealTimeFields[key];
+            if (!fields) return '';
+            const hour = document.getElementById(fields.hour)?.value || '';
+            const minute = document.getElementById(fields.minute)?.value || '';
+            return hour && minute ? `${hour}:${minute}` : '';
+        }
+
+        function setMealTimeValue(key, value) {
+            const fields = mealTimeFields[key];
+            if (!fields) return;
+            const [hour = '', minute = ''] = String(value || '').split(':');
+            const hourSelect = document.getElementById(fields.hour);
+            const minuteSelect = document.getElementById(fields.minute);
+            if (hourSelect) hourSelect.value = hour;
+            if (minuteSelect) minuteSelect.value = minute;
+        }
+
+        initializeMealTimeSelects();
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -780,17 +867,17 @@
                 document.getElementById('weight').value = data.體重 || '';
                 document.getElementById('bodyFat').value = data.體脂 || '';
                 document.getElementById('waterIntake').value = data.喝水量 || '';
-                document.getElementById('breakfastTime').value = data.早餐時間 || '';
+                setMealTimeValue('breakfast', data.早餐時間 || '');
                 document.getElementById('breakfast').value = data.早餐 || '';
-                document.getElementById('morningSnackTime').value = data.早點時間 || '';
+                setMealTimeValue('morningSnack', data.早點時間 || '');
                 document.getElementById('morningSnack').value = data.早點 || '';
-                document.getElementById('lunchTime').value = data.午餐時間 || '';
+                setMealTimeValue('lunch', data.午餐時間 || '');
                 document.getElementById('lunch').value = data.午餐 || '';
-                document.getElementById('afternoonTeaTime').value = data.午茶時間 || '';
+                setMealTimeValue('afternoonTea', data.午茶時間 || '');
                 document.getElementById('afternoonTea').value = data.午茶 || '';
-                document.getElementById('dinnerTime').value = data.晚餐時間 || '';
+                setMealTimeValue('dinner', data.晚餐時間 || '');
                 document.getElementById('dinner').value = data.晚餐 || '';
-                document.getElementById('lateNightSnackTime').value = data.宵夜時間 || '';
+                setMealTimeValue('lateNightSnack', data.宵夜時間 || '');
                 document.getElementById('lateNightSnack').value = data.宵夜 || '';
                 document.getElementById('note').value = data.備註 || '';
                 renderPortionPanelByDate(data.紀錄日期 || '');
@@ -1031,17 +1118,17 @@
                     體重: parseFloat(weight),
                     體脂: document.getElementById('bodyFat').value ? parseFloat(document.getElementById('bodyFat').value) : null,
                     喝水量: document.getElementById('waterIntake').value ? parseFloat(document.getElementById('waterIntake').value) : null,
-                    早餐時間: document.getElementById('breakfastTime').value || '',
+                    早餐時間: getMealTimeValue('breakfast'),
                     早餐: document.getElementById('breakfast').value.trim(),
-                    早點時間: document.getElementById('morningSnackTime').value || '',
+                    早點時間: getMealTimeValue('morningSnack'),
                     早點: document.getElementById('morningSnack').value.trim(),
-                    午餐時間: document.getElementById('lunchTime').value || '',
+                    午餐時間: getMealTimeValue('lunch'),
                     午餐: document.getElementById('lunch').value.trim(),
-                    午茶時間: document.getElementById('afternoonTeaTime').value || '',
+                    午茶時間: getMealTimeValue('afternoonTea'),
                     午茶: document.getElementById('afternoonTea').value.trim(),
-                    晚餐時間: document.getElementById('dinnerTime').value || '',
+                    晚餐時間: getMealTimeValue('dinner'),
                     晚餐: document.getElementById('dinner').value.trim(),
-                    宵夜時間: document.getElementById('lateNightSnackTime').value || '',
+                    宵夜時間: getMealTimeValue('lateNightSnack'),
                     宵夜: document.getElementById('lateNightSnack').value.trim(),
                     備註: document.getElementById('note').value.trim(),
                     照片: allPhotoUrls
