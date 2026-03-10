@@ -960,6 +960,29 @@
             }).join('');
         }
 
+        function buildPortionSummaryLines(portion, compact = false) {
+            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+            const totals = { C: 0, P: 0, F: 0, V: 0 };
+            const kcalRates = { C: 70, P: 75, F: 60, V: 25 };
+            meals.forEach((meal) => {
+                Object.keys(totals).forEach((nutrient) => {
+                    totals[nutrient] += Number(portion?.[`${meal}${nutrient}`] || 0);
+                });
+            });
+            const totalKcal = Object.keys(totals).reduce((sum, nutrient) => sum + (totals[nutrient] * kcalRates[nutrient]), 0);
+            const kcalBreakdown = Object.keys(totals).map((nutrient) => {
+                const kcal = totals[nutrient] * kcalRates[nutrient];
+                const percent = totalKcal > 0 ? Math.round((kcal / totalKcal) * 100) : 0;
+                return `${nutrient}:${kcal} (${percent}%)`;
+            }).join(' ');
+            const fontSize = compact ? '0.8rem' : '0.82rem';
+            return `
+                <div style="font-size:${fontSize};margin-top:8px;padding-top:8px;border-top:1px dashed #dbeafe;"><strong>Total:</strong> C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</div>
+                <div style="font-size:${fontSize};margin-top:4px;"><strong>Kcal:</strong> 總熱量 ${totalKcal}</div>
+                <div style="font-size:${fontSize};margin-top:2px;color:#4b5563;line-height:1.6;">${kcalBreakdown}</div>
+            `;
+        }
+
         function toComparableTime(value) {
             if (!value) return 0;
             if (typeof value === 'string') {
@@ -1411,6 +1434,7 @@
                                     const v = portion[`${meal}V`] || 0;
                                     portionSectionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
                                 }
+                                portionSectionHtml += buildPortionSummaryLines(portion, true);
                             }
                         }
                         portionSectionHtml += '</div>';
@@ -1463,6 +1487,7 @@
                             const v = portion[`${meal}V`] || 0;
                             unmatchedHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
                         }
+                        unmatchedHtml += buildPortionSummaryLines(portion, true);
                         html += `
                             <div style="background:#fffdf5;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);border:1px solid #f1e2b8;">
                                 ${unmatchedHtml}
@@ -1603,6 +1628,7 @@
                         const v = portion[`${meal}V`] || 0;
                         portionHtml += `<div style="font-size:0.8rem;margin-top:4px;"><strong>${meal}${time ? ' ' + time : ''}:</strong> C:${c} P:${p} F:${f} V:${v}</div>`;
                     }
+                    portionHtml += buildPortionSummaryLines(portion, true);
                     
                     rightHtml += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;justify-content:space-between;align-items:flex-start;">
