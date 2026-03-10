@@ -1069,8 +1069,8 @@
             const coldHot = Number(coldHotScore);
             const wetDry = Number(wetDryScore);
             if (!Number.isFinite(coldHot) || !Number.isFinite(wetDry)) return '-';
-            const coldHotAvg = coldHot / 13;
-            const wetDryAvg = wetDry / 14;
+            const coldHotAvg = coldHot / 9;
+            const wetDryAvg = wetDry / 18;
             if (coldHotAvg < 1.5 && wetDryAvg < 1.5) return '陽虛體質';
             if (coldHotAvg < 1.5 && wetDryAvg >= 1.5) return '痰濕體質';
             if (coldHotAvg >= 1.5 && wetDryAvg < 1.5) return '陰虛體質';
