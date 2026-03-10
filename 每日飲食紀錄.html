@@ -805,6 +805,11 @@
             }
 
             const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+            const mealEntries = meals.map((meal) => ({
+                label: meal,
+                time: data[`${meal}時間`] || '',
+                value: data[meal] || ''
+            }));
             const formatDate = (dateStr) => {
                 if (!dateStr) return '-';
                 const d = new Date(dateStr);
@@ -871,18 +876,12 @@
                     </div>
                     <div class="records-row">
                         <div class="diet-records">
-                            <div class="data-item" style="margin-bottom:8px;">
-                                <span class="data-label">早餐</span>
-                                <span class="data-value">${data.早餐 || '-'}</span>
-                            </div>
-                            <div class="data-item" style="margin-bottom:8px;">
-                                <span class="data-label">午餐</span>
-                                <span class="data-value">${data.午餐 || '-'}</span>
-                            </div>
-                            <div class="data-item" style="margin-bottom:8px;">
-                                <span class="data-label">晚餐</span>
-                                <span class="data-value">${data.晚餐 || '-'}</span>
-                            </div>
+                            ${mealEntries.map((meal) => `
+                                <div class="data-item" style="margin-bottom:8px;">
+                                    <span class="data-label">${meal.label}${meal.time ? ` ${meal.time}` : ''}</span>
+                                    <span class="data-value">${meal.value || '-'}</span>
+                                </div>
+                            `).join('')}
                             ${data.備註 ? `<div class="data-item"><span class="data-label">備註</span><span class="data-value">${data.備註}</span></div>` : ''}
                             ${adviceHtml}
                         </div>

@@ -197,7 +197,8 @@
         }
 
         input[type="date"],
-        input[type="number"] {
+        input[type="number"],
+        input[type="time"] {
             width: 100%;
             padding: 14px 16px;
             font-size: 1rem;
@@ -239,6 +240,31 @@
 
         .form-row .form-group {
             margin-bottom: 0;
+        }
+
+        .meal-entry {
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 14px;
+            background: #fafafa;
+            margin-bottom: 14px;
+        }
+
+        .meal-entry-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .meal-entry-header label {
+            margin-bottom: 0;
+        }
+
+        .meal-time-input {
+            width: 150px;
+            flex-shrink: 0;
         }
 
         .photo-upload {
@@ -551,21 +577,54 @@
                 </div>
                 
                 <div class="form-section">
-                    <div class="section-title">飲食記錄（三餐）</div>
-                    
-                    <div class="form-group">
-                        <label>早餐</label>
+                    <div class="section-title">飲食記錄（六餐）</div>
+
+                    <div class="meal-entry">
+                        <div class="meal-entry-header">
+                            <label for="breakfast">早餐</label>
+                            <input type="time" id="breakfastTime" name="breakfastTime" class="meal-time-input">
+                        </div>
                         <textarea id="breakfast" name="breakfast" rows="3" placeholder="記錄早餐內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>午餐</label>
+
+                    <div class="meal-entry">
+                        <div class="meal-entry-header">
+                            <label for="morningSnack">早點</label>
+                            <input type="time" id="morningSnackTime" name="morningSnackTime" class="meal-time-input">
+                        </div>
+                        <textarea id="morningSnack" name="morningSnack" rows="3" placeholder="記錄早點內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
+                    </div>
+
+                    <div class="meal-entry">
+                        <div class="meal-entry-header">
+                            <label for="lunch">午餐</label>
+                            <input type="time" id="lunchTime" name="lunchTime" class="meal-time-input">
+                        </div>
                         <textarea id="lunch" name="lunch" rows="3" placeholder="記錄午餐內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>晚餐</label>
+
+                    <div class="meal-entry">
+                        <div class="meal-entry-header">
+                            <label for="afternoonTea">午茶</label>
+                            <input type="time" id="afternoonTeaTime" name="afternoonTeaTime" class="meal-time-input">
+                        </div>
+                        <textarea id="afternoonTea" name="afternoonTea" rows="3" placeholder="記錄午茶內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
+                    </div>
+
+                    <div class="meal-entry">
+                        <div class="meal-entry-header">
+                            <label for="dinner">晚餐</label>
+                            <input type="time" id="dinnerTime" name="dinnerTime" class="meal-time-input">
+                        </div>
                         <textarea id="dinner" name="dinner" rows="3" placeholder="記錄晚餐內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
+                    </div>
+
+                    <div class="meal-entry">
+                        <div class="meal-entry-header">
+                            <label for="lateNightSnack">宵夜</label>
+                            <input type="time" id="lateNightSnackTime" name="lateNightSnackTime" class="meal-time-input">
+                        </div>
+                        <textarea id="lateNightSnack" name="lateNightSnack" rows="3" placeholder="記錄宵夜內容" style="width:100%;padding:12px 16px;border:1px solid var(--border-color);border-radius:10px;font-size:1rem;resize:vertical;font-family:inherit;"></textarea>
                     </div>
                     
                     <div class="form-group">
@@ -712,9 +771,18 @@
                 document.getElementById('recordDate').value = data.紀錄日期 || '';
                 document.getElementById('weight').value = data.體重 || '';
                 document.getElementById('bodyFat').value = data.體脂 || '';
+                document.getElementById('breakfastTime').value = data.早餐時間 || '';
                 document.getElementById('breakfast').value = data.早餐 || '';
+                document.getElementById('morningSnackTime').value = data.早點時間 || '';
+                document.getElementById('morningSnack').value = data.早點 || '';
+                document.getElementById('lunchTime').value = data.午餐時間 || '';
                 document.getElementById('lunch').value = data.午餐 || '';
+                document.getElementById('afternoonTeaTime').value = data.午茶時間 || '';
+                document.getElementById('afternoonTea').value = data.午茶 || '';
+                document.getElementById('dinnerTime').value = data.晚餐時間 || '';
                 document.getElementById('dinner').value = data.晚餐 || '';
+                document.getElementById('lateNightSnackTime').value = data.宵夜時間 || '';
+                document.getElementById('lateNightSnack').value = data.宵夜 || '';
                 document.getElementById('note').value = data.備註 || '';
                 renderPortionPanelByDate(data.紀錄日期 || '');
 
@@ -953,9 +1021,18 @@
                     紀錄日期: recordDate,
                     體重: parseFloat(weight),
                     體脂: document.getElementById('bodyFat').value ? parseFloat(document.getElementById('bodyFat').value) : null,
+                    早餐時間: document.getElementById('breakfastTime').value || '',
                     早餐: document.getElementById('breakfast').value.trim(),
+                    早點時間: document.getElementById('morningSnackTime').value || '',
+                    早點: document.getElementById('morningSnack').value.trim(),
+                    午餐時間: document.getElementById('lunchTime').value || '',
                     午餐: document.getElementById('lunch').value.trim(),
+                    午茶時間: document.getElementById('afternoonTeaTime').value || '',
+                    午茶: document.getElementById('afternoonTea').value.trim(),
+                    晚餐時間: document.getElementById('dinnerTime').value || '',
                     晚餐: document.getElementById('dinner').value.trim(),
+                    宵夜時間: document.getElementById('lateNightSnackTime').value || '',
+                    宵夜: document.getElementById('lateNightSnack').value.trim(),
                     備註: document.getElementById('note').value.trim(),
                     照片: allPhotoUrls
                 };
