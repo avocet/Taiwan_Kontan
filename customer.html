@@ -945,15 +945,40 @@
             }).join('');
         }
 
-        async function findFirstDocByUserKeys(collectionName, candidateKeys) {
+        function toComparableTime(value) {
+            if (!value) return 0;
+            if (typeof value === 'string') {
+                const parsed = Date.parse(value);
+                return Number.isNaN(parsed) ? 0 : parsed;
+            }
+            if (typeof value?.toMillis === 'function') return value.toMillis();
+            if (typeof value?.seconds === 'number') return value.seconds * 1000;
+            const parsed = Date.parse(String(value));
+            return Number.isNaN(parsed) ? 0 : parsed;
+        }
+
+        function getDocSortScore(data = {}) {
+            return Math.max(
+                toComparableTime(data.更新時間),
+                toComparableTime(data.建立時間),
+                toComparableTime(data.createdAt),
+                toComparableTime(data.updatedAt),
+                toComparableTime(data.紀錄日期)
+            );
+        }
+
+        async function findLatestDocByUserKeys(collectionName, candidateKeys) {
+            const matchedDocs = [];
             for (const key of candidateKeys) {
                 const q = query(collection(db, collectionName), where("userId", "==", key));
                 const snapshot = await getDocs(q);
-                if (!snapshot.empty) {
-                    return snapshot.docs[0].data();
-                }
+                snapshot.forEach((docSnap) => {
+                    matchedDocs.push(docSnap.data());
+                });
             }
-            return null;
+            if (!matchedDocs.length) return null;
+            matchedDocs.sort((a, b) => getDocSortScore(b) - getDocSortScore(a));
+            return matchedDocs[0];
         }
 
         function renderStudentBasicInfoCard(data) {
@@ -1224,9 +1249,9 @@
                 return;
             }
             const [basicInfo, initialBody, constitutionData] = await Promise.all([
-                findFirstDocByUserKeys("客戶資料", uniqueKeys),
-                findFirstDocByUserKeys("原始體重三圍", uniqueKeys),
-                findFirstDocByUserKeys("中醫體質四象限", uniqueKeys)
+                findLatestDocByUserKeys("客戶資料", uniqueKeys),
+                findLatestDocByUserKeys("原始體重三圍", uniqueKeys),
+                findLatestDocByUserKeys("中醫體質四象限", uniqueKeys)
             ]);
             currentStudentSideData = {
                 basicInfo,
@@ -1269,8 +1294,9 @@
                     return;
                 }
                 
-                const userData = userSnapshot.docs[0].data();
-                const userUid = userData.uid || userData.email?.split('@')[0];
+                const userDoc = userSnapshot.docs[0];
+                const userData = userDoc.data();
+                const userUid = userData.uid || userDoc.id || userData.email?.split('@')[0];
                 const emailPrefix = userData.email?.split('@')[0] || '';
                 currentStudentEmail = userData.email || '';
                 
