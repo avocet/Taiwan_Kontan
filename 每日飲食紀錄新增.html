@@ -338,6 +338,24 @@
             height: 18px;
         }
 
+        .bowel-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            align-items: start;
+            margin-top: 16px;
+        }
+
+        .bowel-row .form-group {
+            margin-bottom: 0;
+        }
+
+        @media screen and (max-width: 680px) {
+            .bowel-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .photo-upload {
             border: 2px dashed var(--border-color);
             border-radius: 12px;
@@ -633,19 +651,21 @@
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-top:16px;">
-                        <label>排便與否</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementYes" value="有排便">有排便</label>
-                            <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementNo" value="無排便">無排便</label>
+                    <div class="bowel-row">
+                        <div class="form-group">
+                            <label>排便與否</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementYes" value="有排便">有排便</label>
+                                <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementNo" value="無排便">無排便</label>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label>排便狀況</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="checkbox" id="stoolDiarrhea" value="拉肚子">拉肚子</label>
-                            <label class="checkbox-item"><input type="checkbox" id="stoolNormal" value="正常便">正常便</label>
+                        <div class="form-group" id="stoolConditionGroup" style="display:none;">
+                            <label>排便狀況</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item"><input type="checkbox" id="stoolDiarrhea" value="拉肚子">拉肚子</label>
+                                <label class="checkbox-item"><input type="checkbox" id="stoolNormal" value="正常便">正常便</label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -863,7 +883,24 @@
             return document.querySelector(`input[name="${name}"]:checked`)?.value || '';
         }
 
+        function updateStoolConditionVisibility() {
+            const hasBowelMovement = getRadioValue('bowelMovement') === '有排便';
+            const stoolGroup = document.getElementById('stoolConditionGroup');
+            if (!stoolGroup) return;
+            stoolGroup.style.display = hasBowelMovement ? 'block' : 'none';
+            if (!hasBowelMovement) {
+                ['stoolDiarrhea', 'stoolNormal'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) el.checked = false;
+                });
+            }
+        }
+
         initializeMealTimeSelects();
+        document.querySelectorAll('input[name="bowelMovement"]').forEach((radio) => {
+            radio.addEventListener('change', updateStoolConditionVisibility);
+        });
+        updateStoolConditionVisibility();
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
