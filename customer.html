@@ -462,7 +462,8 @@
                         <td id="portionTotalV" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
                     </tr>
                     <tr style="background:#fff7ed;font-weight:600;">
-                        <td colspan="2" style="padding:8px;border:1px solid #ddd;text-align:center;">Kcal</td>
+                        <td style="padding:8px;border:1px solid #ddd;text-align:center;">Kcal</td>
+                        <td id="portionKcalTotal" style="padding:8px;border:1px solid #ddd;text-align:center;">總熱量 0</td>
                         <td id="portionKcalC" style="padding:8px;border:1px solid #ddd;text-align:center;">0 (0%)</td>
                         <td id="portionKcalP" style="padding:8px;border:1px solid #ddd;text-align:center;">0 (0%)</td>
                         <td id="portionKcalF" style="padding:8px;border:1px solid #ddd;text-align:center;">0 (0%)</td>
@@ -1966,6 +1967,8 @@
             const totalKcal = Object.keys(totals).reduce((sum, nutrient) => {
                 return sum + (totals[nutrient] * kcalRates[nutrient]);
             }, 0);
+            const totalKcalEl = document.getElementById('portionKcalTotal');
+            if (totalKcalEl) totalKcalEl.textContent = `總熱量 ${totalKcal}`;
             Object.keys(totals).forEach((nutrient) => {
                 const kcal = totals[nutrient] * kcalRates[nutrient];
                 const percent = totalKcal > 0 ? Math.round((kcal / totalKcal) * 100) : 0;
