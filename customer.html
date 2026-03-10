@@ -1236,11 +1236,22 @@
             document.getElementById('mobileInfoModal').classList.remove('show');
         }
 
+        function buildUserLookupKeys(...values) {
+            const keys = [];
+            values.filter(Boolean).forEach((value) => {
+                const raw = String(value).trim();
+                if (!raw) return;
+                keys.push(raw);
+                const lower = raw.toLowerCase();
+                if (lower !== raw) {
+                    keys.push(lower);
+                }
+            });
+            return [...new Set(keys)];
+        }
+
         async function loadStudentSideCards(userUid, username, emailPrefix) {
-            const candidateKeys = [userUid, username, emailPrefix]
-                .filter(Boolean)
-                .map((v) => String(v).toLowerCase());
-            const uniqueKeys = [...new Set(candidateKeys)];
+            const uniqueKeys = buildUserLookupKeys(userUid, username, emailPrefix);
             if (!uniqueKeys.length) {
                 renderStudentBasicInfoCard(null);
                 renderStudentInitialBodyCard(null);
