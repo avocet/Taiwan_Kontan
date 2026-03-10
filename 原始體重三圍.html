@@ -194,11 +194,18 @@
         .success-message {
             background: var(--success-color);
             color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
-            margin-bottom: 16px;
+            padding: 14px 24px;
+            border-radius: 14px;
             text-align: center;
             display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+            min-width: 220px;
+            max-width: min(90vw, 320px);
+            box-shadow: 0 18px 40px rgba(52, 199, 89, 0.28);
         }
 
         .success-message.show {
