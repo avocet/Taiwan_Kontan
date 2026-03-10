@@ -199,6 +199,30 @@
             margin-bottom: 12px;
         }
 
+        .admin-tools-bar {
+            display: none;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .admin-tools-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 12px;
+            background: #007AFF;
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
         .mobile-info-btn {
             flex: 1;
             border: none;
@@ -286,6 +310,9 @@
 
     <!-- 學員列表（管理員用） -->
     <div id="studentList" style="display:none;padding:20px;max-width:600px;margin:0 auto;">
+        <div class="admin-tools-bar" id="adminToolsBar">
+            <a class="admin-tools-btn" href="admin.html?tab=constitutionCalibration">體質問卷校正</a>
+        </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <h2 style="font-size:1.25rem;">學員列表</h2>
             <button id="addStudentBtn" style="background:#007AFF;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;">+ 新增學員</button>
@@ -652,16 +679,19 @@
             const headerTitle = document.getElementById('pageTitle');
             const menuGrid = document.getElementById('menuGrid');
             const studentList = document.getElementById('studentList');
+            const adminToolsBar = document.getElementById('adminToolsBar');
             
             if (userRole === 'admin') {
                 headerTitle.textContent = '體重管理班主任 ' + userName;
                 menuGrid.style.display = 'none';
                 studentList.style.display = 'block';
+                if (adminToolsBar) adminToolsBar.style.display = 'flex';
                 loadStudentList();
             } else {
                 headerTitle.textContent = '體重管理班學員 ' + userName;
                 menuGrid.style.display = 'grid';
                 studentList.style.display = 'none';
+                if (adminToolsBar) adminToolsBar.style.display = 'none';
             }
         });
 
