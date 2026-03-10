@@ -403,7 +403,7 @@
                         <th style="padding:8px;border:1px solid #ddd;text-align:center;">時間</th>
                         <th style="padding:8px;border:1px solid #ddd;text-align:center;">C<br>碳水</th>
                         <th style="padding:8px;border:1px solid #ddd;text-align:center;">P<br>蛋白質</th>
-                        <th style="padding:8px;border:1px solid #ddd;text-align:center;">F<br>脂肪</th>
+                        <th style="padding:8px;border:1px solid #ddd;text-align:center;">F<br>水果</th>
                         <th style="padding:8px;border:1px solid #ddd;text-align:center;">V<br>蔬菜</th>
                     </tr>
                     <tr>
@@ -453,6 +453,20 @@
                         <td style="padding:4px;border:1px solid #ddd;text-align:center;"><select name="宵夜P" style="padding:4px;border:1px solid #ddd;border-radius:4px;width:50px;"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></td>
                         <td style="padding:4px;border:1px solid #ddd;text-align:center;"><select name="宵夜F" style="padding:4px;border:1px solid #ddd;border-radius:4px;width:50px;"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></td>
                         <td style="padding:4px;border:1px solid #ddd;text-align:center;"><select name="宵夜V" style="padding:4px;border:1px solid #ddd;border-radius:4px;width:50px;"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option></select></td>
+                    </tr>
+                    <tr style="background:#f8fafc;font-weight:600;">
+                        <td colspan="2" style="padding:8px;border:1px solid #ddd;text-align:center;">Total</td>
+                        <td id="portionTotalC" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
+                        <td id="portionTotalP" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
+                        <td id="portionTotalF" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
+                        <td id="portionTotalV" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
+                    </tr>
+                    <tr style="background:#fff7ed;font-weight:600;">
+                        <td colspan="2" style="padding:8px;border:1px solid #ddd;text-align:center;">Kcal</td>
+                        <td id="portionKcalC" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
+                        <td id="portionKcalP" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
+                        <td id="portionKcalF" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
+                        <td id="portionKcalV" style="padding:8px;border:1px solid #ddd;text-align:center;">0</td>
                     </tr>
                 </table>
                 <div style="margin-top:16px;text-align:right;">
@@ -1636,6 +1650,8 @@
                 if (timeEl) timeEl.value = matchedPortion[`${meal}時間`] || '';
             });
 
+            updatePortionSummary();
+
             document.getElementById('portionTableModal').style.display = 'flex';
         }
         
@@ -1928,6 +1944,38 @@
         }
         initPortionHourSelects();
 
+        function updatePortionSummary() {
+            const form = document.getElementById('portionTableForm');
+            if (!form) return;
+            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+            const totals = { C: 0, P: 0, F: 0, V: 0 };
+            const kcalRates = { C: 70, P: 75, F: 60, V: 25 };
+
+            meals.forEach((meal) => {
+                Object.keys(totals).forEach((nutrient) => {
+                    const selectEl = form.querySelector(`[name="${meal}${nutrient}"]`);
+                    totals[nutrient] += parseInt(selectEl?.value || '0', 10) || 0;
+                });
+            });
+
+            Object.keys(totals).forEach((nutrient) => {
+                const totalEl = document.getElementById(`portionTotal${nutrient}`);
+                const kcalEl = document.getElementById(`portionKcal${nutrient}`);
+                if (totalEl) totalEl.textContent = String(totals[nutrient]);
+                if (kcalEl) kcalEl.textContent = String(totals[nutrient] * kcalRates[nutrient]);
+            });
+        }
+
+        const portionTableFormEl = document.getElementById('portionTableForm');
+        if (portionTableFormEl) {
+            portionTableFormEl.addEventListener('change', (e) => {
+                if (e.target.matches('select[name$="C"], select[name$="P"], select[name$="F"], select[name$="V"]')) {
+                    updatePortionSummary();
+                }
+            });
+        }
+        updatePortionSummary();
+
         if (showPortionTableBtn) {
             showPortionTableBtn.addEventListener('click', () => {
                 editingPortionDocId = null;
@@ -1940,6 +1988,7 @@
                 
                 // 清空表單
                 document.getElementById('portionTableForm').reset();
+                updatePortionSummary();
                 
                 // 恢復預設值
                 document.getElementById('portionStartDate').value = startDate.toISOString().split('T')[0];
