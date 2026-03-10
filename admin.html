@@ -409,6 +409,9 @@
 
         <!-- 中醫體質 -->
         <div class="tab-content" id="constitution">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+                <a href="中醫體質問卷校正.html" style="display:inline-flex;align-items:center;gap:6px;background:#007AFF;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-size:0.875rem;font-weight:600;">逐題校正</a>
+            </div>
             <div class="loading" id="constitutionLoading">
                 <div class="loading-spinner"></div>
                 <p>載入中...</p>
@@ -463,6 +466,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const constitutionConfigRef = doc(db, "中醫體質問卷設定", "current");
 
         let currentCustomerUserId = null;
         let currentCustomerName = null;
@@ -694,6 +698,7 @@
             const list = document.getElementById('constitutionList');
             
             try {
+                await ensureConstitutionQuestionConfig();
                 let q;
                 if (currentCustomerUserId) {
                     q = query(collection(db, "中醫體質四象限"), where("userId", "==", currentCustomerUserId));
@@ -881,20 +886,61 @@
         }
 
         const constitutionQuestionIds = {
-            coldHot: new Set([2, 6, 11, 12, 14, 17, 18, 21, 26]),
-            wetDry: new Set([1, 3, 4, 5, 7, 8, 9, 10, 13, 15, 16, 19, 20, 22, 23, 24, 25, 27])
+            coldHot: [2, 6, 11, 12, 14, 17, 18, 21, 26],
+            wetDry: [1, 3, 4, 5, 7, 8, 9, 10, 13, 15, 16, 19, 20, 22, 23, 24, 25, 27]
         };
         const constitutionThreeOptionIds = new Set([6, 16, 17, 18]);
+        let constitutionQuestionConfig = buildDefaultConstitutionConfig();
+
+        function buildDefaultConstitutionConfig() {
+            const items = {};
+            constitutionQuestionIds.coldHot.forEach((id) => {
+                items[`q${id}`] = { axis: 'coldHot', reverse: false };
+            });
+            constitutionQuestionIds.wetDry.forEach((id) => {
+                items[`q${id}`] = { axis: 'wetDry', reverse: false };
+            });
+            return items;
+        }
+
+        async function ensureConstitutionQuestionConfig() {
+            try {
+                const snapshot = await getDoc(constitutionConfigRef);
+                if (snapshot.exists()) {
+                    const data = snapshot.data() || {};
+                    const savedItems = data.items && typeof data.items === 'object' ? data.items : {};
+                    constitutionQuestionConfig = { ...buildDefaultConstitutionConfig(), ...savedItems };
+                }
+            } catch (error) {
+                console.error('載入中醫體質問卷設定失敗:', error);
+                constitutionQuestionConfig = buildDefaultConstitutionConfig();
+            }
+        }
+
+        function getQuestionConfig(questionId) {
+            return constitutionQuestionConfig[`q${questionId}`] || { axis: 'wetDry', reverse: false };
+        }
+
+        function getQuestionAxisCounts() {
+            return Object.values(constitutionQuestionConfig).reduce((counts, item) => {
+                if (item?.axis === 'coldHot') counts.coldHot += 1;
+                else counts.wetDry += 1;
+                return counts;
+            }, { coldHot: 0, wetDry: 0 });
+        }
+
+        function getOptionScore(questionId, optionIndex) {
+            const optionCount = constitutionThreeOptionIds.has(questionId) ? 3 : 2;
+            let score = 0;
+            if (optionCount === 2) score = optionIndex === 0 ? -1 : 1;
+            else score = optionIndex === 0 ? -1 : optionIndex === 1 ? 0 : 1;
+            return getQuestionConfig(questionId).reverse ? -score : score;
+        }
 
         function mapLegacyConstitutionAnswer(questionId, storedValue) {
             const numericValue = Number(storedValue);
             if (!Number.isFinite(numericValue)) return 0;
-            if (constitutionThreeOptionIds.has(questionId)) {
-                if (numericValue === 0) return -1;
-                if (numericValue === 1) return 0;
-                return 1;
-            }
-            return numericValue === 0 ? -1 : 1;
+            return getOptionScore(questionId, numericValue);
         }
 
         function getConstitutionScores(data = {}) {
@@ -905,10 +951,14 @@
                 Object.entries(data.回答).forEach(([key, rawValue]) => {
                     const questionId = Number(String(key).replace(/^q/, ''));
                     if (!questionId) return;
-                    const score = version >= 2 ? Number(rawValue) : mapLegacyConstitutionAnswer(questionId, rawValue);
+                    const score = version >= 3
+                        ? getOptionScore(questionId, Number(rawValue))
+                        : version === 2
+                            ? Number(rawValue)
+                            : mapLegacyConstitutionAnswer(questionId, rawValue);
                     if (!Number.isFinite(score)) return;
-                    if (constitutionQuestionIds.coldHot.has(questionId)) coldHot += score;
-                    if (constitutionQuestionIds.wetDry.has(questionId)) wetDry += score;
+                    if (getQuestionConfig(questionId).axis === 'coldHot') coldHot += score;
+                    else wetDry += score;
                 });
                 return { coldHot, wetDry };
             }
@@ -922,8 +972,9 @@
             const coldHot = Number(coldHotScore);
             const wetDry = Number(wetDryScore);
             if (!Number.isFinite(coldHot) || !Number.isFinite(wetDry)) return '-';
-            const coldHotAvg = coldHot / 9;
-            const wetDryAvg = wetDry / 18;
+            const counts = getQuestionAxisCounts();
+            const coldHotAvg = coldHot / Math.max(1, counts.coldHot);
+            const wetDryAvg = wetDry / Math.max(1, counts.wetDry);
             if (coldHotAvg < 0 && wetDryAvg < 0) return '陽虛';
             if (coldHotAvg < 0 && wetDryAvg >= 0) return '痰濕';
             if (coldHotAvg >= 0 && wetDryAvg < 0) return '陰虛';

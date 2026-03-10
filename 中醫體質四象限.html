@@ -557,21 +557,81 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const constitutionConfigRef = doc(db, "中醫體質問卷設定", "current");
 
         let currentUser = null;
         let existingDocId = null;
+        let constitutionQuestionConfig = buildDefaultConstitutionConfig();
+        let constitutionConfigVersion = 1;
 
-        function getOptionScore(optionCount, optionIndex) {
-            if (optionCount === 2) return optionIndex === 0 ? -1 : 1;
-            if (optionCount === 3) return optionIndex === 0 ? -1 : optionIndex === 1 ? 0 : 1;
-            return optionIndex;
+        function buildDefaultConstitutionConfig() {
+            return Object.fromEntries(
+                questionsData.items.map((item) => [
+                    `q${item.id}`,
+                    { axis: item.filename.startsWith('ch') ? 'coldHot' : 'wetDry', reverse: false }
+                ])
+            );
         }
 
-        function getStoredAnswerScore(item, storedValue, version) {
+        async function ensureConstitutionQuestionConfig() {
+            try {
+                const snapshot = await getDoc(constitutionConfigRef);
+                if (snapshot.exists()) {
+                    const data = snapshot.data() || {};
+                    const savedItems = data.items && typeof data.items === 'object' ? data.items : {};
+                    constitutionQuestionConfig = { ...buildDefaultConstitutionConfig(), ...savedItems };
+                    constitutionConfigVersion = Number(data.version) || 1;
+                }
+            } catch (error) {
+                console.error('載入中醫體質問卷設定失敗:', error);
+                constitutionQuestionConfig = buildDefaultConstitutionConfig();
+                constitutionConfigVersion = 1;
+            }
+        }
+
+        function getQuestionConfig(questionId) {
+            return constitutionQuestionConfig[`q${questionId}`] || { axis: 'wetDry', reverse: false };
+        }
+
+        function getOptionScore(optionCount, optionIndex, reverse = false) {
+            let score = 0;
+            if (optionCount === 2) score = optionIndex === 0 ? -1 : 1;
+            else if (optionCount === 3) score = optionIndex === 0 ? -1 : optionIndex === 1 ? 0 : 1;
+            else score = optionIndex;
+            return reverse ? -score : score;
+        }
+
+        function getSelectedScore(item, optionIndex) {
+            const config = getQuestionConfig(item.id);
+            return getOptionScore(item.options.length, optionIndex, Boolean(config.reverse));
+        }
+
+        function getAxisCounts() {
+            return questionsData.items.reduce((counts, item) => {
+                const axis = getQuestionConfig(item.id).axis === 'coldHot' ? 'coldHot' : 'wetDry';
+                counts[axis] += 1;
+                return counts;
+            }, { coldHot: 0, wetDry: 0 });
+        }
+
+        function resolveQuadrant(coldHotScore, wetDryScore) {
+            const counts = getAxisCounts();
+            const coldHotAvg = coldHotScore / Math.max(1, counts.coldHot);
+            const wetDryAvg = wetDryScore / Math.max(1, counts.wetDry);
+            if (coldHotAvg < 0 && wetDryAvg < 0) return { quadrant: 'q1', resultText: '陽虛體質' };
+            if (coldHotAvg < 0 && wetDryAvg >= 0) return { quadrant: 'q2', resultText: '痰濕體質' };
+            if (coldHotAvg >= 0 && wetDryAvg < 0) return { quadrant: 'q3', resultText: '陰虛體質' };
+            return { quadrant: 'q4', resultText: '陽盛體質' };
+        }
+
+        function getStoredOptionIndex(item, storedValue, version) {
             const numericValue = Number(storedValue);
             if (!Number.isFinite(numericValue)) return null;
-            if (Number(version) >= 2) return numericValue;
-            return getOptionScore(item.options.length, numericValue);
+            if (Number(version) === 2) {
+                const index = item.options.findIndex((_, optionIndex) => getSelectedScore(item, optionIndex) === numericValue);
+                return index >= 0 ? index : null;
+            }
+            return numericValue;
         }
 
         function generateQuestions() {
@@ -585,10 +645,9 @@
                     <label class="question-label">${index + 1}. ${item.question}</label>
                     <div class="option-grid" data-question-id="${item.id}">
                         ${item.options.map((option, optIndex) => {
-                            const score = getOptionScore(item.options.length, optIndex);
                             return `
-                            <label class="option-item" data-value="${score}">
-                                <input type="radio" name="q${item.id}" value="${score}">
+                            <label class="option-item" data-value="${optIndex}">
+                                <input type="radio" name="q${item.id}" value="${optIndex}">
                                 <span>${option}</span>
                             </label>
                         `;
@@ -649,23 +708,15 @@
         }
 
         function updateProgress() {
-            const coldHotQuestions = questionsData.items.filter(item => item.filename.startsWith('ch'));
-            const wetDryQuestions = questionsData.items.filter(item => item.filename.startsWith('wdq'));
-            
             let coldHotScore = 0;
             let wetDryScore = 0;
             
-            coldHotQuestions.forEach(item => {
+            questionsData.items.forEach(item => {
                 const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
                 if (selected) {
-                    coldHotScore += parseInt(selected.value);
-                }
-            });
-            
-            wetDryQuestions.forEach(item => {
-                const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
-                if (selected) {
-                    wetDryScore += parseInt(selected.value);
+                    const score = getSelectedScore(item, Number(selected.value));
+                    if (getQuestionConfig(item.id).axis === 'coldHot') coldHotScore += score;
+                    else wetDryScore += score;
                 }
             });
             
@@ -681,29 +732,7 @@
             if (answered === questionsData.total) {
                 document.getElementById('coldHotScore').textContent = coldHotScore + ' 分';
                 document.getElementById('wetDryScore').textContent = wetDryScore + ' 分';
-                
-                // 計算平均分數
-                const coldHotAvg = coldHotScore / coldHotQuestions.length;
-                const wetDryAvg = wetDryScore / wetDryQuestions.length;
-                
-                // 判斷落在哪個象限
-                let quadrant = '';
-                let resultText = '';
-                
-                // 負分偏向怕冷/偏乾，正分偏向怕熱/偏濕
-                if (coldHotAvg < 0 && wetDryAvg < 0) {
-                    quadrant = 'q1';
-                    resultText = '陽虛體質';
-                } else if (coldHotAvg < 0 && wetDryAvg >= 0) {
-                    quadrant = 'q2';
-                    resultText = '痰濕體質';
-                } else if (coldHotAvg >= 0 && wetDryAvg < 0) {
-                    quadrant = 'q3';
-                    resultText = '陰虛體質';
-                } else {
-                    quadrant = 'q4';
-                    resultText = '陽盛體質';
-                }
+                const { quadrant, resultText } = resolveQuadrant(coldHotScore, wetDryScore);
                 
                 // 重置所有象限樣式
                 ['q1', 'q2', 'q3', 'q4'].forEach(id => {
@@ -733,9 +762,10 @@
                 window.location.replace('index.html');
             }
             
+            await ensureConstitutionQuestionConfig();
             generateQuestions();
-            loadUserName(user.uid);
-            loadExistingData(user.uid);
+            await loadUserName(user.uid);
+            await loadExistingData(user.uid);
         });
 
         async function loadUserName(userId) {
@@ -767,8 +797,8 @@
                         Object.keys(data.回答).forEach(key => {
                             const item = questionsData.items.find((question) => `q${question.id}` === key);
                             if (!item) return;
-                            const score = getStoredAnswerScore(item, data.回答[key], data.評分版本);
-                            const radio = document.querySelector(`input[name="${key}"][value="${score}"]`);
+                            const optionIndex = getStoredOptionIndex(item, data.回答[key], data.評分版本);
+                            const radio = document.querySelector(`input[name="${key}"][value="${optionIndex}"]`);
                             if (radio) {
                                 radio.checked = true;
                                 radio.closest('.option-item').classList.add('selected');
@@ -826,36 +856,21 @@
 
         submitBtn.addEventListener('click', async function(e) {
             e.preventDefault();
-            
-            const coldHotQuestions = questionsData.items.filter(item => item.filename.startsWith('ch'));
-            const wetDryQuestions = questionsData.items.filter(item => item.filename.startsWith('wdq'));
-            
             const answers = {};
             let coldHotScore = 0;
             let wetDryScore = 0;
-            
-            // 驗證並計算冷熱體質分數
-            for (let i = 0; i < coldHotQuestions.length; i++) {
-                const item = coldHotQuestions[i];
+            for (let i = 0; i < questionsData.items.length; i++) {
+                const item = questionsData.items[i];
                 const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
                 if (!selected) {
-                    alert('請回答所有冷熱體質題目');
+                    alert('請完成所有題目');
                     return;
                 }
-                answers[`q${item.id}`] = Number(selected.value);
-                coldHotScore += Number(selected.value);
-            }
-            
-            // 驗證並計算濕乾體質分數
-            for (let i = 0; i < wetDryQuestions.length; i++) {
-                const item = wetDryQuestions[i];
-                const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
-                if (!selected) {
-                    alert('請回答所有濕乾體質題目');
-                    return;
-                }
-                answers[`q${item.id}`] = Number(selected.value);
-                wetDryScore += Number(selected.value);
+                const optionIndex = Number(selected.value);
+                answers[`q${item.id}`] = optionIndex;
+                const score = getSelectedScore(item, optionIndex);
+                if (getQuestionConfig(item.id).axis === 'coldHot') coldHotScore += score;
+                else wetDryScore += score;
             }
 
             submitBtn.disabled = true;
@@ -874,7 +889,8 @@
                     userId: currentUser.uid,
                     客戶姓名: customerName,
                     回答: answers,
-                    評分版本: 2,
+                    評分版本: 3,
+                    題目設定版本: constitutionConfigVersion,
                     冷熱體質分數: coldHotScore,
                     濕乾體質分數: wetDryScore,
                     建立時間: serverTimestamp()
