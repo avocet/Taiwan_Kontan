@@ -367,6 +367,37 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .portion-summary-row {
+            align-items: flex-start;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed #dbeafe;
+        }
+
+        .portion-summary-value {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            text-align: right;
+        }
+
+        .portion-kcal-total {
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .portion-kcal-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 4px 8px;
+        }
+
+        .portion-kcal-item {
+            white-space: nowrap;
+        }
+
         .advice-section {
             margin-top: 10px;
             padding: 10px 12px;
@@ -797,11 +828,11 @@
                 const kcalText = Object.keys(totals).map((nutrient) => {
                     const kcal = totals[nutrient] * kcalRates[nutrient];
                     const percent = totalKcal > 0 ? Math.round((kcal / totalKcal) * 100) : 0;
-                    return `${nutrient}:${kcal} (${percent}%)`;
+                    return `<span class="portion-kcal-item">${nutrient}:${kcal} (${percent}%)</span>`;
                 }).join(' ');
                 return `
-                    <div class="portion-row"><span class="portion-meal">Total</span><span class="portion-values">C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</span></div>
-                    <div class="portion-row"><span class="portion-meal">Kcal ${totalKcal}</span><span class="portion-values">${kcalText}</span></div>
+                    <div class="portion-row portion-summary-row"><span class="portion-meal">Total</span><span class="portion-values">C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</span></div>
+                    <div class="portion-row"><span class="portion-meal">Kcal</span><span class="portion-values portion-summary-value"><span class="portion-kcal-total">總熱量 ${totalKcal}</span><span class="portion-kcal-breakdown">${kcalText}</span></span></div>
                 `;
             };
             const conversation = normalizeConversation(data);

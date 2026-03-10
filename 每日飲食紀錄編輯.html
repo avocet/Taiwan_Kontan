@@ -121,6 +121,37 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .portion-summary-row {
+            align-items: flex-start;
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px dashed #dbeafe;
+        }
+
+        .portion-summary-value {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            text-align: right;
+        }
+
+        .portion-kcal-total {
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .portion-kcal-breakdown {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 4px 8px;
+        }
+
+        .portion-kcal-item {
+            white-space: nowrap;
+        }
+
         .form-header {
             background: linear-gradient(135deg, #FF2D55, #FF6B6B);
             color: white;
@@ -1007,10 +1038,10 @@
                 const kcalText = Object.keys(totals).map((nutrient) => {
                     const kcal = totals[nutrient] * kcalRates[nutrient];
                     const percent = totalKcal > 0 ? Math.round((kcal / totalKcal) * 100) : 0;
-                    return `${nutrient}:${kcal} (${percent}%)`;
+                    return `<span class="portion-kcal-item">${nutrient}:${kcal} (${percent}%)</span>`;
                 }).join(' ');
-                return `<div class="portion-row"><span class="portion-row-label">Total</span><span class="portion-row-value">C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</span></div>
-                    <div class="portion-row"><span class="portion-row-label">Kcal ${totalKcal}</span><span class="portion-row-value">${kcalText}</span></div>`;
+                return `<div class="portion-row portion-summary-row"><span class="portion-row-label">Total</span><span class="portion-row-value">C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</span></div>
+                    <div class="portion-row"><span class="portion-row-label">Kcal</span><span class="portion-row-value portion-summary-value"><span class="portion-kcal-total">總熱量 ${totalKcal}</span><span class="portion-kcal-breakdown">${kcalText}</span></span></div>`;
             };
             matched.forEach(portion => {
                 const startDate = portion.紀錄日期 || '-';
