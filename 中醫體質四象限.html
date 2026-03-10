@@ -561,6 +561,19 @@
         let currentUser = null;
         let existingDocId = null;
 
+        function getOptionScore(optionCount, optionIndex) {
+            if (optionCount === 2) return optionIndex === 0 ? -1 : 1;
+            if (optionCount === 3) return optionIndex === 0 ? -1 : optionIndex === 1 ? 0 : 1;
+            return optionIndex;
+        }
+
+        function getStoredAnswerScore(item, storedValue, version) {
+            const numericValue = Number(storedValue);
+            if (!Number.isFinite(numericValue)) return null;
+            if (Number(version) >= 2) return numericValue;
+            return getOptionScore(item.options.length, numericValue);
+        }
+
         function generateQuestions() {
             const form = document.getElementById('constitutionForm');
             form.innerHTML = '';
@@ -571,12 +584,15 @@
                 questionGroup.innerHTML = `
                     <label class="question-label">${index + 1}. ${item.question}</label>
                     <div class="option-grid" data-question-id="${item.id}">
-                        ${item.options.map((option, optIndex) => `
-                            <label class="option-item" data-value="${optIndex}">
-                                <input type="radio" name="q${item.id}" value="${optIndex}">
+                        ${item.options.map((option, optIndex) => {
+                            const score = getOptionScore(item.options.length, optIndex);
+                            return `
+                            <label class="option-item" data-value="${score}">
+                                <input type="radio" name="q${item.id}" value="${score}">
                                 <span>${option}</span>
                             </label>
-                        `).join('')}
+                        `;
+                        }).join('')}
                     </div>
                 `;
                 form.appendChild(questionGroup);
@@ -674,14 +690,14 @@
                 let quadrant = '';
                 let resultText = '';
                 
-                // 較低分數 = 怕冷/偏乾，較高分數 = 怕熱/偏濕
-                if (coldHotAvg < 1.5 && wetDryAvg < 1.5) {
+                // 負分偏向怕冷/偏乾，正分偏向怕熱/偏濕
+                if (coldHotAvg < 0 && wetDryAvg < 0) {
                     quadrant = 'q1';
                     resultText = '陽虛體質';
-                } else if (coldHotAvg < 1.5 && wetDryAvg >= 1.5) {
+                } else if (coldHotAvg < 0 && wetDryAvg >= 0) {
                     quadrant = 'q2';
                     resultText = '痰濕體質';
-                } else if (coldHotAvg >= 1.5 && wetDryAvg < 1.5) {
+                } else if (coldHotAvg >= 0 && wetDryAvg < 0) {
                     quadrant = 'q3';
                     resultText = '陰虛體質';
                 } else {
@@ -749,8 +765,10 @@
                     
                     if (data.回答) {
                         Object.keys(data.回答).forEach(key => {
-                            const val = data.回答[key];
-                            const radio = document.querySelector(`input[name="${key}"][value="${val}"]`);
+                            const item = questionsData.items.find((question) => `q${question.id}` === key);
+                            if (!item) return;
+                            const score = getStoredAnswerScore(item, data.回答[key], data.評分版本);
+                            const radio = document.querySelector(`input[name="${key}"][value="${score}"]`);
                             if (radio) {
                                 radio.checked = true;
                                 radio.closest('.option-item').classList.add('selected');
@@ -824,8 +842,8 @@
                     alert('請回答所有冷熱體質題目');
                     return;
                 }
-                answers[`q${item.id}`] = parseInt(selected.value);
-                coldHotScore += parseInt(selected.value);
+                answers[`q${item.id}`] = Number(selected.value);
+                coldHotScore += Number(selected.value);
             }
             
             // 驗證並計算濕乾體質分數
@@ -836,8 +854,8 @@
                     alert('請回答所有濕乾體質題目');
                     return;
                 }
-                answers[`q${item.id}`] = parseInt(selected.value);
-                wetDryScore += parseInt(selected.value);
+                answers[`q${item.id}`] = Number(selected.value);
+                wetDryScore += Number(selected.value);
             }
 
             submitBtn.disabled = true;
@@ -856,6 +874,7 @@
                     userId: currentUser.uid,
                     客戶姓名: customerName,
                     回答: answers,
+                    評分版本: 2,
                     冷熱體質分數: coldHotScore,
                     濕乾體質分數: wetDryScore,
                     建立時間: serverTimestamp()
