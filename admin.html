@@ -375,6 +375,7 @@
         <div class="tab" data-tab="weight">減肥歷史</div>
         <div class="tab" data-tab="diet">3日飲食</div>
         <div class="tab" data-tab="constitution">中醫體質</div>
+        <div class="tab" data-tab="constitutionCalibration">體質問卷校正</div>
         <div class="tab" data-tab="measurements">每日體重三圍</div>
     </div>
 
@@ -410,13 +411,24 @@
         <!-- 中醫體質 -->
         <div class="tab-content" id="constitution">
             <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
-                <a href="中醫體質問卷校正.html" style="display:inline-flex;align-items:center;gap:6px;background:#007AFF;color:#fff;text-decoration:none;padding:10px 14px;border-radius:10px;font-size:0.875rem;font-weight:600;">逐題校正</a>
+                <button type="button" id="openConstitutionCalibrationBtn" style="display:inline-flex;align-items:center;gap:6px;background:#007AFF;color:#fff;border:none;padding:10px 14px;border-radius:10px;font-size:0.875rem;font-weight:600;cursor:pointer;">逐題校正</button>
             </div>
             <div class="loading" id="constitutionLoading">
                 <div class="loading-spinner"></div>
                 <p>載入中...</p>
             </div>
             <div id="constitutionList"></div>
+        </div>
+
+        <div class="tab-content" id="constitutionCalibration">
+            <div style="background:#fff;border-radius:16px;padding:12px;box-shadow:0 8px 24px rgba(15,23,42,0.06);">
+                <iframe
+                    id="constitutionCalibrationFrame"
+                    src="中醫體質問卷校正.html"
+                    title="中醫體質問卷逐題校正"
+                    style="width:100%;min-height:calc(100vh - 240px);border:none;border-radius:12px;background:#fff;"
+                    loading="lazy"></iframe>
+            </div>
         </div>
 
         <!-- 每日體重三圍 -->
@@ -540,6 +552,17 @@
                 const tabId = tab.dataset.tab;
                 document.getElementById(tabId).classList.add('active');
             });
+        });
+
+        document.getElementById('openConstitutionCalibrationBtn')?.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const calibrationTab = document.querySelector('.tab[data-tab="constitutionCalibration"]');
+            const calibrationContent = document.getElementById('constitutionCalibration');
+            if (calibrationTab) calibrationTab.classList.add('active');
+            if (calibrationContent) calibrationContent.classList.add('active');
         });
 
         // 載入所有資料
