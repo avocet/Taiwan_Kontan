@@ -317,6 +317,26 @@
             font-size: 0.875rem;
         }
 
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+            margin-top: 8px;
+        }
+
+        .checkbox-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9375rem;
+            color: var(--text-primary);
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
         .photo-upload {
             border: 2px dashed var(--border-color);
             border-radius: 12px;
@@ -611,6 +631,22 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="form-group" style="margin-top:16px;">
+                        <label>排便與否</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" id="bowelMovementYes" value="有排便">有排便</label>
+                            <label class="checkbox-item"><input type="checkbox" id="bowelMovementNo" value="無排便">無排便</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>排便狀況</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item"><input type="checkbox" id="stoolDiarrhea" value="拉肚子">拉肚子</label>
+                            <label class="checkbox-item"><input type="checkbox" id="stoolNormal" value="正常便">正常便</label>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-section">
@@ -813,6 +849,13 @@
             const minuteSelect = document.getElementById(fields.minute);
             if (hourSelect) hourSelect.value = hour;
             if (minuteSelect) minuteSelect.value = minute;
+        }
+
+        function getCheckedValues(ids = []) {
+            return ids
+                .map((id) => document.getElementById(id))
+                .filter((el) => el && el.checked)
+                .map((el) => el.value);
         }
 
         initializeMealTimeSelects();
@@ -1089,6 +1132,8 @@
                     體重: parseFloat(weight),
                     體脂: document.getElementById('bodyFat').value ? parseFloat(document.getElementById('bodyFat').value) : null,
                     喝水量: document.getElementById('waterIntake').value ? parseFloat(document.getElementById('waterIntake').value) : null,
+                    排便與否: getCheckedValues(['bowelMovementYes', 'bowelMovementNo']),
+                    排便狀況: getCheckedValues(['stoolDiarrhea', 'stoolNormal']),
                     早餐時間: getMealTimeValue('breakfast'),
                     早餐: document.getElementById('breakfast').value.trim(),
                     早點時間: getMealTimeValue('morningSnack'),
