@@ -938,7 +938,7 @@
                         </div>
                         <div class="data-item">
                             <span class="data-label">排便與否</span>
-                            <span class="data-value">${Array.isArray(data.排便與否) && data.排便與否.length ? data.排便與否.join('、') : '-'}</span>
+                            <span class="data-value">${Array.isArray(data.排便與否) ? (data.排便與否[0] || '-') : (data.排便與否 || '-')}</span>
                         </div>
                         <div class="data-item">
                             <span class="data-label">排便狀況</span>

@@ -657,8 +657,8 @@
                     <div class="form-group" style="margin-top:16px;">
                         <label>排便與否</label>
                         <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="checkbox" id="bowelMovementYes" value="有排便">有排便</label>
-                            <label class="checkbox-item"><input type="checkbox" id="bowelMovementNo" value="無排便">無排便</label>
+                            <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementYes" value="有排便">有排便</label>
+                            <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementNo" value="無排便">無排便</label>
                         </div>
                     </div>
 
@@ -885,6 +885,15 @@
                 .map((el) => el.value);
         }
 
+        function getRadioValue(name) {
+            return document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+        }
+
+        function setRadioValue(name, value) {
+            const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+            if (radio) radio.checked = true;
+        }
+
         function setCheckedValues(ids = [], values = []) {
             const selected = new Set(Array.isArray(values) ? values : (values ? [values] : []));
             ids.forEach((id) => {
@@ -957,7 +966,7 @@
                 document.getElementById('weight').value = data.體重 || '';
                 document.getElementById('bodyFat').value = data.體脂 || '';
                 document.getElementById('waterIntake').value = data.喝水量 || '';
-                setCheckedValues(['bowelMovementYes', 'bowelMovementNo'], data.排便與否 || []);
+                setRadioValue('bowelMovement', Array.isArray(data.排便與否) ? (data.排便與否[0] || '') : (data.排便與否 || ''));
                 setCheckedValues(['stoolDiarrhea', 'stoolNormal'], data.排便狀況 || []);
                 setMealTimeValue('breakfast', data.早餐時間 || '');
                 document.getElementById('breakfast').value = data.早餐 || '';
@@ -1228,7 +1237,7 @@
                     體重: parseFloat(weight),
                     體脂: document.getElementById('bodyFat').value ? parseFloat(document.getElementById('bodyFat').value) : null,
                     喝水量: document.getElementById('waterIntake').value ? parseFloat(document.getElementById('waterIntake').value) : null,
-                    排便與否: getCheckedValues(['bowelMovementYes', 'bowelMovementNo']),
+                    排便與否: getRadioValue('bowelMovement'),
                     排便狀況: getCheckedValues(['stoolDiarrhea', 'stoolNormal']),
                     早餐時間: getMealTimeValue('breakfast'),
                     早餐: document.getElementById('breakfast').value.trim(),

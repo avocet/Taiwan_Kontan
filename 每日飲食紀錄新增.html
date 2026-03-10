@@ -636,8 +636,8 @@
                     <div class="form-group" style="margin-top:16px;">
                         <label>排便與否</label>
                         <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="checkbox" id="bowelMovementYes" value="有排便">有排便</label>
-                            <label class="checkbox-item"><input type="checkbox" id="bowelMovementNo" value="無排便">無排便</label>
+                            <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementYes" value="有排便">有排便</label>
+                            <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementNo" value="無排便">無排便</label>
                         </div>
                     </div>
 
@@ -857,6 +857,10 @@
                 .map((id) => document.getElementById(id))
                 .filter((el) => el && el.checked)
                 .map((el) => el.value);
+        }
+
+        function getRadioValue(name) {
+            return document.querySelector(`input[name="${name}"]:checked`)?.value || '';
         }
 
         initializeMealTimeSelects();
@@ -1133,7 +1137,7 @@
                     體重: parseFloat(weight),
                     體脂: document.getElementById('bodyFat').value ? parseFloat(document.getElementById('bodyFat').value) : null,
                     喝水量: document.getElementById('waterIntake').value ? parseFloat(document.getElementById('waterIntake').value) : null,
-                    排便與否: getCheckedValues(['bowelMovementYes', 'bowelMovementNo']),
+                    排便與否: getRadioValue('bowelMovement'),
                     排便狀況: getCheckedValues(['stoolDiarrhea', 'stoolNormal']),
                     早餐時間: getMealTimeValue('breakfast'),
                     早餐: document.getElementById('breakfast').value.trim(),
