@@ -149,6 +149,234 @@
             display: block;
         }
 
+        .calibration-shell {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 18px;
+        }
+
+        .calibration-side,
+        .calibration-main {
+            background: var(--card-background);
+            border-radius: 20px;
+            border: 1px solid rgba(15, 23, 42, 0.06);
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .calibration-side {
+            padding: 18px;
+            position: sticky;
+            top: 96px;
+            height: fit-content;
+        }
+
+        .calibration-main {
+            padding: 24px;
+        }
+
+        .calibration-progress-num {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .calibration-progress-label,
+        .calibration-legend,
+        .calibration-preview,
+        .calibration-status {
+            color: var(--text-secondary);
+        }
+
+        .calibration-progress-bar {
+            margin-top: 14px;
+            height: 10px;
+            background: #edf2fa;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .calibration-progress-fill {
+            display: block;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary-color), #5aa2ff);
+        }
+
+        .calibration-legend {
+            display: grid;
+            gap: 8px;
+            margin-top: 18px;
+            font-size: 0.875rem;
+        }
+
+        .calibration-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .calibration-heading {
+            margin: 0;
+            font-size: 1.35rem;
+            color: var(--text-primary);
+        }
+
+        .calibration-subtext {
+            margin-top: 6px;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+        }
+
+        .calibration-save-btn,
+        .calibration-nav-btn {
+            border: none;
+            border-radius: 12px;
+            min-height: 44px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+
+        .calibration-save-btn {
+            background: var(--primary-color);
+            color: #fff;
+            padding: 10px 16px;
+            font-weight: 600;
+        }
+
+        .calibration-nav-btn {
+            background: #fff;
+            color: var(--text-primary);
+            padding: 10px 14px;
+            border: 1px solid #d9e2f1;
+            min-width: 120px;
+        }
+
+        .calibration-save-btn:hover,
+        .calibration-nav-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .calibration-question-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #e7f0ff;
+            color: var(--primary-color);
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .calibration-question-title {
+            margin: 14px 0 18px;
+            font-size: 1.65rem;
+            line-height: 1.35;
+        }
+
+        .calibration-section-title {
+            margin: 0 0 12px;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .calibration-option-list {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .calibration-option-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #f8fbff;
+            border: 1px solid #dce7f8;
+        }
+
+        .calibration-option-text {
+            font-size: 1rem;
+        }
+
+        .calibration-score-badge {
+            flex-shrink: 0;
+            min-width: 72px;
+            text-align: center;
+            padding: 8px 10px;
+            border-radius: 999px;
+            font-weight: 700;
+            background: #fff;
+            border: 1px solid #d8e3f6;
+        }
+
+        .calibration-score-badge.negative { color: #2563eb; }
+        .calibration-score-badge.neutral { color: #64748b; }
+        .calibration-score-badge.positive { color: var(--success-color); }
+
+        .calibration-choice-group {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .calibration-chip input {
+            display: none;
+        }
+
+        .calibration-chip span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 52px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid #d9e2f1;
+            background: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.18s ease;
+        }
+
+        .calibration-chip input:checked + span {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+            box-shadow: 0 10px 22px rgba(15, 111, 255, 0.18);
+        }
+
+        .calibration-preview {
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: #fbfcfe;
+            border: 1px dashed #cdd9ec;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .calibration-nav-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .calibration-status {
+            margin-top: 16px;
+            min-height: 24px;
+            font-size: 0.9rem;
+        }
+
+        .calibration-status.success { color: var(--success-color); }
+        .calibration-status.error { color: var(--error-color); }
+
         /* Data List */
         .data-card {
             background: var(--card-background);
@@ -352,6 +580,27 @@
             .data-info {
                 grid-template-columns: 1fr;
             }
+
+            .calibration-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .calibration-side {
+                position: static;
+            }
+
+            .calibration-choice-group {
+                grid-template-columns: 1fr;
+            }
+
+            .calibration-question-title {
+                font-size: 1.35rem;
+            }
+
+            .calibration-option-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -421,13 +670,65 @@
         </div>
 
         <div class="tab-content" id="constitutionCalibration">
-            <div style="background:#fff;border-radius:16px;padding:12px;box-shadow:0 8px 24px rgba(15,23,42,0.06);">
-                <iframe
-                    id="constitutionCalibrationFrame"
-                    src="中醫體質問卷校正.html"
-                    title="中醫體質問卷逐題校正"
-                    style="width:100%;min-height:calc(100vh - 240px);border:none;border-radius:12px;background:#fff;"
-                    loading="lazy"></iframe>
+            <div class="calibration-shell">
+                <aside class="calibration-side">
+                    <div class="calibration-progress-num" id="calibrationProgressNum">1 / 27</div>
+                    <div class="calibration-progress-label">目前校正題目</div>
+                    <div class="calibration-progress-bar"><span class="calibration-progress-fill" id="calibrationProgressFill"></span></div>
+                    <div class="calibration-legend">
+                        <div>二選題：依方向套用 `-1 / +1` 或 `+1 / -1`</div>
+                        <div>三選題：依方向套用 `-1 / 0 / +1` 或 `+1 / 0 / -1`</div>
+                    </div>
+                </aside>
+
+                <section class="calibration-main">
+                    <div class="calibration-topbar">
+                        <div>
+                            <h2 class="calibration-heading">中醫體質問卷逐題校正</h2>
+                            <div class="calibration-subtext">一題一題調整題軸與方向，儲存後會同步套用到問卷、學員頁與管理員頁。</div>
+                        </div>
+                        <button type="button" class="calibration-save-btn" id="calibrationSaveBtn">儲存設定</button>
+                    </div>
+
+                    <div class="calibration-question-tag" id="calibrationQuestionMeta">題號 1</div>
+                    <h3 class="calibration-question-title" id="calibrationQuestionTitle">載入中...</h3>
+
+                    <div class="calibration-section-title">選項與目前分數</div>
+                    <div class="calibration-option-list" id="calibrationOptionList"></div>
+
+                    <div class="calibration-section-title">這一題屬於哪一軸</div>
+                    <div class="calibration-choice-group">
+                        <label class="calibration-chip">
+                            <input type="radio" name="calibrationAxis" value="coldHot">
+                            <span>冷熱</span>
+                        </label>
+                        <label class="calibration-chip">
+                            <input type="radio" name="calibrationAxis" value="wetDry">
+                            <span>濕乾</span>
+                        </label>
+                    </div>
+
+                    <div class="calibration-section-title">選項排列方向</div>
+                    <div class="calibration-choice-group">
+                        <label class="calibration-chip">
+                            <input type="radio" name="calibrationDirection" value="normal">
+                            <span>排列正確</span>
+                        </label>
+                        <label class="calibration-chip">
+                            <input type="radio" name="calibrationDirection" value="reverse">
+                            <span>反轉</span>
+                        </label>
+                    </div>
+
+                    <div class="calibration-preview" id="calibrationPreviewBox"></div>
+
+                    <div class="calibration-nav-row">
+                        <button type="button" class="calibration-nav-btn" id="calibrationPrevBtn">上一題</button>
+                        <button type="button" class="calibration-nav-btn" id="calibrationNextBtn">下一題</button>
+                    </div>
+
+                    <div class="calibration-status" id="calibrationStatusText"></div>
+                </section>
             </div>
         </div>
 
@@ -463,7 +764,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import { getFirestore, collection, getDocs, getDoc, deleteDoc, doc, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, getDoc, deleteDoc, doc, query, orderBy, where, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -565,6 +866,46 @@
             if (calibrationContent) calibrationContent.classList.add('active');
         });
 
+        document.querySelectorAll('input[name="calibrationAxis"]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const item = constitutionCalibrationQuestions[calibrationCurrentIndex];
+                if (!item) return;
+                calibrationConfigDraft[`q${item.id}`] = {
+                    ...getCalibrationQuestionConfig(item.id),
+                    axis: input.value
+                };
+                renderCalibrationQuestion();
+            });
+        });
+
+        document.querySelectorAll('input[name="calibrationDirection"]').forEach((input) => {
+            input.addEventListener('change', () => {
+                const item = constitutionCalibrationQuestions[calibrationCurrentIndex];
+                if (!item) return;
+                calibrationConfigDraft[`q${item.id}`] = {
+                    ...getCalibrationQuestionConfig(item.id),
+                    reverse: input.value === 'reverse'
+                };
+                renderCalibrationQuestion();
+            });
+        });
+
+        document.getElementById('calibrationPrevBtn')?.addEventListener('click', () => {
+            if (calibrationCurrentIndex > 0) {
+                calibrationCurrentIndex -= 1;
+                renderCalibrationQuestion();
+            }
+        });
+
+        document.getElementById('calibrationNextBtn')?.addEventListener('click', () => {
+            if (calibrationCurrentIndex < constitutionCalibrationQuestions.length - 1) {
+                calibrationCurrentIndex += 1;
+                renderCalibrationQuestion();
+            }
+        });
+
+        document.getElementById('calibrationSaveBtn')?.addEventListener('click', saveCalibrationConfig);
+
         // 載入所有資料
         async function loadAllData() {
             await Promise.all([
@@ -574,6 +915,7 @@
                 loadConstitution(),
                 loadMeasurements()
             ]);
+            await initializeCalibrationPanel();
         }
 
         // 載入客戶資料
@@ -913,7 +1255,38 @@
             wetDry: [1, 3, 4, 5, 7, 8, 9, 10, 13, 15, 16, 19, 20, 22, 23, 24, 25, 27]
         };
         const constitutionThreeOptionIds = new Set([6, 16, 17, 18]);
+        const constitutionCalibrationQuestions = [
+            { id: 1, filename: "wdq1.png", question: "平時耳朵狀況", options: ["有耳油會癢，經常用棉花棒", "耳屎結塊，常掏耳朵"] },
+            { id: 2, filename: "chq2.png", question: "容易暈車", options: ["會或經常", "很少或不會"] },
+            { id: 3, filename: "wdq3.png", question: "喉嚨有痰", options: ["會或經常", "很少或不會"] },
+            { id: 4, filename: "wdq4.png", question: "嘴巴容易散發異味", options: ["是", "否"] },
+            { id: 5, filename: "wdq5.png", question: "比較喜歡吃", options: ["甜食&澱粉", "肉類"] },
+            { id: 6, filename: "chq6.png", question: "喜歡喝的飲料或水", options: ["冷的", "常溫", "熱的"] },
+            { id: 7, filename: "wdq7.png", question: "飯後易疲倦", options: ["是", "否"] },
+            { id: 8, filename: "wdq8.png", question: "蚊蟲叮咬", options: ["消腫快", "消腫慢"] },
+            { id: 9, filename: "wdq9.png", question: "睡眠狀況", options: ["淺眠多夢", "易入睡"] },
+            { id: 10, filename: "wdq10.png", question: "睡醒狀況", options: ["常常睡不飽", "精神很好"] },
+            { id: 11, filename: "chq11.png", question: "平常比較怕熱還是怕冷", options: ["怕熱", "怕冷"] },
+            { id: 12, filename: "chq12.png", question: "手腳四肢易冰冷", options: ["是", "否"] },
+            { id: 13, filename: "wdq13.png", question: "下肢或臉水腫時", options: ["容易消腫", "不易消腫"] },
+            { id: 14, filename: "chq14.png", question: "精神狀況", options: ["容易疲倦", "精神良好"] },
+            { id: 15, filename: "wdq15.png", question: "呼吸狀況", options: ["容易喘不過氣或胸悶", "呼吸順暢/不易胸悶"] },
+            { id: 16, filename: "wdq16.png", question: "女性分泌物", options: ["白帶", "黃帶", "我是男性"] },
+            { id: 17, filename: "chq17.png", question: "生理期前睡眠狀況", options: ["頭痛或不易入睡", "較無影響", "我是男性"] },
+            { id: 18, filename: "chq18.png", question: "生理前後或期間狀況", options: ["月經結塊或腹痛或腹瀉", "稍微不適或無影響", "我是男性"] },
+            { id: 19, filename: "wdq19.png", question: "消化狀況", options: ["易脹氣", "容易消化"] },
+            { id: 20, filename: "wdq20.png", question: "排便狀況", options: ["經常腹瀉或軟便", "正常或乾硬"] },
+            { id: 21, filename: "chq21.png", question: "夜間排尿狀況", options: ["頻尿，例如：每晚1-2次", "很少或不會"] },
+            { id: 22, filename: "wdq22.png", question: "腎結石、膽結石、尿道結石", options: ["曾經有或現在有", "沒有"] },
+            { id: 23, filename: "wdq23.png", question: "蕁麻疹", options: ["曾經有或狀況嚴重", "很少或不曾發生"] },
+            { id: 24, filename: "wdq24.png", question: "痛風", options: ["曾經有或狀況嚴重", "很少或不曾發生"] },
+            { id: 25, filename: "wdq25.png", question: "血糖不耐或糖尿病", options: ["曾經有或狀況嚴重", "很少或不曾發生"] },
+            { id: 26, filename: "chq26.png", question: "臉部氣色或唇部周圍", options: ["明亮", "暗沉"] },
+            { id: 27, filename: "wdq27.png", question: "經常有黑眼圈", options: ["是", "否"] }
+        ];
         let constitutionQuestionConfig = buildDefaultConstitutionConfig();
+        let calibrationConfigDraft = {};
+        let calibrationCurrentIndex = 0;
 
         function buildDefaultConstitutionConfig() {
             const items = {};
@@ -1002,6 +1375,114 @@
             if (coldHotAvg < 0 && wetDryAvg >= 0) return '痰濕';
             if (coldHotAvg >= 0 && wetDryAvg < 0) return '陰虛';
             return '陽盛';
+        }
+
+        function getCalibrationQuestionConfig(questionId) {
+            return calibrationConfigDraft[`q${questionId}`] || { axis: 'wetDry', reverse: false };
+        }
+
+        function getCalibrationOptionScore(questionId, optionIndex) {
+            const item = constitutionCalibrationQuestions.find((row) => row.id === questionId);
+            if (!item) return 0;
+            let score = 0;
+            if (item.options.length === 2) score = optionIndex === 0 ? -1 : 1;
+            else score = optionIndex === 0 ? -1 : optionIndex === 1 ? 0 : 1;
+            return getCalibrationQuestionConfig(questionId).reverse ? -score : score;
+        }
+
+        function getCalibrationScoreClass(score) {
+            if (score > 0) return 'positive';
+            if (score < 0) return 'negative';
+            return 'neutral';
+        }
+
+        function renderCalibrationQuestion() {
+            const item = constitutionCalibrationQuestions[calibrationCurrentIndex];
+            if (!item) return;
+            const config = getCalibrationQuestionConfig(item.id);
+            const progressNumEl = document.getElementById('calibrationProgressNum');
+            const progressFillEl = document.getElementById('calibrationProgressFill');
+            const metaEl = document.getElementById('calibrationQuestionMeta');
+            const titleEl = document.getElementById('calibrationQuestionTitle');
+            const optionListEl = document.getElementById('calibrationOptionList');
+            const previewEl = document.getElementById('calibrationPreviewBox');
+            const prevBtn = document.getElementById('calibrationPrevBtn');
+            const nextBtn = document.getElementById('calibrationNextBtn');
+
+            if (progressNumEl) progressNumEl.textContent = `${calibrationCurrentIndex + 1} / ${constitutionCalibrationQuestions.length}`;
+            if (progressFillEl) progressFillEl.style.width = `${((calibrationCurrentIndex + 1) / constitutionCalibrationQuestions.length) * 100}%`;
+            if (metaEl) metaEl.textContent = `題號 ${item.id} ． ${config.axis === 'coldHot' ? '冷熱題' : '濕乾題'}`;
+            if (titleEl) titleEl.textContent = item.question;
+            if (optionListEl) {
+                optionListEl.innerHTML = item.options.map((option, optionIndex) => {
+                    const score = getCalibrationOptionScore(item.id, optionIndex);
+                    const scoreText = score > 0 ? `+${score}` : `${score}`;
+                    return `
+                        <div class="calibration-option-card">
+                            <div class="calibration-option-text">${optionIndex + 1}. ${option}</div>
+                            <div class="calibration-score-badge ${getCalibrationScoreClass(score)}">${scoreText}</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            document.querySelectorAll('input[name="calibrationAxis"]').forEach((input) => {
+                input.checked = input.value === config.axis;
+            });
+            document.querySelectorAll('input[name="calibrationDirection"]').forEach((input) => {
+                input.checked = (input.value === 'reverse') === Boolean(config.reverse);
+            });
+
+            if (previewEl) {
+                previewEl.innerHTML = `
+                    目前設定：
+                    <strong>${config.axis === 'coldHot' ? '冷熱' : '濕乾'}</strong> /
+                    <strong>${config.reverse ? '反轉' : '排列正確'}</strong><br>
+                    儲存後，所有新舊體質結果都會優先依這份題目設定重新計算。
+                `;
+            }
+
+            if (prevBtn) prevBtn.disabled = calibrationCurrentIndex === 0;
+            if (nextBtn) nextBtn.disabled = calibrationCurrentIndex === constitutionCalibrationQuestions.length - 1;
+        }
+
+        async function initializeCalibrationPanel() {
+            await ensureConstitutionQuestionConfig();
+            calibrationConfigDraft = JSON.parse(JSON.stringify(constitutionQuestionConfig));
+            renderCalibrationQuestion();
+        }
+
+        async function saveCalibrationConfig() {
+            const saveBtn = document.getElementById('calibrationSaveBtn');
+            const statusEl = document.getElementById('calibrationStatusText');
+            if (!saveBtn || !statusEl) return;
+            const user = auth.currentUser;
+            if (!user) {
+                statusEl.textContent = '尚未登入，無法儲存。';
+                statusEl.className = 'calibration-status error';
+                return;
+            }
+            saveBtn.disabled = true;
+            statusEl.textContent = '儲存中...';
+            statusEl.className = 'calibration-status';
+            try {
+                await setDoc(constitutionConfigRef, {
+                    version: Date.now(),
+                    updatedAt: serverTimestamp(),
+                    updatedBy: user.uid,
+                    items: calibrationConfigDraft
+                }, { merge: true });
+                constitutionQuestionConfig = JSON.parse(JSON.stringify(calibrationConfigDraft));
+                statusEl.textContent = '設定已儲存，問卷與結果頁會直接套用。';
+                statusEl.className = 'calibration-status success';
+                await loadConstitution();
+            } catch (error) {
+                console.error('儲存題目設定失敗:', error);
+                statusEl.textContent = `儲存失敗：${error.message}`;
+                statusEl.className = 'calibration-status error';
+            } finally {
+                saveBtn.disabled = false;
+            }
         }
 
         // 建立中醫體質卡片
