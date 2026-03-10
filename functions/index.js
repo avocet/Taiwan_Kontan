@@ -149,10 +149,31 @@ exports.deleteStudentAccountData = onCall(
     }
 
     const callerUid = request.auth.uid;
+    const callerEmail = String(request.auth.token?.email || "").trim().toLowerCase();
     const db = admin.firestore();
 
+    let isAdmin = false;
+
     const callerDoc = await db.collection("users").doc(callerUid).get();
-    if (!callerDoc.exists || callerDoc.data()?.role !== "admin") {
+    if (callerDoc.exists && callerDoc.data()?.role === "admin") {
+      isAdmin = true;
+    }
+
+    if (!isAdmin) {
+      const callerByUid = await db.collection("users").where("uid", "==", callerUid).limit(1).get();
+      if (!callerByUid.empty && callerByUid.docs[0].data()?.role === "admin") {
+        isAdmin = true;
+      }
+    }
+
+    if (!isAdmin && callerEmail) {
+      const callerByEmail = await db.collection("users").where("email", "==", callerEmail).limit(1).get();
+      if (!callerByEmail.empty && callerByEmail.docs[0].data()?.role === "admin") {
+        isAdmin = true;
+      }
+    }
+
+    if (!isAdmin) {
       throw new HttpsError("permission-denied", "僅管理員可執行此操作");
     }
 

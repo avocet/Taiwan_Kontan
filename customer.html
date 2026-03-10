@@ -593,9 +593,18 @@
             let userName = '';
             let userRole = 'customer';
             let usersSnapshot = null;
+
+            // 優先以目前 Auth 使用者 UID 判斷角色，避免 localStorage 舊值誤判。
+            const byUidQuery = query(collection(db, "users"), where("uid", "==", user.uid));
+            const byUidSnapshot = await getDocs(byUidQuery);
+            if (!byUidSnapshot.empty) {
+                usersSnapshot = byUidSnapshot;
+                const userData = usersSnapshot.docs[0].data();
+                userRole = userData.role || 'customer';
+            }
             
-                if (savedUsername) {
-                    const usersQuery = query(collection(db, "users"), where("username", "==", savedUsername));
+                if ((!usersSnapshot || usersSnapshot.empty) && savedUsername) {
+                    const usersQuery = query(collection(db, "users"), where("username", "==", savedUsername.toLowerCase()));
                     usersSnapshot = await getDocs(usersQuery);
                 console.log('usersSnapshot empty:', usersSnapshot.empty);
                 
@@ -2177,6 +2186,8 @@
                     const code = error?.code || '';
                     if (code.includes('auth/wrong-password') || code.includes('auth/invalid-credential')) {
                         alert('管理員密碼錯誤');
+                    } else if (code.includes('permission-denied')) {
+                        alert('目前登入狀態不是管理員，請重新登入管理員帳號後再試');
                     } else {
                         alert('刪除失敗：' + (error?.message || '請稍後再試'));
                     }
