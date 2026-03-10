@@ -141,6 +141,35 @@
             padding: 20px;
         }
 
+        .admin-shortcuts {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .admin-shortcut-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 12px;
+            background: var(--primary-color);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .admin-shortcut-btn.secondary {
+            background: #eef4ff;
+            color: var(--primary-color);
+            border: 1px solid #cfe0ff;
+        }
+
         .tab-content {
             display: none;
         }
@@ -630,6 +659,10 @@
 
     <!-- Content -->
     <div class="content">
+        <div class="admin-shortcuts">
+            <button type="button" class="admin-shortcut-btn" id="quickOpenConstitutionCalibrationBtn">體質問卷校正</button>
+        </div>
+
         <!-- 客戶資料 -->
         <div class="tab-content active" id="customers">
             <div class="loading" id="customersLoading">
@@ -874,6 +907,10 @@
         }
 
         document.getElementById('openConstitutionCalibrationBtn')?.addEventListener('click', () => {
+            activateTab('constitutionCalibration');
+        });
+
+        document.getElementById('quickOpenConstitutionCalibrationBtn')?.addEventListener('click', () => {
             activateTab('constitutionCalibration');
         });
 
