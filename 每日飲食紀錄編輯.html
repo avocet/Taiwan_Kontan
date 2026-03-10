@@ -995,6 +995,23 @@
             }
 
             let html = '';
+            const buildPortionSummaryHtml = (portion) => {
+                const totals = { C: 0, P: 0, F: 0, V: 0 };
+                const kcalRates = { C: 70, P: 75, F: 60, V: 25 };
+                meals.forEach((meal) => {
+                    Object.keys(totals).forEach((nutrient) => {
+                        totals[nutrient] += Number(portion[`${meal}${nutrient}`] || 0);
+                    });
+                });
+                const totalKcal = Object.keys(totals).reduce((sum, nutrient) => sum + totals[nutrient] * kcalRates[nutrient], 0);
+                const kcalText = Object.keys(totals).map((nutrient) => {
+                    const kcal = totals[nutrient] * kcalRates[nutrient];
+                    const percent = totalKcal > 0 ? Math.round((kcal / totalKcal) * 100) : 0;
+                    return `${nutrient}:${kcal} (${percent}%)`;
+                }).join(' ');
+                return `<div class="portion-row"><span class="portion-row-label">Total</span><span class="portion-row-value">C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</span></div>
+                    <div class="portion-row"><span class="portion-row-label">Kcal ${totalKcal}</span><span class="portion-row-value">${kcalText}</span></div>`;
+            };
             matched.forEach(portion => {
                 const startDate = portion.紀錄日期 || '-';
                 const endDate = portion.結束日期 || startDate;
@@ -1007,6 +1024,7 @@
                     const v = portion[`${meal}V`] || 0;
                     html += `<div class="portion-row"><span class="portion-row-label">${meal}${time ? ' ' + time : ''}</span><span class="portion-row-value">C:${c} P:${p} F:${f} V:${v}</span></div>`;
                 });
+                html += buildPortionSummaryHtml(portion);
                 html += '</div>';
             });
 
