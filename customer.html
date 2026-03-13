@@ -1252,6 +1252,7 @@
                 const status = getDisplayCourseStatus(student.課程狀態);
                 const badgeBg = status === '已完成' ? '#EAF8EF' : '#E8F3FF';
                 const badgeColor = status === '已完成' ? '#1E7E34' : '#0A58CA';
+                const isCoachView = currentOrgContext?.role === 'coach';
                 const classDisplayHtml = currentOrgContext?.role === 'coach'
                     ? `<div style="padding:6px 10px;border:1px solid #dbeafe;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:0.8125rem;font-weight:600;white-space:nowrap;">${escapeHtml(student.className || DEFAULT_CLASS_NAME)}</div>`
                     : `<select data-uid="${student.uid || ''}" data-username="${student.username}" onchange="updateStudentClassAssignment(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
@@ -1265,8 +1266,8 @@
                             <div style="color:#64748b;font-size:0.8rem;margin-top:4px;">${student.className || DEFAULT_CLASS_NAME}</div>
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;" onclick="event.stopPropagation()">
-                            <span style="padding:4px 8px;border-radius:999px;font-size:0.75rem;font-weight:600;background:${badgeBg};color:${badgeColor};">${status}</span>
-                            ${classDisplayHtml}
+                            ${isCoachView ? '' : `<span style="padding:4px 8px;border-radius:999px;font-size:0.75rem;font-weight:600;background:${badgeBg};color:${badgeColor};">${status}</span>`}
+                            ${isCoachView ? '' : classDisplayHtml}
                             <select data-customer-doc-id="${student.customerDocId || ''}" data-uid="${student.uid || ''}" data-username="${student.username}" data-student-name="${student.studentName || ''}" data-email-prefix="${student.emailPrefix || ''}" onchange="updateStudentCourseStatus(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
                                 <option value="課程中" ${status === '課程中' ? 'selected' : ''}>課程中</option>
                                 <option value="已完成" ${status === '已完成' ? 'selected' : ''}>已完成</option>
