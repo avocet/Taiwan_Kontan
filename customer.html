@@ -594,6 +594,29 @@
         </div>
     </div>
 
+    <div class="password-modal" id="issueReportModal">
+        <div class="password-modal-content">
+            <div class="password-modal-title">軟體問題報修</div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+                <div>
+                    <label style="display:block;margin-bottom:6px;font-size:0.9rem;color:#4b5563;">主旨</label>
+                    <input id="issueSubjectInput" type="text" style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:1rem;" placeholder="請輸入報修主旨">
+                </div>
+                <div>
+                    <label style="display:block;margin-bottom:6px;font-size:0.9rem;color:#4b5563;">問題內容</label>
+                    <textarea id="issueBodyInput" rows="8" style="width:100%;padding:10px 12px;border:1px solid #d1d5db;border-radius:10px;font-size:1rem;resize:vertical;" placeholder="請描述問題發生頁面、操作步驟、錯誤畫面與發生時間"></textarea>
+                </div>
+                <div style="font-size:0.82rem;color:#6b7280;line-height:1.6;">
+                    系統會直接寄送到 `taiwanakso@gmail.com`，不會跳出你的 Mail App。
+                </div>
+            </div>
+            <div class="password-modal-actions">
+                <button class="password-btn password-btn-cancel" id="cancelIssueReportBtn" type="button">取消</button>
+                <button class="password-btn password-btn-submit" id="submitIssueReportBtn" type="button">送出報修</button>
+            </div>
+        </div>
+    </div>
+
     <div class="menu-grid" id="menuGrid">
     </div>
 
@@ -2479,11 +2502,83 @@
         });
 
         const reportIssueBtn = document.getElementById('reportIssueBtn');
+        const issueReportModal = document.getElementById('issueReportModal');
+        const issueSubjectInput = document.getElementById('issueSubjectInput');
+        const issueBodyInput = document.getElementById('issueBodyInput');
+        const cancelIssueReportBtn = document.getElementById('cancelIssueReportBtn');
+        const submitIssueReportBtn = document.getElementById('submitIssueReportBtn');
+
+        function resetIssueReportForm() {
+            const pageName = document.title || '管理員頁面';
+            issueSubjectInput.value = `軟體問題報修 - ${pageName}`;
+            issueBodyInput.value = `發生頁面：${pageName}\n操作步驟：\n錯誤描述：\n發生時間：${new Date().toLocaleString('zh-TW')}\n`;
+        }
+
         if (reportIssueBtn) {
             reportIssueBtn.addEventListener('click', () => {
-                const subject = encodeURIComponent('軟體問題報修');
-                const body = encodeURIComponent('請描述問題發生頁面、操作步驟、錯誤畫面與發生時間：\n\n1. 發生頁面：\n2. 操作步驟：\n3. 錯誤描述：\n4. 發生時間：\n');
-                window.location.href = `mailto:taiwanakso@gmail.com?subject=${subject}&body=${body}`;
+                resetIssueReportForm();
+                issueReportModal.style.display = 'flex';
+            });
+        }
+
+        if (cancelIssueReportBtn) {
+            cancelIssueReportBtn.addEventListener('click', () => {
+                issueReportModal.style.display = 'none';
+            });
+        }
+
+        if (issueReportModal) {
+            issueReportModal.addEventListener('click', (e) => {
+                if (e.target === issueReportModal) {
+                    issueReportModal.style.display = 'none';
+                }
+            });
+        }
+
+        if (submitIssueReportBtn) {
+            submitIssueReportBtn.addEventListener('click', async () => {
+                const subject = (issueSubjectInput.value || '').trim();
+                const body = (issueBodyInput.value || '').trim();
+                if (!subject || !body) {
+                    alert('請輸入主旨與問題內容');
+                    return;
+                }
+
+                const currentUser = auth.currentUser;
+                const adminName = document.getElementById('pageTitle')?.textContent?.trim() || '管理員';
+                const reporterEmail = currentUser?.email || '未提供';
+                const text = `${body}\n\n回報者：${adminName}\n登入 Email：${reporterEmail}`;
+                const html = `
+                    <div style="font-family:Arial,'PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.7;">
+                        <h3 style="margin:0 0 12px;">管理員軟體問題報修</h3>
+                        <p style="margin:0 0 8px;"><strong>回報者：</strong>${escapeHtml(adminName)}</p>
+                        <p style="margin:0 0 8px;"><strong>登入 Email：</strong>${escapeHtml(reporterEmail)}</p>
+                        <p style="margin:0 0 8px;"><strong>主旨：</strong>${escapeHtml(subject)}</p>
+                        <p style="margin:12px 0 8px;"><strong>內容：</strong></p>
+                        <blockquote style="margin:0;padding:10px 12px;background:#f3f4f6;border-left:4px solid #9ca3af;white-space:pre-wrap;">${escapeHtml(body)}</blockquote>
+                    </div>
+                `;
+
+                submitIssueReportBtn.disabled = true;
+                const originalLabel = submitIssueReportBtn.textContent;
+                submitIssueReportBtn.textContent = '送出中...';
+
+                try {
+                    await addDoc(collection(db, "emailNotifications"), {
+                        to: ["taiwanakso@gmail.com"],
+                        message: { subject, text, html },
+                        createdAt: new Date(),
+                        source: "admin-issue-report"
+                    });
+                    issueReportModal.style.display = 'none';
+                    alert('報修已送出');
+                } catch (error) {
+                    console.error('送出報修失敗:', error);
+                    alert(`報修送出失敗：${error.message}`);
+                } finally {
+                    submitIssueReportBtn.disabled = false;
+                    submitIssueReportBtn.textContent = originalLabel;
+                }
             });
         }
 
