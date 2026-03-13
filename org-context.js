@@ -210,3 +210,7 @@ export function withOrgContext(data, context, overrides = {}) {
         updatedAt: serverTimestamp()
     };
 }
+
+export function hasOrgContext(data = {}) {
+    return Boolean(data.companyId || data.classId || (Array.isArray(data.classIds) && data.classIds.length));
+}
