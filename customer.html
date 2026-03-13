@@ -364,7 +364,10 @@
             <button type="button" class="admin-tools-btn" id="backfillOrgDataBtn">資料補齊</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h2 style="font-size:1.25rem;">學員列表</h2>
+            <div>
+                <h2 id="studentListTitle" style="font-size:1.25rem;">學員列表</h2>
+                <div id="studentListSubtitle" style="font-size:0.9rem;color:#64748b;margin-top:4px;">可查看學員資料、課程狀態與每日飲食紀錄。</div>
+            </div>
             <button id="addStudentBtn" style="background:#007AFF;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;">+ 新增學員</button>
         </div>
         <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -804,7 +807,11 @@
             const companyAdminPanel = document.getElementById('companyAdminPanel');
             const studentList = document.getElementById('studentList');
             const adminToolsBar = document.getElementById('adminToolsBar');
+            const companyToolsBar = document.getElementById('companyToolsBar');
             const reportIssueBtn = document.getElementById('reportIssueBtn');
+            const studentListTitle = document.getElementById('studentListTitle');
+            const studentListSubtitle = document.getElementById('studentListSubtitle');
+            const addStudentBtn = document.getElementById('addStudentBtn');
             
             if (userRole === 'admin' || userRole === 'super_admin' || userRole === 'coach') {
                 const titleMap = {
@@ -816,7 +823,19 @@
                 menuGrid.style.display = 'none';
                 companyAdminPanel.style.display = (userRole === 'admin' || userRole === 'super_admin') ? 'block' : 'none';
                 studentList.style.display = userRole === 'coach' ? 'block' : 'none';
-                if (adminToolsBar) adminToolsBar.style.display = 'flex';
+                if (companyToolsBar) companyToolsBar.style.display = (userRole === 'admin' || userRole === 'super_admin') ? 'flex' : 'none';
+                if (adminToolsBar) adminToolsBar.style.display = 'none';
+                if (studentListTitle) {
+                    studentListTitle.textContent = userRole === 'coach' ? '我的學員列表' : '學員列表';
+                }
+                if (studentListSubtitle) {
+                    studentListSubtitle.textContent = userRole === 'coach'
+                        ? '只顯示你目前負責班級的學員，可直接查看紀錄與調整狀態。'
+                        : '可查看學員資料、課程狀態與每日飲食紀錄。';
+                }
+                if (addStudentBtn) {
+                    addStudentBtn.textContent = userRole === 'coach' ? '+ 新增本班學員' : '+ 新增學員';
+                }
                 if (reportIssueBtn) reportIssueBtn.style.display = 'inline-flex';
                 await refreshClassOptions();
                 await loadStudentList();
@@ -826,6 +845,7 @@
                 menuGrid.style.display = 'grid';
                 companyAdminPanel.style.display = 'none';
                 studentList.style.display = 'none';
+                if (companyToolsBar) companyToolsBar.style.display = 'none';
                 if (adminToolsBar) adminToolsBar.style.display = 'none';
                 if (reportIssueBtn) reportIssueBtn.style.display = 'none';
             }
@@ -971,6 +991,7 @@
                     <div style="min-width:0;flex:1;">
                         <div style="font-weight:700;">${escapeHtml(coach.username || coach.email || coach.uid)}</div>
                         <div style="font-size:0.84rem;color:#64748b;">${escapeHtml(coach.email || '-')}</div>
+                        <div style="font-size:0.82rem;color:#475569;margin-top:6px;">負責班級：${escapeHtml(availableClasses.find((classItem) => classItem.id === (coach.classId || DEFAULT_CLASS_ID))?.name || coach.className || DEFAULT_CLASS_NAME)}</div>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
                         <select data-coach-uid="${coach.uid}" onchange="updateCoachClassAssignment(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
@@ -1439,6 +1460,7 @@
         let currentStudentEmail = '';
         let editingPortionDocId = null;
         let pendingDeleteStudent = null;
+        let pendingDeleteTargetType = '學員';
         window.portionRecordsData = [];
         let studentTrendChart = null;
         let currentStudentSideData = {
@@ -3120,15 +3142,17 @@
             });
         }
 
-        function openDeleteStudentModal(student) {
+        function openDeleteStudentModal(student, targetType = '學員') {
             pendingDeleteStudent = student;
+            pendingDeleteTargetType = targetType;
             deleteStudentPassword.value = '';
-            deleteStudentHint.textContent = `請輸入管理員密碼以刪除「${student.studentName || student.username || '學員'}」帳號與相關資料。`;
+            deleteStudentHint.textContent = `請輸入管理員密碼以刪除「${student.studentName || student.username || targetType}」帳號與相關資料。`;
             deleteStudentModal.style.display = 'flex';
         }
 
         function closeDeleteStudentModal() {
             pendingDeleteStudent = null;
+            pendingDeleteTargetType = '學員';
             deleteStudentPassword.value = '';
             deleteStudentModal.style.display = 'none';
         }
@@ -3146,7 +3170,7 @@
                     username: btn.getAttribute('data-username') || '',
                     email: btn.getAttribute('data-email') || '',
                     studentName: btn.getAttribute('data-student-name') || ''
-                });
+                }, '學員');
             }, true);
         }
         const coachListContent = document.getElementById('coachListContent');
@@ -3161,7 +3185,7 @@
                     username: btn.getAttribute('data-username') || '',
                     email: btn.getAttribute('data-email') || '',
                     studentName: btn.getAttribute('data-username') || '班主任'
-                });
+                }, '班主任');
             }, true);
         }
 
@@ -3205,7 +3229,7 @@
                     });
 
                     closeDeleteStudentModal();
-                    alert('學員帳號與相關資料已刪除');
+                    alert(`${pendingDeleteTargetType}帳號與相關資料已刪除`);
                     await loadStudentList();
                 } catch (error) {
                     console.error('刪除學員失敗:', error);
