@@ -260,6 +260,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { ensureUserOrgProfile, resolveUserContext } from "./org-context.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -379,8 +380,13 @@
                 }
                 
                 // 登入成功
+                const orgContext = await resolveUserContext(db, user, { savedUsername: username.toLowerCase() });
+                await ensureUserOrgProfile(db, user, orgContext);
                 localStorage.setItem('twkt_user_id', user.uid);
                 localStorage.setItem('twkt_username', username.toLowerCase());
+                localStorage.setItem('twkt_role', orgContext.role);
+                localStorage.setItem('twkt_company_id', orgContext.companyId);
+                localStorage.setItem('twkt_class_id', orgContext.primaryClassId);
                 
                 clearTimeout(timeout);
                 showMessage('message', '登入成功！正在轉跳...', 'success');

@@ -566,6 +566,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc, query, where, getDocs, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { ensureUserOrgProfile, resolveUserContext, withOrgContext } from "./org-context.js";
 
         // ====== Firebase 配置 ======
         const firebaseConfig = {
@@ -587,6 +588,7 @@
         // 檢查登入狀態
         let currentUser = null;
         let customerDocId = null;
+        let currentOrgContext = null;
         
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -594,9 +596,9 @@
                 return;
             }
             currentUser = user;
-            // 檢查是否為管理員
-            const adminDoc = await getDoc(doc(db, "管理員", user.uid));
-            if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+            currentOrgContext = await resolveUserContext(db, user, { savedUsername: localStorage.getItem('twkt_username') || '' });
+            await ensureUserOrgProfile(db, user, currentOrgContext);
+            if (currentOrgContext.role !== 'student') {
                 await signOut(auth);
                 window.location.replace('index.html');
                 return;
@@ -856,7 +858,7 @@
             }
 
             // 收集表單數據
-            const formData = {
+            const formData = withOrgContext({
                 userId: currentUser.uid,
                 姓名: name,
                 年齡: age,
@@ -869,7 +871,7 @@
                 上月mc週期: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('mcCycle').value : '',
                 email: document.getElementById('email').value.trim(),
                 建立時間: serverTimestamp()
-            };
+            }, currentOrgContext || { companyId: 'akso-company', primaryClassId: 'akso-default-class', classIds: ['akso-default-class'] });
 
             // 顯示載入中
             submitBtn.disabled = true;

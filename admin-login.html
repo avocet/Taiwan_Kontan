@@ -251,6 +251,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { ensureUserOrgProfile, resolveUserContext } from "./org-context.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -301,14 +302,19 @@
                 const userCredential = await signInWithEmailAndPassword(auth, email, password);
                 const user = userCredential.user;
                 
-                // 檢查是否為管理員
-                const adminDoc = await getDoc(doc(db, "管理員", user.uid));
-                
-                if (adminDoc.exists() && adminDoc.data().role === 'admin') {
+                const orgContext = await resolveUserContext(db, user, { savedUsername: email.split('@')[0] });
+                await ensureUserOrgProfile(db, user, orgContext);
+                localStorage.setItem('twkt_user_id', user.uid);
+                localStorage.setItem('twkt_username', orgContext.username || email.split('@')[0]);
+                localStorage.setItem('twkt_role', orgContext.role);
+                localStorage.setItem('twkt_company_id', orgContext.companyId);
+                localStorage.setItem('twkt_class_id', orgContext.primaryClassId);
+
+                if (orgContext.role === 'admin' || orgContext.role === 'super_admin' || orgContext.role === 'coach') {
                     clearTimeout(timeout);
                     showMessage('登入成功！正在轉跳...', 'success');
                     setTimeout(() => {
-                        window.location.href = 'customer-list.html';
+                        window.location.href = 'customer.html';
                     }, 1000);
                 } else {
                     // 不是管理員，強制登出

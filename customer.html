@@ -340,12 +340,19 @@
     <div id="studentList" style="display:none;padding:20px;max-width:600px;margin:0 auto;">
         <div class="admin-tools-bar" id="adminToolsBar">
             <a class="admin-tools-btn" href="中醫體質問卷校正.html">體質問卷校正</a>
+            <button type="button" class="admin-tools-btn" id="createClassBtn">新增減重班</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <h2 style="font-size:1.25rem;">學員列表</h2>
             <button id="addStudentBtn" style="background:#007AFF;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;">+ 新增學員</button>
         </div>
-        <div style="margin-bottom:12px;display:flex;justify-content:flex-end;">
+        <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:0.875rem;color:#4b5563;">班級</span>
+                <select id="classFilter" style="border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:0.875rem;background:#fff;color:#333;min-width:180px;">
+                    <option value="">全部班級</option>
+                </select>
+            </div>
             <select id="courseStatusFilter" style="border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:0.875rem;background:#fff;color:#333;min-width:140px;">
                 <option value="全部">全部狀態</option>
                 <option value="課程中">課程中</option>
@@ -546,12 +553,42 @@
                     <input type="email" id="newEmail" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
                 </div>
                 <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">加入班級</label>
+                    <select id="newStudentClassId" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;"></select>
+                </div>
+                <div style="margin-bottom:12px;">
                     <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">密碼</label>
                     <input type="password" id="newPassword" required minlength="6" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;" placeholder="至少6個字元">
                 </div>
                 <div style="display:flex;gap:10px;margin-top:20px;">
                     <button type="button" id="cancelAddStudent" style="flex:1;padding:12px;border:1px solid #ddd;background:white;border-radius:8px;cursor:pointer;">取消</button>
                     <button type="submit" id="submitAddStudent" style="flex:1;padding:12px;background:#007AFF;color:white;border:none;border-radius:8px;cursor:pointer;">新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="createClassModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1100;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:16px;width:90%;max-width:420px;margin:20px;">
+            <h3 style="margin-bottom:16px;font-size:1.125rem;">新增減重班</h3>
+            <form id="createClassForm">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">班級名稱</label>
+                    <input type="text" id="newClassName" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+                    <div>
+                        <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">開始日期</label>
+                        <input type="date" id="newClassStartDate" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                    </div>
+                    <div>
+                        <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">結束日期</label>
+                        <input type="date" id="newClassEndDate" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                    </div>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:20px;">
+                    <button type="button" id="cancelCreateClassBtn" style="flex:1;padding:12px;border:1px solid #ddd;background:white;border-radius:8px;cursor:pointer;">取消</button>
+                    <button type="submit" id="submitCreateClassBtn" style="flex:1;padding:12px;background:#007AFF;color:white;border:none;border-radius:8px;cursor:pointer;">建立班級</button>
                 </div>
             </form>
         </div>
@@ -626,6 +663,7 @@
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-functions.js";
+        import { createClassRecord, ensureDefaultOrgStructure, ensureUserOrgProfile, listClassesForContext, resolveUserContext, withOrgContext, DEFAULT_CLASS_ID, DEFAULT_CLASS_NAME } from "./org-context.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
@@ -638,13 +676,18 @@
         };
 
         const app = initializeApp(firebaseConfig);
+        const secondaryApp = initializeApp(firebaseConfig, "studentCreator");
         const auth = getAuth(app);
+        const secondaryAuth = getAuth(secondaryApp);
         const db = getFirestore(app);
         const functions = getFunctions(app, "asia-east1");
         const constitutionConfigRef = doc(db, "中醫體質問卷設定", "current");
+        let currentOrgContext = null;
+        let availableClasses = [];
+        let selectedClassId = '';
 
         async function redirectIfCourseCompleted(user, userRole, savedUsername = '') {
-            if (!user || userRole === 'admin') {
+            if (!user || userRole === 'admin' || userRole === 'super_admin' || userRole === 'coach') {
                 return false;
             }
             const candidateKeys = [
@@ -683,47 +726,15 @@
             // 獲取用戶資料 - 從 localStorage 取得 username
             const savedUsername = localStorage.getItem('twkt_username');
             console.log('savedUsername:', savedUsername);
-            
-            let userName = '';
-            let userRole = 'customer';
-            let usersSnapshot = null;
 
-            // 優先以目前 Auth 使用者 UID 判斷角色，避免 localStorage 舊值誤判。
-            const byUidQuery = query(collection(db, "users"), where("uid", "==", user.uid));
-            const byUidSnapshot = await getDocs(byUidQuery);
-            if (!byUidSnapshot.empty) {
-                usersSnapshot = byUidSnapshot;
-                const userData = usersSnapshot.docs[0].data();
-                userRole = userData.role || 'customer';
-            }
-            
-                if ((!usersSnapshot || usersSnapshot.empty) && savedUsername) {
-                    const usersQuery = query(collection(db, "users"), where("username", "==", savedUsername.toLowerCase()));
-                    usersSnapshot = await getDocs(usersQuery);
-                console.log('usersSnapshot empty:', usersSnapshot.empty);
-                
-                if (!usersSnapshot.empty) {
-                    const userData = usersSnapshot.docs[0].data();
-                    console.log('userData:', userData);
-                    userRole = userData.role || 'customer';
-                        console.log('userRole:', userRole);
-                    }
-                }
+            currentOrgContext = await resolveUserContext(db, user, { savedUsername });
+            await ensureUserOrgProfile(db, user, currentOrgContext);
 
-                if (await redirectIfCourseCompleted(user, userRole, savedUsername || '')) {
+            const userName = currentOrgContext.displayName || '';
+            const userRole = currentOrgContext.role;
+
+            if (await redirectIfCourseCompleted(user, userRole, savedUsername || '')) {
                     return;
-                }
-
-                // 嘗試從客戶資料獲取姓名
-                const customerQuery = query(collection(db, "客戶資料"), where("userId", "==", user.uid));
-                const customerSnapshot = await getDocs(customerQuery);
-            if (!customerSnapshot.empty) {
-                userName = customerSnapshot.docs[0].data().姓名 || '';
-            }
-
-            // 如果沒有姓名，使用 username
-            if (!userName && usersSnapshot && !usersSnapshot.empty) {
-                userName = usersSnapshot.docs[0].data().username || '';
             }
 
             // 更新標題
@@ -733,12 +744,18 @@
             const adminToolsBar = document.getElementById('adminToolsBar');
             const reportIssueBtn = document.getElementById('reportIssueBtn');
             
-            if (userRole === 'admin') {
-                headerTitle.textContent = '體重管理班主任 ' + userName;
+            if (userRole === 'admin' || userRole === 'super_admin' || userRole === 'coach') {
+                const titleMap = {
+                    super_admin: '阿克索公司管理員',
+                    admin: '體重管理班管理員',
+                    coach: '體重管理班班主任'
+                };
+                headerTitle.textContent = `${titleMap[userRole] || '體重管理班管理員'} ${userName}`;
                 menuGrid.style.display = 'none';
                 studentList.style.display = 'block';
                 if (adminToolsBar) adminToolsBar.style.display = 'flex';
                 if (reportIssueBtn) reportIssueBtn.style.display = 'inline-flex';
+                await refreshClassOptions();
                 loadStudentList();
             } else {
                 headerTitle.textContent = '體重管理班學員 ' + userName;
@@ -789,8 +806,46 @@
         }
         renderMenu();
         document.getElementById('courseStatusFilter').addEventListener('change', applyStudentListFilter);
+        document.getElementById('classFilter').addEventListener('change', (event) => {
+            selectedClassId = event.target.value || '';
+            applyStudentListFilter();
+        });
 
         let allStudents = [];
+
+        function renderClassOptions() {
+            const classFilter = document.getElementById('classFilter');
+            const newStudentClassId = document.getElementById('newStudentClassId');
+            const options = availableClasses.length
+                ? availableClasses
+                : [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME }];
+
+            if (classFilter) {
+                classFilter.innerHTML = '<option value="">全部班級</option>' + options.map((item) => (
+                    `<option value="${item.id}">${item.name || item.id}</option>`
+                )).join('');
+                classFilter.value = selectedClassId || '';
+            }
+
+            if (newStudentClassId) {
+                newStudentClassId.innerHTML = options.map((item) => (
+                    `<option value="${item.id}">${item.name || item.id}</option>`
+                )).join('');
+                newStudentClassId.value = selectedClassId || currentOrgContext?.primaryClassId || options[0].id;
+            }
+        }
+
+        async function refreshClassOptions() {
+            if (!currentOrgContext) return;
+            availableClasses = await listClassesForContext(db, currentOrgContext);
+            if (!availableClasses.length) {
+                availableClasses = [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME }];
+            }
+            if (!selectedClassId) {
+                selectedClassId = currentOrgContext.primaryClassId || availableClasses[0].id;
+            }
+            renderClassOptions();
+        }
 
         function getDisplayCourseStatus(statusValue) {
             return statusValue === '已完成' ? '已完成' : '課程中';
@@ -812,6 +867,7 @@
                         <div style="min-width:0;flex:1;">
                             <div style="font-weight:600;font-size:1rem;">${student.studentName}</div>
                             <div style="color:#8E8E93;font-size:0.875rem;">${student.email || '-'}</div>
+                            <div style="color:#64748b;font-size:0.8rem;margin-top:4px;">${student.className || DEFAULT_CLASS_NAME}</div>
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;" onclick="event.stopPropagation()">
                             <span style="padding:4px 8px;border-radius:999px;font-size:0.75rem;font-weight:600;background:${badgeBg};color:${badgeColor};">${status}</span>
@@ -833,7 +889,9 @@
             const selectedStatus = filterEl ? filterEl.value : '全部';
             const filteredStudents = allStudents.filter((student) => {
                 const status = getDisplayCourseStatus(student.課程狀態);
-                return selectedStatus === '全部' ? true : status === selectedStatus;
+                const statusMatch = selectedStatus === '全部' ? true : status === selectedStatus;
+                const classMatch = !selectedClassId ? true : (student.classId || DEFAULT_CLASS_ID) === selectedClassId;
+                return statusMatch && classMatch;
             });
             renderStudentList(filteredStudents);
         }
@@ -845,11 +903,14 @@
             
             try {
                 console.log('Loading student list...');
-                const usersQuery = query(collection(db, "users"), where("role", "==", "customer"));
-                const usersSnapshot = await getDocs(usersQuery);
-                console.log('usersSnapshot size:', usersSnapshot.size);
+                const usersSnapshot = await getDocs(collection(db, "users"));
+                const userDocs = usersSnapshot.docs.filter((docSnap) => {
+                    const role = String(docSnap.data()?.role || '').toLowerCase();
+                    return role === 'customer' || role === 'student';
+                });
+                console.log('usersSnapshot size:', userDocs.length);
                 
-                if (usersSnapshot.empty) {
+                if (userDocs.length === 0) {
                     allStudents = [];
                     content.innerHTML = '<p>目前沒有學員</p>';
                     return;
@@ -857,7 +918,9 @@
                 
                 allStudents = [];
                 
-                for (const userDoc of usersSnapshot.docs) {
+                const classMap = new Map(availableClasses.map((item) => [item.id, item]));
+
+                for (const userDoc of userDocs) {
                     const userData = userDoc.data();
                     console.log('userData:', userData);
                     
@@ -879,6 +942,7 @@
                         }
                     }
 
+                    const classId = userData.primaryClassId || userData.classId || DEFAULT_CLASS_ID;
                     allStudents.push({
                         uid,
                         username: userData.username || username,
@@ -886,7 +950,9 @@
                         emailPrefix,
                         studentName: customerData?.姓名 || username,
                         customerDocId,
-                        課程狀態: customerData?.課程狀態 || '課程中'
+                        課程狀態: customerData?.課程狀態 || '課程中',
+                        classId,
+                        className: classMap.get(classId)?.name || userData.className || DEFAULT_CLASS_NAME
                     });
                 }
                 
@@ -935,6 +1001,8 @@
                             userId: userIdForCreate,
                             姓名: studentName || username || '-',
                             課程狀態: newStatus,
+                            companyId: currentOrgContext?.companyId || 'akso-company',
+                            classId: allStudents.find((student) => (student.username || '').toLowerCase() === username)?.classId || DEFAULT_CLASS_ID,
                             建立時間: serverTimestamp()
                         });
                         resolvedDocId = createdDoc.id;
@@ -962,6 +1030,7 @@
         let currentStudentUsername = null;
         let currentStudentName = null;
         let currentStudentUid = null;
+        let currentStudentClassId = DEFAULT_CLASS_ID;
         let currentStudentEmail = '';
         let editingPortionDocId = null;
         let pendingDeleteStudent = null;
@@ -1490,6 +1559,7 @@
             currentStudentUsername = username;
             currentStudentName = name;
             currentStudentEmail = '';
+            currentStudentClassId = DEFAULT_CLASS_ID;
             
             const studentList = document.getElementById('studentList');
             const studentRecords = document.getElementById('studentRecords');
@@ -1520,6 +1590,7 @@
                 const userUid = userData.uid || userDoc.id || userData.email?.split('@')[0];
                 const emailPrefix = userData.email?.split('@')[0] || '';
                 currentStudentEmail = userData.email || '';
+                currentStudentClassId = userData.primaryClassId || userData.classId || allStudents.find((item) => item.username === username)?.classId || DEFAULT_CLASS_ID;
                 
                 if (!userUid) {
                     recordsContent.innerHTML = '<p>找不到學員 UID</p>';
@@ -2246,12 +2317,15 @@
             const nutrients = ['C', 'P', 'F', 'V'];
             
             // 儲存起始日期的資料
-            const portionData = {
+            const portionData = withOrgContext({
                 userId: currentStudentUid,
                 紀錄日期: startDate,
                 結束日期: endDate,
                 更新時間: new Date()
-            };
+            }, currentOrgContext || { companyId: 'akso-company', primaryClassId: DEFAULT_CLASS_ID, classIds: [DEFAULT_CLASS_ID] }, {
+                classId: currentStudentClassId || DEFAULT_CLASS_ID,
+                classIds: [currentStudentClassId || DEFAULT_CLASS_ID]
+            });
             
             // 收集每餐的時間和營養素數值
             meals.forEach(meal => {
@@ -2316,8 +2390,14 @@
         const addStudentBtn = document.getElementById('addStudentBtn');
         const addStudentModal = document.getElementById('addStudentModal');
         const addStudentForm = document.getElementById('addStudentForm');
+        const newStudentClassIdEl = document.getElementById('newStudentClassId');
         const cancelAddStudent = document.getElementById('cancelAddStudent');
         const submitAddStudent = document.getElementById('submitAddStudent');
+        const createClassBtn = document.getElementById('createClassBtn');
+        const createClassModal = document.getElementById('createClassModal');
+        const createClassForm = document.getElementById('createClassForm');
+        const cancelCreateClassBtn = document.getElementById('cancelCreateClassBtn');
+        const submitCreateClassBtn = document.getElementById('submitCreateClassBtn');
         const deleteStudentModal = document.getElementById('deleteStudentModal');
         const deleteStudentHint = document.getElementById('deleteStudentHint');
         const deleteStudentPassword = document.getElementById('deleteStudentPassword');
@@ -2326,7 +2406,59 @@
 
         if (addStudentBtn) {
             addStudentBtn.addEventListener('click', () => {
+                renderClassOptions();
                 addStudentModal.style.display = 'flex';
+            });
+        }
+
+        if (createClassBtn) {
+            createClassBtn.addEventListener('click', () => {
+                createClassForm.reset();
+                createClassModal.style.display = 'flex';
+            });
+        }
+
+        if (cancelCreateClassBtn) {
+            cancelCreateClassBtn.addEventListener('click', () => {
+                createClassModal.style.display = 'none';
+                createClassForm.reset();
+            });
+        }
+
+        if (createClassModal) {
+            createClassModal.addEventListener('click', (e) => {
+                if (e.target === createClassModal) {
+                    createClassModal.style.display = 'none';
+                }
+            });
+        }
+
+        if (createClassForm) {
+            createClassForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentOrgContext) return;
+                submitCreateClassBtn.disabled = true;
+                submitCreateClassBtn.textContent = '建立中...';
+                try {
+                    const classId = await createClassRecord(db, currentOrgContext, {
+                        name: document.getElementById('newClassName').value.trim(),
+                        startDate: document.getElementById('newClassStartDate').value,
+                        endDate: document.getElementById('newClassEndDate').value,
+                        coachIds: currentOrgContext.role === 'coach' ? [currentOrgContext.uid] : []
+                    });
+                    createClassModal.style.display = 'none';
+                    await refreshClassOptions();
+                    selectedClassId = classId;
+                    renderClassOptions();
+                    applyStudentListFilter();
+                    alert('減重班已建立');
+                } catch (error) {
+                    console.error('建立班級失敗:', error);
+                    alert(`建立班級失敗：${error.message}`);
+                } finally {
+                    submitCreateClassBtn.disabled = false;
+                    submitCreateClassBtn.textContent = '建立班級';
+                }
             });
         }
 
@@ -2353,6 +2485,7 @@
                 const username = document.getElementById('newUsername').value.trim();
                 const email = document.getElementById('newEmail').value.trim();
                 const password = document.getElementById('newPassword').value;
+                const assignedClassId = newStudentClassIdEl?.value || selectedClassId || currentOrgContext?.primaryClassId || DEFAULT_CLASS_ID;
                 
                 if (!username || !email || !password) {
                     alert('請填寫所有欄位');
@@ -2377,26 +2510,33 @@
                     }
                     
                     // 建立 Firebase Auth 帳戶
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
                     const user = userCredential.user;
                     
                     // 儲存到 Firestore
                     await setDoc(doc(db, "users", user.uid), {
                         uid: user.uid,
                         username: username.toLowerCase(),
-                        email: email,
+                        email: email.toLowerCase(),
                         role: 'customer',
+                        companyId: currentOrgContext?.companyId || 'akso-company',
+                        primaryClassId: assignedClassId,
+                        classId: assignedClassId,
+                        classIds: [assignedClassId],
                         createdAt: serverTimestamp()
                     });
                     
                     alert('學員新增成功！');
                     addStudentModal.style.display = 'none';
                     addStudentForm.reset();
+                    await refreshClassOptions();
                     loadStudentList(); // 重新載入列表
+                    await signOut(secondaryAuth);
                     
                 } catch (error) {
                     console.error('新增學員失敗:', error);
                     alert('新增失敗: ' + error.message);
+                    try { await signOut(secondaryAuth); } catch (signOutError) { console.warn(signOutError); }
                 } finally {
                     submitAddStudent.disabled = false;
                     submitAddStudent.textContent = '新增';
