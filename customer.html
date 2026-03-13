@@ -341,6 +341,8 @@
         <div class="admin-tools-bar" id="adminToolsBar">
             <a class="admin-tools-btn" href="中醫體質問卷校正.html">體質問卷校正</a>
             <button type="button" class="admin-tools-btn" id="createClassBtn">新增減重班</button>
+            <button type="button" class="admin-tools-btn" id="manageClassesBtn">班級管理</button>
+            <button type="button" class="admin-tools-btn" id="backfillOrgDataBtn">資料補齊</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <h2 style="font-size:1.25rem;">學員列表</h2>
@@ -595,6 +597,16 @@
         </div>
     </div>
 
+    <div id="manageClassesModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1150;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:16px;width:min(920px,94vw);max-height:88vh;overflow:auto;margin:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;">
+                <h3 style="margin:0;font-size:1.125rem;">班級管理</h3>
+                <button type="button" id="closeManageClassesBtn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✕</button>
+            </div>
+            <div id="manageClassesContent" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;"></div>
+        </div>
+    </div>
+
     <div id="deleteStudentModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1200;align-items:center;justify-content:center;">
         <div style="background:white;padding:24px;border-radius:16px;width:90%;max-width:420px;margin:20px;">
             <h3 style="margin-bottom:10px;font-size:1.125rem;">刪除學員帳號</h3>
@@ -662,7 +674,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, collection, query, where, getDocs, setDoc, serverTimestamp, addDoc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-functions.js";
         import { createClassRecord, ensureDefaultOrgStructure, ensureUserOrgProfile, listClassesForContext, resolveUserContext, withOrgContext, DEFAULT_CLASS_ID, DEFAULT_CLASS_NAME } from "./org-context.js";
 
@@ -867,6 +879,129 @@
             });
         }
 
+        async function buildUserOrgLookup() {
+            const snapshot = await getDocs(collection(db, "users"));
+            const lookup = new Map();
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data() || {};
+                const normalized = {
+                    uid: data.uid || docSnap.id,
+                    username: String(data.username || '').toLowerCase(),
+                    emailPrefix: String(data.email || '').split('@')[0].toLowerCase(),
+                    companyId: data.companyId || currentOrgContext?.companyId || 'akso-company',
+                    classId: data.primaryClassId || data.classId || DEFAULT_CLASS_ID,
+                    classIds: Array.isArray(data.classIds) && data.classIds.length ? data.classIds : [data.primaryClassId || data.classId || DEFAULT_CLASS_ID]
+                };
+                [normalized.uid, normalized.username, normalized.emailPrefix].filter(Boolean).forEach((key) => {
+                    lookup.set(String(key).toLowerCase(), normalized);
+                });
+            });
+            return lookup;
+        }
+
+        async function backfillLegacyOrgData() {
+            const collectionsToFix = ['客戶資料', '原始體重三圍', '每日體重三圍', '飲食份數表', '中醫體質四象限', '減肥歷史'];
+            const userLookup = await buildUserOrgLookup();
+            let updates = 0;
+
+            for (const collectionName of collectionsToFix) {
+                const snapshot = await getDocs(collection(db, collectionName));
+                let batch = writeBatch(db);
+                let batchCount = 0;
+
+                for (const docSnap of snapshot.docs) {
+                    const data = docSnap.data() || {};
+                    if (data.companyId && data.classId) continue;
+                    const rawUserId = String(data.userId || '').toLowerCase();
+                    const match = userLookup.get(rawUserId) || userLookup.get(String(data.email || '').split('@')[0].toLowerCase()) || {
+                        companyId: currentOrgContext?.companyId || 'akso-company',
+                        classId: currentOrgContext?.primaryClassId || DEFAULT_CLASS_ID,
+                        classIds: [currentOrgContext?.primaryClassId || DEFAULT_CLASS_ID]
+                    };
+                    batch.update(doc(db, collectionName, docSnap.id), {
+                        companyId: data.companyId || match.companyId,
+                        classId: data.classId || match.classId,
+                        classIds: Array.isArray(data.classIds) && data.classIds.length ? data.classIds : (match.classIds || [match.classId || DEFAULT_CLASS_ID]),
+                        updatedAt: serverTimestamp()
+                    });
+                    batchCount += 1;
+                    updates += 1;
+                    if (batchCount >= 350) {
+                        await batch.commit();
+                        batch = writeBatch(db);
+                        batchCount = 0;
+                    }
+                }
+
+                if (batchCount > 0) {
+                    await batch.commit();
+                }
+            }
+
+            return updates;
+        }
+
+        function renderManageClassesContent() {
+            const container = document.getElementById('manageClassesContent');
+            if (!container) return;
+            const classCards = (availableClasses.length ? availableClasses : [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME, coachIds: [] }]).map((classItem) => {
+                const students = allStudents.filter((student) => (student.classId || DEFAULT_CLASS_ID) === classItem.id);
+                const coachNames = Array.isArray(classItem.coachNames) ? classItem.coachNames.join(', ') : '';
+                return `
+                    <form class="manageClassCard" data-class-id="${classItem.id}" style="border:1px solid #dbeafe;border-radius:14px;padding:14px;background:#fff;">
+                        <div style="font-weight:700;color:#1e3a8a;margin-bottom:10px;">${escapeHtml(classItem.id)}</div>
+                        <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">班級名稱</label>
+                        <input name="className" value="${escapeHtml(classItem.name || '')}" style="width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                            <div>
+                                <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">開始日期</label>
+                                <input type="date" name="startDate" value="${escapeHtml(classItem.startDate || '')}" style="width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;">
+                            </div>
+                            <div>
+                                <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">結束日期</label>
+                                <input type="date" name="endDate" value="${escapeHtml(classItem.endDate || '')}" style="width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;">
+                            </div>
+                        </div>
+                        <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">班主任帳號（逗號分隔）</label>
+                        <input name="coachNames" value="${escapeHtml(coachNames)}" placeholder="例如 tracy" style="width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;">
+                        <div style="font-size:0.8rem;color:#475569;margin-bottom:12px;">學員 ${students.length} 人</div>
+                        <div style="display:flex;justify-content:flex-end;">
+                            <button type="submit" style="padding:9px 12px;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;">儲存班級</button>
+                        </div>
+                    </form>
+                `;
+            }).join('');
+            container.innerHTML = classCards || '<div style="color:#64748b;">目前沒有班級資料</div>';
+
+            container.querySelectorAll('.manageClassCard').forEach((formEl) => {
+                formEl.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    const classId = formEl.dataset.classId;
+                    const fd = new FormData(formEl);
+                    const coachNameValues = String(fd.get('coachNames') || '')
+                        .split(',')
+                        .map((item) => item.trim().toLowerCase())
+                        .filter(Boolean);
+                    const usersSnapshot = await getDocs(collection(db, "users"));
+                    const coachIds = usersSnapshot.docs
+                        .filter((docSnap) => coachNameValues.includes(String(docSnap.data()?.username || '').toLowerCase()))
+                        .map((docSnap) => docSnap.data()?.uid || docSnap.id);
+
+                    await updateDoc(doc(db, "classes", classId), {
+                        name: String(fd.get('className') || '').trim() || classId,
+                        startDate: String(fd.get('startDate') || ''),
+                        endDate: String(fd.get('endDate') || ''),
+                        coachIds,
+                        coachNames: coachNameValues,
+                        updatedAt: serverTimestamp()
+                    });
+                    await refreshClassOptions();
+                    await loadStudentList();
+                    alert('班級已更新');
+                });
+            });
+        }
+
         async function refreshClassOptions() {
             if (!currentOrgContext) return;
             availableClasses = await listClassesForContext(db, currentOrgContext);
@@ -904,6 +1039,9 @@
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;" onclick="event.stopPropagation()">
                             <span style="padding:4px 8px;border-radius:999px;font-size:0.75rem;font-weight:600;background:${badgeBg};color:${badgeColor};">${status}</span>
+                            <select data-uid="${student.uid || ''}" data-username="${student.username}" onchange="updateStudentClassAssignment(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
+                                ${availableClasses.map((classItem) => `<option value="${classItem.id}" ${((student.classId || DEFAULT_CLASS_ID) === classItem.id) ? 'selected' : ''}>${classItem.name || classItem.id}</option>`).join('')}
+                            </select>
                             <select data-customer-doc-id="${student.customerDocId || ''}" data-uid="${student.uid || ''}" data-username="${student.username}" data-student-name="${student.studentName || ''}" data-email-prefix="${student.emailPrefix || ''}" onchange="updateStudentCourseStatus(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
                                 <option value="課程中" ${status === '課程中' ? 'selected' : ''}>課程中</option>
                                 <option value="已完成" ${status === '已完成' ? 'selected' : ''}>已完成</option>
@@ -1063,6 +1201,42 @@
             } catch (error) {
                 console.error('更新學員課程狀態失敗:', error);
                 alert('更新狀態失敗，請稍後再試');
+            } finally {
+                select.disabled = false;
+            }
+        };
+
+        window.updateStudentClassAssignment = async function(event) {
+            event.stopPropagation();
+            const select = event.target;
+            const uid = select.dataset.uid || '';
+            const username = (select.dataset.username || '').toLowerCase();
+            const classId = select.value || DEFAULT_CLASS_ID;
+            const classInfo = availableClasses.find((item) => item.id === classId);
+            select.disabled = true;
+            try {
+                const targetStudent = allStudents.find((student) => (student.username || '').toLowerCase() === username || (student.uid || '') === uid);
+                const targetUid = uid || targetStudent?.uid;
+                if (!targetUid) throw new Error('找不到學員帳號');
+
+                await updateDoc(doc(db, "users", targetUid), {
+                    classId,
+                    primaryClassId: classId,
+                    classIds: [classId],
+                    className: classInfo?.name || classId,
+                    updatedAt: serverTimestamp()
+                });
+
+                allStudents = allStudents.map((student) => {
+                    if ((student.username || '').toLowerCase() === username || (student.uid || '') === uid) {
+                        return { ...student, classId, className: classInfo?.name || classId };
+                    }
+                    return student;
+                });
+                applyStudentListFilter();
+            } catch (error) {
+                console.error('更新學員班級失敗:', error);
+                alert(`更新班級失敗：${error.message}`);
             } finally {
                 select.disabled = false;
             }
@@ -2450,6 +2624,10 @@
         const createClassForm = document.getElementById('createClassForm');
         const cancelCreateClassBtn = document.getElementById('cancelCreateClassBtn');
         const submitCreateClassBtn = document.getElementById('submitCreateClassBtn');
+        const manageClassesBtn = document.getElementById('manageClassesBtn');
+        const manageClassesModal = document.getElementById('manageClassesModal');
+        const closeManageClassesBtn = document.getElementById('closeManageClassesBtn');
+        const backfillOrgDataBtn = document.getElementById('backfillOrgDataBtn');
         const deleteStudentModal = document.getElementById('deleteStudentModal');
         const deleteStudentHint = document.getElementById('deleteStudentHint');
         const deleteStudentPassword = document.getElementById('deleteStudentPassword');
@@ -2467,6 +2645,49 @@
             createClassBtn.addEventListener('click', () => {
                 createClassForm.reset();
                 createClassModal.style.display = 'flex';
+            });
+        }
+
+        if (manageClassesBtn) {
+            manageClassesBtn.addEventListener('click', async () => {
+                await refreshClassOptions();
+                renderManageClassesContent();
+                manageClassesModal.style.display = 'flex';
+            });
+        }
+
+        if (closeManageClassesBtn) {
+            closeManageClassesBtn.addEventListener('click', () => {
+                manageClassesModal.style.display = 'none';
+            });
+        }
+
+        if (manageClassesModal) {
+            manageClassesModal.addEventListener('click', (e) => {
+                if (e.target === manageClassesModal) {
+                    manageClassesModal.style.display = 'none';
+                }
+            });
+        }
+
+        if (backfillOrgDataBtn) {
+            backfillOrgDataBtn.addEventListener('click', async () => {
+                const confirmed = confirm('將補齊舊資料的公司與班級欄位。這不會刪除資料，是否繼續？');
+                if (!confirmed) return;
+                const originalText = backfillOrgDataBtn.textContent;
+                backfillOrgDataBtn.disabled = true;
+                backfillOrgDataBtn.textContent = '補齊中...';
+                try {
+                    const updatedCount = await backfillLegacyOrgData();
+                    await loadStudentList();
+                    alert(`資料補齊完成，共更新 ${updatedCount} 筆資料`);
+                } catch (error) {
+                    console.error('資料補齊失敗:', error);
+                    alert(`資料補齊失敗：${error.message}`);
+                } finally {
+                    backfillOrgDataBtn.disabled = false;
+                    backfillOrgDataBtn.textContent = originalText;
+                }
             });
         }
 
