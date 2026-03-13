@@ -542,9 +542,7 @@
                     
                     <div class="form-group half-width">
                         <label>營養師</label>
-                        <select id="nutritionist" name="nutritionist">
-                            <option value="Tracy">Tracy</option>
-                        </select>
+                        <input type="text" id="nutritionist" name="nutritionist" placeholder="系統自動帶入班主任" readonly>
                     </div>
                 </div>
             </form>
@@ -611,6 +609,9 @@
         // 載入用戶資料
         async function loadUserData(userId) {
             try {
+                const nutritionistName = await resolveAssignedNutritionistName();
+                document.getElementById('nutritionist').value = nutritionistName;
+
                 const q = query(collection(db, "客戶資料"), where("userId", "==", userId));
                 const querySnapshot = await getDocs(q);
                 
@@ -630,7 +631,7 @@
                             genderRadio.closest('.radio-option').classList.add('selected');
                         }
                     }
-                    if (data.營養師) document.getElementById('nutritionist').value = data.營養師;
+                    if (!nutritionistName && data.營養師) document.getElementById('nutritionist').value = data.營養師;
                     if (data.產前體重) document.getElementById('prePregnancyWeight').value = data.產前體重;
                     if (data.產後體重) document.getElementById('postPregnancyWeight').value = data.產後體重;
                     if (data.上月mc週期) document.getElementById('mcCycle').value = data.上月mc週期;
@@ -795,6 +796,57 @@
             const birthday = document.getElementById('birthday').value;
             const age = calculateAgeByBirthday(birthday);
             document.getElementById('age').value = age === '' ? '' : String(age);
+        }
+
+        async function resolveAssignedNutritionistName() {
+            if (!currentOrgContext?.primaryClassId) return '';
+
+            try {
+                const classDoc = await getDoc(doc(db, "classes", currentOrgContext.primaryClassId));
+                const classData = classDoc.exists() ? (classDoc.data() || {}) : {};
+                const coachNames = [];
+                const coachIds = Array.isArray(classData.coachIds) ? classData.coachIds.filter(Boolean) : [];
+
+                for (const coachId of coachIds) {
+                    const coachDoc = await getDoc(doc(db, "users", coachId));
+                    if (!coachDoc.exists()) continue;
+                    const coachData = coachDoc.data() || {};
+                    const displayName = String(coachData.姓名 || coachData.displayName || coachData.username || coachData.email || '').trim();
+                    if (displayName) {
+                        coachNames.push(displayName.includes('@') ? displayName.split('@')[0] : displayName);
+                    }
+                }
+
+                if (!coachNames.length) {
+                    const coachQuery = query(
+                        collection(db, "users"),
+                        where("primaryClassId", "==", currentOrgContext.primaryClassId),
+                        where("role", "==", "coach")
+                    );
+                    const coachSnapshot = await getDocs(coachQuery);
+                    coachSnapshot.forEach((docSnap) => {
+                        const coachData = docSnap.data() || {};
+                        const displayName = String(coachData.姓名 || coachData.displayName || coachData.username || coachData.email || '').trim();
+                        if (displayName) {
+                            coachNames.push(displayName.includes('@') ? displayName.split('@')[0] : displayName);
+                        }
+                    });
+                }
+
+                if (!coachNames.length && Array.isArray(classData.coachNames)) {
+                    classData.coachNames.forEach((name) => {
+                        const displayName = String(name || '').trim();
+                        if (displayName) {
+                            coachNames.push(displayName);
+                        }
+                    });
+                }
+
+                return [...new Set(coachNames.filter(Boolean))].join('、');
+            } catch (error) {
+                console.error('取得班主任名稱失敗:', error);
+                return '';
+            }
         }
 
         populateBirthdaySelectors();
