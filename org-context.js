@@ -172,7 +172,7 @@ export async function listClassesForContext(db, context) {
     const rows = snapshot.docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data()
-    }));
+    })).filter((row) => row.status !== "deleted");
 
     if (context.role === "super_admin" || context.role === "admin") {
         return rows.sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "zh-Hant"));

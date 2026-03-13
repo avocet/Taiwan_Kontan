@@ -336,6 +336,25 @@
         </div>
     </div>
 
+    <div id="companyAdminPanel" style="display:none;padding:20px;max-width:980px;margin:0 auto;">
+        <div class="admin-tools-bar" id="companyToolsBar">
+            <button type="button" class="admin-tools-btn" id="companyCreateClassBtn">新增減重班</button>
+            <button type="button" class="admin-tools-btn" id="companyManageClassesBtn">刪除/編輯減重班</button>
+            <button type="button" class="admin-tools-btn" id="addCoachBtn">新增班主任帳號</button>
+            <button type="button" class="admin-tools-btn" id="backfillOrgDataBtnCompany">資料補齊</button>
+        </div>
+        <div style="margin-bottom:14px;">
+            <h2 style="font-size:1.25rem;margin:0 0 8px;">減重班管理</h2>
+            <div style="font-size:0.9rem;color:#64748b;">阿克索公司端只管理減重班與班主任帳號，不直接管理學員。</div>
+        </div>
+        <div id="companyClassOverviewContent" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;"></div>
+        <div style="margin-bottom:14px;">
+            <h2 style="font-size:1.25rem;margin:0 0 8px;">班主任帳號</h2>
+            <div style="font-size:0.9rem;color:#64748b;">可新增、指定班級與刪除班主任帳號。</div>
+        </div>
+        <div id="coachListContent"></div>
+    </div>
+
     <!-- 學員列表（管理員用） -->
     <div id="studentList" style="display:none;padding:20px;max-width:600px;margin:0 auto;">
         <div class="admin-tools-bar" id="adminToolsBar">
@@ -597,6 +616,34 @@
         </div>
     </div>
 
+    <div id="addCoachModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1120;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:16px;width:90%;max-width:420px;margin:20px;">
+            <h3 style="margin-bottom:16px;font-size:1.125rem;">新增班主任帳號</h3>
+            <form id="addCoachForm">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">使用者名稱</label>
+                    <input type="text" id="newCoachUsername" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">電子郵件</label>
+                    <input type="email" id="newCoachEmail" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">負責班級</label>
+                    <select id="newCoachClassId" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;"></select>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">密碼</label>
+                    <input type="password" id="newCoachPassword" required minlength="6" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                </div>
+                <div style="display:flex;gap:10px;margin-top:20px;">
+                    <button type="button" id="cancelAddCoachBtn" style="flex:1;padding:12px;border:1px solid #ddd;background:white;border-radius:8px;cursor:pointer;">取消</button>
+                    <button type="submit" id="submitAddCoachBtn" style="flex:1;padding:12px;background:#007AFF;color:white;border:none;border-radius:8px;cursor:pointer;">新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="manageClassesModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1150;align-items:center;justify-content:center;">
         <div style="background:white;padding:24px;border-radius:16px;width:min(920px,94vw);max-height:88vh;overflow:auto;margin:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;">
@@ -698,6 +745,7 @@
         let currentOrgContext = null;
         let availableClasses = [];
         let selectedClassId = '';
+        let allCoaches = [];
 
         async function redirectIfCourseCompleted(user, userRole, savedUsername = '') {
             if (!user || userRole === 'admin' || userRole === 'super_admin' || userRole === 'coach') {
@@ -753,6 +801,7 @@
             // 更新標題
             const headerTitle = document.getElementById('pageTitle');
             const menuGrid = document.getElementById('menuGrid');
+            const companyAdminPanel = document.getElementById('companyAdminPanel');
             const studentList = document.getElementById('studentList');
             const adminToolsBar = document.getElementById('adminToolsBar');
             const reportIssueBtn = document.getElementById('reportIssueBtn');
@@ -765,14 +814,17 @@
                 };
                 headerTitle.textContent = `${titleMap[userRole] || '體重管理班管理員'} ${userName}`;
                 menuGrid.style.display = 'none';
-                studentList.style.display = 'block';
+                companyAdminPanel.style.display = (userRole === 'admin' || userRole === 'super_admin') ? 'block' : 'none';
+                studentList.style.display = userRole === 'coach' ? 'block' : 'none';
                 if (adminToolsBar) adminToolsBar.style.display = 'flex';
                 if (reportIssueBtn) reportIssueBtn.style.display = 'inline-flex';
                 await refreshClassOptions();
-                loadStudentList();
+                await loadStudentList();
+                await loadCoachList();
             } else {
                 headerTitle.textContent = '體重管理班學員 ' + userName;
                 menuGrid.style.display = 'grid';
+                companyAdminPanel.style.display = 'none';
                 studentList.style.display = 'none';
                 if (adminToolsBar) adminToolsBar.style.display = 'none';
                 if (reportIssueBtn) reportIssueBtn.style.display = 'none';
@@ -829,6 +881,7 @@
         function renderClassOptions() {
             const classFilter = document.getElementById('classFilter');
             const newStudentClassId = document.getElementById('newStudentClassId');
+            const newCoachClassId = document.getElementById('newCoachClassId');
             const options = availableClasses.length
                 ? availableClasses
                 : [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME }];
@@ -845,6 +898,13 @@
                     `<option value="${item.id}">${item.name || item.id}</option>`
                 )).join('');
                 newStudentClassId.value = selectedClassId || currentOrgContext?.primaryClassId || options[0].id;
+            }
+
+            if (newCoachClassId) {
+                newCoachClassId.innerHTML = options.map((item) => (
+                    `<option value="${item.id}">${item.name || item.id}</option>`
+                )).join('');
+                newCoachClassId.value = selectedClassId || currentOrgContext?.primaryClassId || options[0].id;
             }
         }
 
@@ -877,6 +937,66 @@
                     applyStudentListFilter();
                 });
             });
+        }
+
+        function renderCompanyClassOverview() {
+            const container = document.getElementById('companyClassOverviewContent');
+            if (!container) return;
+            const options = availableClasses.length
+                ? availableClasses
+                : [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME, coachIds: [] }];
+            container.innerHTML = options.map((classItem) => {
+                const coachCount = allCoaches.filter((coach) => (coach.classId || DEFAULT_CLASS_ID) === classItem.id).length;
+                const studentCount = allStudents.filter((student) => (student.classId || DEFAULT_CLASS_ID) === classItem.id).length;
+                return `
+                    <div style="border:1px solid #dbeafe;border-radius:14px;padding:14px;background:#fff;box-shadow:0 2px 8px rgba(37,99,235,0.08);">
+                        <div style="font-weight:700;color:#1e3a8a;">${escapeHtml(classItem.name || classItem.id)}</div>
+                        <div style="font-size:0.82rem;color:#64748b;margin-top:4px;">ID: ${escapeHtml(classItem.id)}</div>
+                        <div style="font-size:0.82rem;color:#475569;margin-top:10px;">班主任 ${coachCount} 人</div>
+                        <div style="font-size:0.82rem;color:#475569;margin-top:2px;">學員 ${studentCount} 人</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderCoachList() {
+            const container = document.getElementById('coachListContent');
+            if (!container) return;
+            if (!allCoaches.length) {
+                container.innerHTML = '<div style="color:#64748b;">目前沒有班主任帳號</div>';
+                return;
+            }
+            container.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;">${allCoaches.map((coach) => `
+                <div style="background:#fff;padding:14px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                    <div style="min-width:0;flex:1;">
+                        <div style="font-weight:700;">${escapeHtml(coach.username || coach.email || coach.uid)}</div>
+                        <div style="font-size:0.84rem;color:#64748b;">${escapeHtml(coach.email || '-')}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <select data-coach-uid="${coach.uid}" onchange="updateCoachClassAssignment(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
+                            ${availableClasses.map((classItem) => `<option value="${classItem.id}" ${((coach.classId || DEFAULT_CLASS_ID) === classItem.id) ? 'selected' : ''}>${classItem.name || classItem.id}</option>`).join('')}
+                        </select>
+                        <button type="button" class="deleteCoachBtn" data-uid="${coach.uid}" data-username="${escapeHtml(coach.username || '')}" data-email="${escapeHtml(coach.email || '')}" style="border:none;border-radius:8px;padding:6px 8px;font-size:0.75rem;background:#FF3B30;color:#fff;cursor:pointer;white-space:nowrap;">刪除班主任</button>
+                    </div>
+                </div>
+            `).join('')}</div>`;
+        }
+
+        async function loadCoachList() {
+            const usersSnapshot = await getDocs(collection(db, "users"));
+            allCoaches = usersSnapshot.docs
+                .map((docSnap) => ({ uid: docSnap.id, ...docSnap.data() }))
+                .filter((row) => {
+                    const role = String(row.role || '').toLowerCase();
+                    return role === 'coach';
+                })
+                .map((row) => ({
+                    ...row,
+                    classId: row.primaryClassId || row.classId || DEFAULT_CLASS_ID
+                }))
+                .sort((a, b) => String(a.username || a.email || '').localeCompare(String(b.username || b.email || ''), 'zh-Hant'));
+            renderCoachList();
+            renderCompanyClassOverview();
         }
 
         async function buildUserOrgLookup() {
@@ -965,7 +1085,8 @@
                         <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">班主任帳號（逗號分隔）</label>
                         <input name="coachNames" value="${escapeHtml(coachNames)}" placeholder="例如 tracy" style="width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;">
                         <div style="font-size:0.8rem;color:#475569;margin-bottom:12px;">學員 ${students.length} 人</div>
-                        <div style="display:flex;justify-content:flex-end;">
+                        <div style="display:flex;justify-content:space-between;gap:10px;">
+                            <button type="button" class="deleteClassBtn" data-class-id="${classItem.id}" style="padding:9px 12px;border:none;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer;">刪除班級</button>
                             <button type="submit" style="padding:9px 12px;border:none;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer;">儲存班級</button>
                         </div>
                     </form>
@@ -1000,6 +1121,37 @@
                     alert('班級已更新');
                 });
             });
+            container.querySelectorAll('.deleteClassBtn').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    const classId = btn.dataset.classId || '';
+                    const classStudents = allStudents.filter((student) => (student.classId || DEFAULT_CLASS_ID) === classId);
+                    const classCoaches = allCoaches.filter((coach) => (coach.classId || DEFAULT_CLASS_ID) === classId);
+                    if (classStudents.length || classCoaches.length) {
+                        alert('此班級仍有學員或班主任，請先移轉後再刪除');
+                        return;
+                    }
+                    const confirmed = confirm(`確定要刪除班級「${classId}」嗎？`);
+                    if (!confirmed) return;
+                    try {
+                        await updateDoc(doc(db, "classes", classId), {
+                            status: 'deleted',
+                            deletedAt: serverTimestamp(),
+                            updatedAt: serverTimestamp()
+                        });
+                        availableClasses = availableClasses.filter((item) => item.id !== classId);
+                        if (selectedClassId === classId) {
+                            selectedClassId = availableClasses[0]?.id || '';
+                        }
+                        renderClassOptions();
+                        renderManageClassesContent();
+                        renderCompanyClassOverview();
+                        alert('班級已刪除');
+                    } catch (error) {
+                        console.error('刪除班級失敗:', error);
+                        alert(`刪除班級失敗：${error.message}`);
+                    }
+                });
+            });
         }
 
         async function refreshClassOptions() {
@@ -1013,6 +1165,7 @@
             }
             renderClassOptions();
             renderClassOverview();
+            renderCompanyClassOverview();
         }
 
         function getDisplayCourseStatus(statusValue) {
@@ -1071,7 +1224,9 @@
         // 載入學員列表
         async function loadStudentList() {
             const content = document.getElementById('studentListContent');
-            content.innerHTML = '<p>載入中...</p>';
+            if (content && currentOrgContext?.role === 'coach') {
+                content.innerHTML = '<p>載入中...</p>';
+            }
             
             try {
                 console.log('Loading student list...');
@@ -1091,7 +1246,10 @@
                 
                 if (userDocs.length === 0) {
                     allStudents = [];
-                    content.innerHTML = '<p>目前沒有學員</p>';
+                    if (content && currentOrgContext?.role === 'coach') {
+                        content.innerHTML = '<p>目前沒有學員</p>';
+                    }
+                    renderCompanyClassOverview();
                     return;
                 }
                 
@@ -1135,10 +1293,16 @@
                     });
                 }
                 
-                applyStudentListFilter();
+                if (currentOrgContext?.role === 'coach') {
+                    applyStudentListFilter();
+                } else {
+                    renderCompanyClassOverview();
+                }
             } catch (error) {
                 console.error('載入學員列表失敗:', error);
-                content.innerHTML = '<p>載入失敗</p>';
+                if (content && currentOrgContext?.role === 'coach') {
+                    content.innerHTML = '<p>載入失敗</p>';
+                }
             }
         }
 
@@ -1237,6 +1401,32 @@
             } catch (error) {
                 console.error('更新學員班級失敗:', error);
                 alert(`更新班級失敗：${error.message}`);
+            } finally {
+                select.disabled = false;
+            }
+        };
+
+        window.updateCoachClassAssignment = async function(event) {
+            event.stopPropagation();
+            const select = event.target;
+            const uid = select.dataset.coachUid || '';
+            const classId = select.value || DEFAULT_CLASS_ID;
+            const classInfo = availableClasses.find((item) => item.id === classId);
+            select.disabled = true;
+            try {
+                await updateDoc(doc(db, "users", uid), {
+                    classId,
+                    primaryClassId: classId,
+                    classIds: [classId],
+                    className: classInfo?.name || classId,
+                    updatedAt: serverTimestamp()
+                });
+                allCoaches = allCoaches.map((coach) => coach.uid === uid ? { ...coach, classId, className: classInfo?.name || classId } : coach);
+                renderCoachList();
+                renderCompanyClassOverview();
+            } catch (error) {
+                console.error('更新班主任班級失敗:', error);
+                alert(`更新班主任班級失敗：${error.message}`);
             } finally {
                 select.disabled = false;
             }
@@ -2620,14 +2810,22 @@
         const cancelAddStudent = document.getElementById('cancelAddStudent');
         const submitAddStudent = document.getElementById('submitAddStudent');
         const createClassBtn = document.getElementById('createClassBtn');
+        const companyCreateClassBtn = document.getElementById('companyCreateClassBtn');
         const createClassModal = document.getElementById('createClassModal');
         const createClassForm = document.getElementById('createClassForm');
         const cancelCreateClassBtn = document.getElementById('cancelCreateClassBtn');
         const submitCreateClassBtn = document.getElementById('submitCreateClassBtn');
         const manageClassesBtn = document.getElementById('manageClassesBtn');
+        const companyManageClassesBtn = document.getElementById('companyManageClassesBtn');
         const manageClassesModal = document.getElementById('manageClassesModal');
         const closeManageClassesBtn = document.getElementById('closeManageClassesBtn');
         const backfillOrgDataBtn = document.getElementById('backfillOrgDataBtn');
+        const backfillOrgDataBtnCompany = document.getElementById('backfillOrgDataBtnCompany');
+        const addCoachBtn = document.getElementById('addCoachBtn');
+        const addCoachModal = document.getElementById('addCoachModal');
+        const addCoachForm = document.getElementById('addCoachForm');
+        const cancelAddCoachBtn = document.getElementById('cancelAddCoachBtn');
+        const submitAddCoachBtn = document.getElementById('submitAddCoachBtn');
         const deleteStudentModal = document.getElementById('deleteStudentModal');
         const deleteStudentHint = document.getElementById('deleteStudentHint');
         const deleteStudentPassword = document.getElementById('deleteStudentPassword');
@@ -2647,12 +2845,97 @@
                 createClassModal.style.display = 'flex';
             });
         }
+        if (companyCreateClassBtn) {
+            companyCreateClassBtn.addEventListener('click', () => {
+                createClassForm.reset();
+                createClassModal.style.display = 'flex';
+            });
+        }
 
         if (manageClassesBtn) {
             manageClassesBtn.addEventListener('click', async () => {
                 await refreshClassOptions();
                 renderManageClassesContent();
                 manageClassesModal.style.display = 'flex';
+            });
+        }
+        if (companyManageClassesBtn) {
+            companyManageClassesBtn.addEventListener('click', async () => {
+                await refreshClassOptions();
+                renderManageClassesContent();
+                manageClassesModal.style.display = 'flex';
+            });
+        }
+
+        if (addCoachBtn) {
+            addCoachBtn.addEventListener('click', () => {
+                renderClassOptions();
+                addCoachForm.reset();
+                addCoachModal.style.display = 'flex';
+            });
+        }
+
+        if (cancelAddCoachBtn) {
+            cancelAddCoachBtn.addEventListener('click', () => {
+                addCoachModal.style.display = 'none';
+                addCoachForm.reset();
+            });
+        }
+
+        if (addCoachModal) {
+            addCoachModal.addEventListener('click', (e) => {
+                if (e.target === addCoachModal) {
+                    addCoachModal.style.display = 'none';
+                }
+            });
+        }
+
+        if (addCoachForm) {
+            addCoachForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('newCoachUsername').value.trim();
+                const email = document.getElementById('newCoachEmail').value.trim();
+                const password = document.getElementById('newCoachPassword').value;
+                const assignedClassId = document.getElementById('newCoachClassId').value || DEFAULT_CLASS_ID;
+                if (!username || !email || !password) {
+                    alert('請填寫所有欄位');
+                    return;
+                }
+                submitAddCoachBtn.disabled = true;
+                submitAddCoachBtn.textContent = '新增中...';
+                try {
+                    const checkQuery = query(collection(db, "users"), where("username", "==", username.toLowerCase()));
+                    const checkSnapshot = await getDocs(checkQuery);
+                    if (!checkSnapshot.empty) throw new Error('此使用者名稱已被使用');
+
+                    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                    const user = userCredential.user;
+                    const classInfo = availableClasses.find((item) => item.id === assignedClassId);
+                    await setDoc(doc(db, "users", user.uid), {
+                        uid: user.uid,
+                        username: username.toLowerCase(),
+                        email: email.toLowerCase(),
+                        role: 'coach',
+                        companyId: currentOrgContext?.companyId || 'akso-company',
+                        primaryClassId: assignedClassId,
+                        classId: assignedClassId,
+                        classIds: [assignedClassId],
+                        className: classInfo?.name || assignedClassId,
+                        createdAt: serverTimestamp()
+                    });
+                    await signOut(secondaryAuth);
+                    addCoachModal.style.display = 'none';
+                    addCoachForm.reset();
+                    await loadCoachList();
+                    alert('班主任帳號新增成功');
+                } catch (error) {
+                    console.error('新增班主任失敗:', error);
+                    alert(`新增班主任失敗：${error.message}`);
+                    try { await signOut(secondaryAuth); } catch (signOutError) { console.warn(signOutError); }
+                } finally {
+                    submitAddCoachBtn.disabled = false;
+                    submitAddCoachBtn.textContent = '新增';
+                }
             });
         }
 
@@ -2687,6 +2970,26 @@
                 } finally {
                     backfillOrgDataBtn.disabled = false;
                     backfillOrgDataBtn.textContent = originalText;
+                }
+            });
+        }
+        if (backfillOrgDataBtnCompany) {
+            backfillOrgDataBtnCompany.addEventListener('click', async () => {
+                const confirmed = confirm('將補齊舊資料的公司與班級欄位。這不會刪除資料，是否繼續？');
+                if (!confirmed) return;
+                const originalText = backfillOrgDataBtnCompany.textContent;
+                backfillOrgDataBtnCompany.disabled = true;
+                backfillOrgDataBtnCompany.textContent = '補齊中...';
+                try {
+                    const updatedCount = await backfillLegacyOrgData();
+                    await loadCoachList();
+                    alert(`資料補齊完成，共更新 ${updatedCount} 筆資料`);
+                } catch (error) {
+                    console.error('資料補齊失敗:', error);
+                    alert(`資料補齊失敗：${error.message}`);
+                } finally {
+                    backfillOrgDataBtnCompany.disabled = false;
+                    backfillOrgDataBtnCompany.textContent = originalText;
                 }
             });
         }
@@ -2843,6 +3146,21 @@
                     username: btn.getAttribute('data-username') || '',
                     email: btn.getAttribute('data-email') || '',
                     studentName: btn.getAttribute('data-student-name') || ''
+                });
+            }, true);
+        }
+        const coachListContent = document.getElementById('coachListContent');
+        if (coachListContent) {
+            coachListContent.addEventListener('click', (e) => {
+                const btn = e.target.closest('.deleteCoachBtn');
+                if (!btn) return;
+                e.preventDefault();
+                e.stopPropagation();
+                openDeleteStudentModal({
+                    uid: btn.getAttribute('data-uid') || '',
+                    username: btn.getAttribute('data-username') || '',
+                    email: btn.getAttribute('data-email') || '',
+                    studentName: btn.getAttribute('data-username') || '班主任'
                 });
             }, true);
         }
