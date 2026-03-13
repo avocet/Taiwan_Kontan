@@ -3256,9 +3256,13 @@
                         email: pendingDeleteStudent.email || ''
                     });
 
+                    const deletedTargetType = pendingDeleteTargetType;
                     closeDeleteStudentModal();
-                    alert(`${pendingDeleteTargetType}帳號與相關資料已刪除`);
+                    alert(`${deletedTargetType}帳號與相關資料已刪除`);
                     await loadStudentList();
+                    if (deletedTargetType === '班主任') {
+                        await loadCoachList();
+                    }
                 } catch (error) {
                     console.error('刪除學員失敗:', error);
                     const code = error?.code || '';
