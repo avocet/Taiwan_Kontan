@@ -960,13 +960,14 @@
                 : [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME, status: 'active', coachIds: [] }];
             const cards = options.map((classItem) => {
                 const students = allStudents.filter((student) => (student.classId || DEFAULT_CLASS_ID) === classItem.id);
+                const coachCount = allCoaches.filter((coach) => (coach.classId || DEFAULT_CLASS_ID) === classItem.id).length;
                 const activeCount = students.filter((student) => getDisplayCourseStatus(student.課程狀態) === '課程中').length;
                 const completedCount = students.length - activeCount;
                 const isSelected = selectedClassId === classItem.id;
                 return `
                     <button type="button" class="classOverviewCard" data-class-id="${classItem.id}" style="text-align:left;border:${isSelected ? '2px solid #2563eb' : '1px solid #dbeafe'};background:${isSelected ? '#eff6ff' : '#fff'};border-radius:12px;padding:12px;cursor:pointer;box-shadow:0 2px 8px rgba(37,99,235,0.08);">
                         <div style="font-weight:700;color:#1e3a8a;">${escapeHtml(classItem.name || classItem.id)}</div>
-                        <div style="font-size:0.8rem;color:#64748b;margin-top:4px;">班主任 ${Array.isArray(classItem.coachIds) && classItem.coachIds.length ? classItem.coachIds.length : 0} 人</div>
+                        <div style="font-size:0.8rem;color:#64748b;margin-top:4px;">班主任 ${coachCount} 人</div>
                         <div style="font-size:0.8rem;color:#475569;margin-top:8px;">學員 ${students.length} 人</div>
                         <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">課程中 ${activeCount} / 已完成 ${completedCount}</div>
                     </button>
@@ -1041,6 +1042,7 @@
                 }))
                 .sort((a, b) => String(a.username || a.email || '').localeCompare(String(b.username || b.email || ''), 'zh-Hant'));
             renderCoachList();
+            renderClassOverview();
             renderCompanyClassOverview();
         }
 
