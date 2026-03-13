@@ -371,11 +371,12 @@
             <button id="addStudentBtn" style="background:#007AFF;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;">+ 新增學員</button>
         </div>
         <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:8px;">
+            <div id="classFilterWrap" style="display:flex;align-items:center;gap:8px;">
                 <span style="font-size:0.875rem;color:#4b5563;">班級</span>
                 <select id="classFilter" style="border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:0.875rem;background:#fff;color:#333;min-width:180px;">
                     <option value="">全部班級</option>
                 </select>
+                <div id="currentClassDisplay" style="display:none;padding:8px 12px;border:1px solid #bfdbfe;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:0.875rem;font-weight:600;"></div>
             </div>
             <select id="courseStatusFilter" style="border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:0.875rem;background:#fff;color:#333;min-width:140px;">
                 <option value="全部">全部狀態</option>
@@ -891,20 +892,32 @@
         }
         renderMenu();
         document.getElementById('courseStatusFilter').addEventListener('change', applyStudentListFilter);
-        document.getElementById('classFilter').addEventListener('change', (event) => {
-            selectedClassId = event.target.value || '';
-            applyStudentListFilter();
-        });
+        const classFilterEl = document.getElementById('classFilter');
+        if (classFilterEl) {
+            classFilterEl.addEventListener('change', (event) => {
+                selectedClassId = event.target.value || '';
+                applyStudentListFilter();
+            });
+        }
 
         let allStudents = [];
 
         function renderClassOptions() {
             const classFilter = document.getElementById('classFilter');
+            const classFilterWrap = document.getElementById('classFilterWrap');
+            const currentClassDisplay = document.getElementById('currentClassDisplay');
             const newStudentClassId = document.getElementById('newStudentClassId');
             const newCoachClassId = document.getElementById('newCoachClassId');
             const options = availableClasses.length
                 ? availableClasses
                 : [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME }];
+            const isCoachView = currentOrgContext?.role === 'coach';
+            const currentClassId = currentOrgContext?.primaryClassId || currentOrgContext?.classId || options[0].id;
+            const currentClass = options.find((item) => item.id === currentClassId) || options[0];
+
+            if (isCoachView) {
+                selectedClassId = currentClassId;
+            }
 
             if (classFilter) {
                 classFilter.innerHTML = '<option value="">全部班級</option>' + options.map((item) => (
@@ -913,18 +926,29 @@
                 classFilter.value = selectedClassId || '';
             }
 
+            if (classFilterWrap) {
+                classFilterWrap.style.display = 'flex';
+            }
+            if (classFilter) {
+                classFilter.style.display = isCoachView ? 'none' : 'inline-flex';
+            }
+            if (currentClassDisplay) {
+                currentClassDisplay.style.display = isCoachView ? 'inline-flex' : 'none';
+                currentClassDisplay.textContent = currentClass?.name || DEFAULT_CLASS_NAME;
+            }
+
             if (newStudentClassId) {
                 newStudentClassId.innerHTML = options.map((item) => (
                     `<option value="${item.id}">${item.name || item.id}</option>`
                 )).join('');
-                newStudentClassId.value = selectedClassId || currentOrgContext?.primaryClassId || options[0].id;
+                newStudentClassId.value = selectedClassId || currentClassId || options[0].id;
             }
 
             if (newCoachClassId) {
                 newCoachClassId.innerHTML = options.map((item) => (
                     `<option value="${item.id}">${item.name || item.id}</option>`
                 )).join('');
-                newCoachClassId.value = selectedClassId || currentOrgContext?.primaryClassId || options[0].id;
+                newCoachClassId.value = selectedClassId || currentClassId || options[0].id;
             }
         }
 
@@ -1181,7 +1205,9 @@
             if (!availableClasses.length) {
                 availableClasses = [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME }];
             }
-            if (!selectedClassId) {
+            if (currentOrgContext.role === 'coach') {
+                selectedClassId = currentOrgContext.primaryClassId || currentOrgContext.classId || availableClasses[0].id;
+            } else if (!selectedClassId) {
                 selectedClassId = currentOrgContext.primaryClassId || availableClasses[0].id;
             }
             renderClassOptions();
