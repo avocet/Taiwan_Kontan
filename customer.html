@@ -904,9 +904,16 @@
             try {
                 console.log('Loading student list...');
                 const usersSnapshot = await getDocs(collection(db, "users"));
+                const allowedClassIds = new Set((currentOrgContext?.classIds || []).filter(Boolean));
                 const userDocs = usersSnapshot.docs.filter((docSnap) => {
                     const role = String(docSnap.data()?.role || '').toLowerCase();
-                    return role === 'customer' || role === 'student';
+                    if (!(role === 'customer' || role === 'student')) return false;
+                    if (currentOrgContext?.role === 'coach') {
+                        const row = docSnap.data() || {};
+                        const studentClassId = row.primaryClassId || row.classId || DEFAULT_CLASS_ID;
+                        return allowedClassIds.has(studentClassId);
+                    }
+                    return true;
                 });
                 console.log('usersSnapshot size:', userDocs.length);
                 

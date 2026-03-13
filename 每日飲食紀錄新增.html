@@ -841,6 +841,10 @@
         const storage = getStorage(app);
 
         let currentUser = null;
+        const currentOrgContext = {
+            companyId: localStorage.getItem('twkt_company_id') || 'akso-company',
+            classId: localStorage.getItem('twkt_class_id') || 'akso-default-class'
+        };
         let userPortionRecords = [];
         let portionRecordsLoaded = false;
         const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
@@ -1002,7 +1006,11 @@
             userPortionRecords = snapshot.docs.map(docSnap => ({
                 id: docSnap.id,
                 ...docSnap.data()
-            })).sort((a, b) => (b.紀錄日期 || '').localeCompare(a.紀錄日期 || ''));
+            })).filter((item) => {
+                if (item.companyId && item.companyId !== currentOrgContext.companyId) return false;
+                if (item.classId && item.classId !== currentOrgContext.classId) return false;
+                return true;
+            }).sort((a, b) => (b.紀錄日期 || '').localeCompare(a.紀錄日期 || ''));
             portionRecordsLoaded = true;
         }
 
@@ -1187,6 +1195,9 @@
                 const formData = {
                     userId: currentUser.uid,
                     客戶姓名: customerName,
+                    companyId: currentOrgContext.companyId,
+                    classId: currentOrgContext.classId,
+                    classIds: [currentOrgContext.classId],
                     紀錄日期: recordDate,
                     體重: parseFloat(weight),
                     體脂: document.getElementById('bodyFat').value ? parseFloat(document.getElementById('bodyFat').value) : null,

@@ -505,6 +505,10 @@
         const storage = getStorage(app);
 
         let currentUser = null;
+        const currentOrgContext = {
+            companyId: localStorage.getItem('twkt_company_id') || 'akso-company',
+            classId: localStorage.getItem('twkt_class_id') || 'akso-default-class'
+        };
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -629,6 +633,9 @@
                 const formData = {
                     userId: currentUser.uid,
                     客戶姓名: customerName,
+                    companyId: currentOrgContext.companyId,
+                    classId: currentOrgContext.classId,
+                    classIds: [currentOrgContext.classId],
                     紀錄日期: recordDate,
                     體重: parseFloat(weight),
                     胸圍: document.getElementById('chest').value ? parseFloat(document.getElementById('chest').value) : null,

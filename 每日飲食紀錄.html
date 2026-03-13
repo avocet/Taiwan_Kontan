@@ -687,6 +687,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const storage = getStorage(app);
+        const currentOrgContext = {
+            companyId: localStorage.getItem('twkt_company_id') || 'akso-company',
+            classId: localStorage.getItem('twkt_class_id') || 'akso-default-class'
+        };
         let replyingRecordId = '';
         let recordCache = new Map();
         let cachedAdminEmails = [];
@@ -783,7 +787,11 @@
                 const portionRecords = portionSnapshot.docs.map((docSnap) => ({
                     id: docSnap.id,
                     ...docSnap.data()
-                })).sort((a, b) => {
+                })).filter((item) => {
+                    if (item.companyId && item.companyId !== currentOrgContext.companyId) return false;
+                    if (item.classId && item.classId !== currentOrgContext.classId) return false;
+                    return true;
+                }).sort((a, b) => {
                     const dateA = a.紀錄日期 || '';
                     const dateB = b.紀錄日期 || '';
                     return dateB.localeCompare(dateA);
@@ -805,7 +813,10 @@
                 // 轉為陣列並用 JavaScript 排序
                 let docsArray = [];
                 querySnapshot.forEach((doc) => {
-                    docsArray.push({ id: doc.id, data: doc.data() });
+                    const row = doc.data();
+                    if (row.companyId && row.companyId !== currentOrgContext.companyId) return;
+                    if (row.classId && row.classId !== currentOrgContext.classId) return;
+                    docsArray.push({ id: doc.id, data: row });
                 });
                 
                 docsArray.sort((a, b) => {
