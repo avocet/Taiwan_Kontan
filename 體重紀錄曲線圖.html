@@ -144,6 +144,10 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const currentOrgContext = {
+            companyId: localStorage.getItem('twkt_company_id') || 'akso-company',
+            classId: localStorage.getItem('twkt_class_id') || 'akso-default-class'
+        };
 
         let trendChart = null;
 
@@ -170,6 +174,11 @@
 
                 const rows = snapshot.docs
                     .map((docSnap) => docSnap.data())
+                    .filter((row) => {
+                        if (row.companyId && row.companyId !== currentOrgContext.companyId) return false;
+                        if (row.classId && row.classId !== currentOrgContext.classId) return false;
+                        return true;
+                    })
                     .filter((d) => d.紀錄日期 && (d.體重 !== undefined || d.體脂 !== undefined))
                     .sort((a, b) => String(a.紀錄日期).localeCompare(String(b.紀錄日期)));
 

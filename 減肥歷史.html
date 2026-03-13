@@ -438,6 +438,10 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const currentOrgContext = {
+            companyId: localStorage.getItem('twkt_company_id') || 'akso-company',
+            classId: localStorage.getItem('twkt_class_id') || 'akso-default-class'
+        };
 
         // 檢查登入狀態
         let currentUser = null;
@@ -487,8 +491,14 @@
                 const querySnapshot = await getDocs(q);
                 
                 if (!querySnapshot.empty) {
-                    existingDocId = querySnapshot.docs[0].id;
-                    const data = querySnapshot.docs[0].data();
+                    const matchedDoc = querySnapshot.docs.find((docSnap) => {
+                        const row = docSnap.data() || {};
+                        if (row.companyId && row.companyId !== currentOrgContext.companyId) return false;
+                        if (row.classId && row.classId !== currentOrgContext.classId) return false;
+                        return true;
+                    }) || querySnapshot.docs[0];
+                    existingDocId = matchedDoc.id;
+                    const data = matchedDoc.data();
                     
                     document.getElementById('recordDate').value = data.紀錄日期 || '';
                     document.getElementById('currentWeight').value = data.目前體重 || '';
@@ -577,6 +587,9 @@
 
             const formData = {
                 userId: currentUser.uid,
+                companyId: currentOrgContext.companyId,
+                classId: currentOrgContext.classId,
+                classIds: [currentOrgContext.classId],
                 客戶姓名: customerName,
                 紀錄日期: recordDate,
                 目前體重: parseFloat(currentWeight),
