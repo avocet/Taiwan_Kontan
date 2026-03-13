@@ -813,6 +813,10 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const constitutionConfigRef = doc(db, "中醫體質問卷設定", "current");
+        const currentOrgContext = {
+            companyId: localStorage.getItem('twkt_company_id') || 'akso-company',
+            classId: localStorage.getItem('twkt_class_id') || 'akso-default-class'
+        };
 
         let currentCustomerUserId = null;
         let currentCustomerName = null;
@@ -831,6 +835,18 @@
         document.getElementById('backBtn').addEventListener('click', () => {
             window.location.href = 'customer-list.html';
         });
+
+        function filterDocsByOrg(docsArray = []) {
+            return docsArray.filter((item) => {
+                const data = item?.data || {};
+                if (data.companyId && data.companyId !== currentOrgContext.companyId) return false;
+                if (currentCustomerUserId) {
+                    return true;
+                }
+                if (data.classId && data.classId !== currentOrgContext.classId) return false;
+                return true;
+            });
+        }
 
         // 檢查登入狀態
         onAuthStateChanged(auth, (user) => {
@@ -993,6 +1009,7 @@
                 querySnapshot.forEach((d) => {
                     docsArray.push({ id: d.id, data: d.data() });
                 });
+                docsArray = filterDocsByOrg(docsArray);
                 
                 if (!currentCustomerUserId) {
                     docsArray.sort((a, b) => {
@@ -1040,6 +1057,7 @@
                 querySnapshot.forEach((doc) => {
                     docsArray.push({ id: doc.id, data: doc.data() });
                 });
+                docsArray = filterDocsByOrg(docsArray);
                 
                 docsArray.sort((a, b) => {
                     const timeA = a.data.建立時間?.seconds || 0;
@@ -1085,6 +1103,7 @@
                 querySnapshot.forEach((doc) => {
                     docsArray.push({ id: doc.id, data: doc.data() });
                 });
+                docsArray = filterDocsByOrg(docsArray);
                 
                 docsArray.sort((a, b) => {
                     const timeA = a.data.建立時間?.seconds || 0;
@@ -1131,6 +1150,7 @@
                 querySnapshot.forEach((doc) => {
                     docsArray.push({ id: doc.id, data: doc.data() });
                 });
+                docsArray = filterDocsByOrg(docsArray);
                 
                 docsArray.sort((a, b) => {
                     const timeA = a.data.建立時間?.seconds || 0;
@@ -1176,6 +1196,7 @@
                 querySnapshot.forEach((doc) => {
                     docsArray.push({ id: doc.id, data: doc.data() });
                 });
+                docsArray = filterDocsByOrg(docsArray);
                 
                 docsArray.sort((a, b) => {
                     const dateA = a.data.紀錄日期 || '';
