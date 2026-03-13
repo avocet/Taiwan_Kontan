@@ -150,6 +150,29 @@
         };
 
         let trendChart = null;
+        const pointValueLabelPlugin = {
+            id: 'pointValueLabelPlugin',
+            afterDatasetsDraw(chart) {
+                const { ctx } = chart;
+                ctx.save();
+                chart.data.datasets.forEach((dataset, datasetIndex) => {
+                    const meta = chart.getDatasetMeta(datasetIndex);
+                    if (meta.hidden) return;
+                    meta.data.forEach((point, index) => {
+                        const rawValue = dataset.data[index];
+                        if (rawValue === null || rawValue === undefined || Number.isNaN(Number(rawValue))) return;
+                        const value = Number(rawValue);
+                        const label = datasetIndex === 0 ? `${value}kg` : `${value}%`;
+                        ctx.font = '11px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillStyle = dataset.borderColor || '#111827';
+                        ctx.fillText(label, point.x, point.y - 8);
+                    });
+                });
+                ctx.restore();
+            }
+        };
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -284,7 +307,8 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [pointValueLabelPlugin]
             });
         }
     </script>
