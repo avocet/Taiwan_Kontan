@@ -330,6 +330,7 @@
     <div class="header">
         <h1 id="pageTitle">體重管理班</h1>
         <div class="header-actions">
+            <button class="logout-btn" id="reportIssueBtn" type="button" style="display:none;">軟體問題報修</button>
             <button class="logout-btn" id="changePasswordBtn" type="button">修改密碼</button>
             <a href="index.html" class="logout-btn" id="logoutBtn">登出</a>
         </div>
@@ -707,18 +708,21 @@
             const menuGrid = document.getElementById('menuGrid');
             const studentList = document.getElementById('studentList');
             const adminToolsBar = document.getElementById('adminToolsBar');
+            const reportIssueBtn = document.getElementById('reportIssueBtn');
             
             if (userRole === 'admin') {
                 headerTitle.textContent = '體重管理班主任 ' + userName;
                 menuGrid.style.display = 'none';
                 studentList.style.display = 'block';
                 if (adminToolsBar) adminToolsBar.style.display = 'flex';
+                if (reportIssueBtn) reportIssueBtn.style.display = 'inline-flex';
                 loadStudentList();
             } else {
                 headerTitle.textContent = '體重管理班學員 ' + userName;
                 menuGrid.style.display = 'grid';
                 studentList.style.display = 'none';
                 if (adminToolsBar) adminToolsBar.style.display = 'none';
+                if (reportIssueBtn) reportIssueBtn.style.display = 'none';
             }
         });
 
@@ -2473,6 +2477,15 @@
             // 使用 location.replace 防止後退
             window.location.replace('index.html');
         });
+
+        const reportIssueBtn = document.getElementById('reportIssueBtn');
+        if (reportIssueBtn) {
+            reportIssueBtn.addEventListener('click', () => {
+                const subject = encodeURIComponent('軟體問題報修');
+                const body = encodeURIComponent('請描述問題發生頁面、操作步驟、錯誤畫面與發生時間：\n\n1. 發生頁面：\n2. 操作步驟：\n3. 錯誤描述：\n4. 發生時間：\n');
+                window.location.href = `mailto:taiwanakso@gmail.com?subject=${subject}&body=${body}`;
+            });
+        }
 
         // 修改密碼（彈窗輸入舊密碼與新密碼）
         const changePasswordModal = document.getElementById('changePasswordModal');
