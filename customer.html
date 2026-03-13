@@ -259,6 +259,21 @@
             padding: 14px;
         }
 
+        .portion-table-modal {
+            justify-content: center;
+        }
+
+        .portion-table-modal-content {
+            width: 95%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            margin: 20px;
+        }
+
         .mobile-info-modal-title {
             font-size: 1rem;
             font-weight: 700;
@@ -288,6 +303,18 @@
             #studentRecordsContent { display: none !important; }
             #studentRecords { max-width: 600px; }
             .mobile-top-actions { display: flex; }
+        }
+
+        @media screen and (min-width: 1024px) {
+            .portion-table-modal {
+                justify-content: flex-start;
+                padding-left: clamp(24px, 6vw, 96px);
+            }
+
+            .portion-table-modal-content {
+                margin-left: 0;
+                margin-right: auto;
+            }
         }
         
         @media screen and (min-width: 769px) {
@@ -409,8 +436,8 @@
     </div>
 
     <!-- 飲食份數表 Modal (輸入) -->
-    <div id="portionTableModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-        <div style="background:white;padding:24px;border-radius:16px;width:95%;max-width:800px;max-height:90vh;overflow-y:auto;margin:20px;">
+    <div id="portionTableModal" class="portion-table-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;">
+        <div class="portion-table-modal-content">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
                 <h3 style="font-size:1.125rem;">飲食份數表 - 輸入</h3>
                 <button id="closePortionTableBtn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✕</button>
