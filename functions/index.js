@@ -36,6 +36,15 @@ async function collectDocsByUserKeys(db, collectionName, userKeys) {
   return Array.from(deduped.values());
 }
 
+async function collectDocsByField(db, collectionName, fieldName, fieldValue) {
+  const deduped = new Map();
+  const snapshot = await db.collection(collectionName).where(fieldName, "==", fieldValue).get();
+  snapshot.forEach((docSnap) => {
+    deduped.set(docSnap.ref.path, docSnap.ref);
+  });
+  return Array.from(deduped.values());
+}
+
 async function batchDeleteDocs(docRefs) {
   const db = admin.firestore();
   const chunkSize = 400;
@@ -45,6 +54,29 @@ async function batchDeleteDocs(docRefs) {
     chunk.forEach((ref) => batch.delete(ref));
     await batch.commit();
   }
+}
+
+async function resolveAdminRole(db, callerUid, callerEmail) {
+  const allowedRoles = new Set(["admin", "super_admin"]);
+
+  const callerDoc = await db.collection("users").doc(callerUid).get();
+  if (callerDoc.exists && allowedRoles.has(String(callerDoc.data()?.role || "").toLowerCase())) {
+    return true;
+  }
+
+  const callerByUid = await db.collection("users").where("uid", "==", callerUid).limit(1).get();
+  if (!callerByUid.empty && allowedRoles.has(String(callerByUid.docs[0].data()?.role || "").toLowerCase())) {
+    return true;
+  }
+
+  if (callerEmail) {
+    const callerByEmail = await db.collection("users").where("email", "==", callerEmail).limit(1).get();
+    if (!callerByEmail.empty && allowedRoles.has(String(callerByEmail.docs[0].data()?.role || "").toLowerCase())) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 exports.sendEmailNotification = onDocumentCreated(
@@ -151,27 +183,7 @@ exports.deleteStudentAccountData = onCall(
     const callerUid = request.auth.uid;
     const callerEmail = String(request.auth.token?.email || "").trim().toLowerCase();
     const db = admin.firestore();
-
-    let isAdmin = false;
-
-    const callerDoc = await db.collection("users").doc(callerUid).get();
-    if (callerDoc.exists && callerDoc.data()?.role === "admin") {
-      isAdmin = true;
-    }
-
-    if (!isAdmin) {
-      const callerByUid = await db.collection("users").where("uid", "==", callerUid).limit(1).get();
-      if (!callerByUid.empty && callerByUid.docs[0].data()?.role === "admin") {
-        isAdmin = true;
-      }
-    }
-
-    if (!isAdmin && callerEmail) {
-      const callerByEmail = await db.collection("users").where("email", "==", callerEmail).limit(1).get();
-      if (!callerByEmail.empty && callerByEmail.docs[0].data()?.role === "admin") {
-        isAdmin = true;
-      }
-    }
+    const isAdmin = await resolveAdminRole(db, callerUid, callerEmail);
 
     if (!isAdmin) {
       throw new HttpsError("permission-denied", "僅管理員可執行此操作");
@@ -235,6 +247,113 @@ exports.deleteStudentAccountData = onCall(
       success: true,
       deletedDocs: dedupRefs.length,
       deletedAuthUid: resolvedUid || ""
+    };
+  }
+);
+
+exports.deleteClassAccountData = onCall(
+  { region: MAIL_REGION, timeoutSeconds: 540, memory: "1GiB" },
+  async (request) => {
+    if (!request.auth?.uid) {
+      throw new HttpsError("unauthenticated", "需要先登入管理員帳號");
+    }
+
+    const callerUid = request.auth.uid;
+    const callerEmail = String(request.auth.token?.email || "").trim().toLowerCase();
+    const db = admin.firestore();
+    const isAdmin = await resolveAdminRole(db, callerUid, callerEmail);
+
+    if (!isAdmin) {
+      throw new HttpsError("permission-denied", "僅管理員可執行此操作");
+    }
+
+    const payload = request.data || {};
+    const classId = String(payload.classId || "").trim();
+    if (!classId) {
+      throw new HttpsError("invalid-argument", "缺少班級識別資料");
+    }
+
+    const classRef = db.collection("classes").doc(classId);
+    const classSnap = await classRef.get();
+    if (!classSnap.exists) {
+      throw new HttpsError("not-found", "找不到指定班級");
+    }
+
+    const usersSnapshot = await db.collection("users").where("primaryClassId", "==", classId).get();
+    const classUsers = usersSnapshot.docs
+      .map((docSnap) => ({ ref: docSnap.ref, uid: docSnap.id, ...docSnap.data() }))
+      .filter((row) => {
+        const role = String(row.role || "").toLowerCase();
+        return role === "student" || role === "customer" || role === "coach";
+      });
+
+    const collectionsToDeleteByUser = [
+      "客戶資料",
+      "每日體重三圍",
+      "飲食份數表",
+      "原始體重三圍",
+      "中醫體質四象限",
+      "減肥歷史",
+      "3日飲食記錄",
+    ];
+
+    const collectionsToDeleteByClass = [
+      "客戶資料",
+      "每日體重三圍",
+      "飲食份數表",
+      "原始體重三圍",
+      "中醫體質四象限",
+      "減肥歷史",
+      "3日飲食記錄",
+    ];
+
+    let refsToDelete = [classRef];
+    const authUidsToDelete = [];
+
+    for (const userRow of classUsers) {
+      const targetUid = String(userRow.uid || "").trim();
+      const targetUsername = String(userRow.username || "").trim().toLowerCase();
+      const targetEmail = String(userRow.email || "").trim().toLowerCase();
+      const targetEmailPrefix = targetEmail.includes("@") ? targetEmail.split("@")[0] : "";
+      const userKeys = Array.from(
+        new Set([targetUid, targetUsername, targetEmailPrefix].filter(Boolean).map((v) => String(v).toLowerCase()))
+      );
+
+      for (const name of collectionsToDeleteByUser) {
+        const refs = await collectDocsByUserKeys(db, name, userKeys);
+        refsToDelete = refsToDelete.concat(refs);
+      }
+
+      refsToDelete.push(userRow.ref);
+      if (targetUid) {
+        authUidsToDelete.push(targetUid);
+      }
+    }
+
+    for (const name of collectionsToDeleteByClass) {
+      const refs = await collectDocsByField(db, name, "classId", classId);
+      refsToDelete = refsToDelete.concat(refs);
+    }
+
+    const dedupRefs = Array.from(new Map(refsToDelete.map((r) => [r.path, r])).values());
+    await batchDeleteDocs(dedupRefs);
+
+    for (const uid of Array.from(new Set(authUidsToDelete))) {
+      try {
+        await admin.auth().deleteUser(uid);
+      } catch (error) {
+        if (error?.code !== "auth/user-not-found") {
+          logger.error("Delete class auth user failed", { uid, message: error?.message || String(error) });
+          throw new HttpsError("internal", "刪除班級成員 Auth 帳號失敗");
+        }
+      }
+    }
+
+    return {
+      success: true,
+      classId,
+      deletedDocs: dedupRefs.length,
+      deletedAuthUsers: Array.from(new Set(authUidsToDelete)).length,
     };
   }
 );
