@@ -1018,9 +1018,9 @@
                         <div style="font-size:0.82rem;color:#475569;margin-top:6px;">負責班級：${escapeHtml(availableClasses.find((classItem) => classItem.id === (coach.classId || DEFAULT_CLASS_ID))?.name || coach.className || DEFAULT_CLASS_NAME)}</div>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <select data-coach-uid="${coach.uid}" onchange="updateCoachClassAssignment(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
-                            ${availableClasses.map((classItem) => `<option value="${classItem.id}" ${((coach.classId || DEFAULT_CLASS_ID) === classItem.id) ? 'selected' : ''}>${classItem.name || classItem.id}</option>`).join('')}
-                        </select>
+                        <div style="padding:6px 10px;border:1px solid #dbeafe;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:0.8125rem;font-weight:600;white-space:nowrap;">
+                            ${escapeHtml(availableClasses.find((classItem) => classItem.id === (coach.classId || DEFAULT_CLASS_ID))?.name || coach.className || DEFAULT_CLASS_NAME)}
+                        </div>
                         <button type="button" class="deleteCoachBtn" data-uid="${coach.uid}" data-username="${escapeHtml(coach.username || '')}" data-email="${escapeHtml(coach.email || '')}" style="border:none;border-radius:8px;padding:6px 8px;font-size:0.75rem;background:#FF3B30;color:#fff;cursor:pointer;white-space:nowrap;">刪除班主任</button>
                     </div>
                 </div>
