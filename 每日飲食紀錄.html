@@ -44,6 +44,7 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            position: relative;
         }
 
         .header-left {
@@ -51,12 +52,16 @@
             flex-direction: column;
             align-items: center;
             gap: 6px;
+            width: 100%;
+            text-align: center;
         }
 
         .header-title-row {
             display: flex;
             align-items: center;
             gap: 12px;
+            width: 100%;
+            justify-content: center;
         }
 
         .header-meta {
@@ -79,6 +84,8 @@
             cursor: pointer;
             font-size: 0.875rem;
             text-decoration: none;
+            position: absolute;
+            left: 20px;
         }
 
         .back-btn:hover {
@@ -100,6 +107,8 @@
             font-size: 0.875rem;
             font-weight: 600;
             text-decoration: none;
+            position: absolute;
+            right: 20px;
         }
 
         .add-btn:hover {
