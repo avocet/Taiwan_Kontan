@@ -1672,6 +1672,8 @@
                 <div>手機：${escapeHtml(data.手機 || '-')}</div>
                 <div>Email：${escapeHtml(data.email || '-')}</div>
                 <div>營養師：${escapeHtml(data.營養師 || '-')}</div>
+                <div>目標體重：${escapeHtml(data.目標體重 || '-')} kg</div>
+                <div>課程週數：${escapeHtml(data.課程週數 || '-')} 週</div>
             `;
             card.innerHTML = `
                 <div style="font-weight:600;margin-bottom:6px;">學員基本資料</div>
@@ -1968,6 +1970,8 @@
                     <div>手機：${escapeHtml(data.手機 || '-')}</div>
                     <div>Email：${escapeHtml(data.email || '-')}</div>
                     <div>營養師：${escapeHtml(data.營養師 || '-')}</div>
+                    <div>目標體重：${escapeHtml(data.目標體重 || '-')} kg</div>
+                    <div>課程週數：${escapeHtml(data.課程週數 || '-')} 週</div>
                 `;
             }
             if (panel === 'initial') {

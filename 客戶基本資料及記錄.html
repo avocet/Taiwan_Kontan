@@ -544,6 +544,16 @@
                         <label>營養師</label>
                         <input type="text" id="nutritionist" name="nutritionist" placeholder="系統自動帶入班主任" readonly>
                     </div>
+                    
+                    <div class="form-group half-width">
+                        <label>目標體重 (kg)</label>
+                        <input type="number" id="targetWeight" name="targetWeight" placeholder="例如：60" step="0.1">
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label>課程週數</label>
+                        <input type="number" id="courseWeeks" name="courseWeeks" placeholder="例如：12" min="1">
+                    </div>
                 </div>
             </form>
             
@@ -632,6 +642,8 @@
                         }
                     }
                     if (!nutritionistName && data.營養師) document.getElementById('nutritionist').value = data.營養師;
+                    if (data.目標體重) document.getElementById('targetWeight').value = data.目標體重;
+                    if (data.課程週數) document.getElementById('courseWeeks').value = data.課程週數;
                     if (data.產前體重) document.getElementById('prePregnancyWeight').value = data.產前體重;
                     if (data.產後體重) document.getElementById('postPregnancyWeight').value = data.產後體重;
                     if (data.上月mc週期) document.getElementById('mcCycle').value = data.上月mc週期;
@@ -918,6 +930,8 @@
                 性別: document.querySelector('input[name="gender"]:checked')?.value || '',
                 手機: mobile,
                 營養師: document.getElementById('nutritionist').value.trim(),
+                目標體重: document.getElementById('targetWeight').value.trim(),
+                課程週數: document.getElementById('courseWeeks').value.trim(),
                 產前體重: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('prePregnancyWeight').value.trim() : '',
                 產後體重: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('postPregnancyWeight').value.trim() : '',
                 上月mc週期: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('mcCycle').value : '',
