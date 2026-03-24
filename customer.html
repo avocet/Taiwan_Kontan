@@ -395,6 +395,7 @@
             <h2 id="studentNameTitle" style="font-size:1.25rem;flex:1;text-align:center;margin-right:60px;">學員飲食紀錄</h2>
             <button id="showPortionTableBtn" style="background:#34C759;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:0.875rem;cursor:pointer;white-space:nowrap;">新增飲食份數表</button>
         </div>
+        <div id="studentRecordsMeta" style="text-align:center;color:#6b7280;font-size:0.8125rem;margin:-6px 0 12px;">目標體重：-｜距離目標：-｜已進行：- 週｜剩餘：- 週</div>
 
         <div class="mobile-top-actions" id="mobileTopInfoActions">
             <button type="button" class="mobile-info-btn" data-panel="basic">學員基本資料</button>
@@ -1840,6 +1841,52 @@
                 });
         }
 
+        function parseDateValue(value) {
+            if (!value) return null;
+            if (typeof value.toDate === 'function') {
+                return value.toDate();
+            }
+            if (value instanceof Date) return value;
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return null;
+            return parsed;
+        }
+
+        function updateStudentRecordsMeta(basicInfo, records = []) {
+            const metaEl = document.getElementById('studentRecordsMeta');
+            if (!metaEl) return;
+
+            const targetWeight = Number(basicInfo?.目標體重);
+            const totalWeeks = Number(basicInfo?.課程週數);
+            const latestWeightRow = records.find((row) => Number.isFinite(Number(row?.體重)));
+            const latestWeight = latestWeightRow ? Number(latestWeightRow.體重) : null;
+            const remainingKg = Number.isFinite(targetWeight) && Number.isFinite(latestWeight)
+                ? Math.max(0, latestWeight - targetWeight)
+                : null;
+
+            let startDate = null;
+            if (records.length) {
+                startDate = parseDateValue(records[records.length - 1]?.紀錄日期);
+            }
+            if (!startDate && basicInfo?.建立時間) {
+                startDate = parseDateValue(basicInfo.建立時間);
+            }
+            const today = new Date();
+            const weeksElapsed = startDate
+                ? Math.max(0, Math.ceil((today - startDate) / (7 * 24 * 60 * 60 * 1000)))
+                : null;
+            const weeksRemaining = Number.isFinite(totalWeeks) && weeksElapsed !== null
+                ? Math.max(0, totalWeeks - weeksElapsed)
+                : null;
+
+            const targetText = Number.isFinite(targetWeight) ? `${targetWeight} kg` : '-';
+            const remainingText = remainingKg !== null ? `${remainingKg.toFixed(1)} kg` : '-';
+            const elapsedText = weeksElapsed !== null ? `${weeksElapsed} 週` : '-';
+            const remainingWeeksText = weeksRemaining !== null ? `${weeksRemaining} 週` : '-';
+
+            metaEl.textContent = `目標體重：${targetText}｜距離目標：${remainingText}｜已進行：${elapsedText}｜剩餘：${remainingWeeksText}`;
+        }
+
         const pointValueLabelPlugin = {
             id: 'pointValueLabelPlugin',
             afterDatasetsDraw(chart) {
@@ -2115,6 +2162,7 @@
                 currentStudentUid = userUid;
                 await loadStudentSideCards(userUid, username, emailPrefix);
                 console.log('userUid:', userUid);
+                updateStudentRecordsMeta(currentStudentSideData.basicInfo, []);
                 
                 // 用 uid 查詢學員的每日飲食紀錄
                 const recordsQuery = query(collection(db, "每日體重三圍"), where("userId", "==", userUid));
@@ -2129,6 +2177,7 @@
                     if (row.classId && currentStudentClassId && row.classId !== currentStudentClassId) return false;
                     return true;
                 }).sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+                updateStudentRecordsMeta(currentStudentSideData.basicInfo, records);
                 currentStudentSideData.trendRecords = records;
                 renderStudentTrendCard(records);
 
