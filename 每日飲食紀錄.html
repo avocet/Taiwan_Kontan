@@ -48,8 +48,24 @@
 
         .header-left {
             display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .header-title-row {
+            display: flex;
             align-items: center;
             gap: 12px;
+        }
+
+        .header-meta {
+            font-size: 0.75rem;
+            line-height: 1.5;
+            opacity: 0.9;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
         .back-btn {
@@ -634,8 +650,13 @@
 <body>
     <div class="header">
         <div class="header-left">
-            <a href="customer.html" class="back-btn">← 返回</a>
-            <h1>每日飲食紀錄</h1>
+            <div class="header-title-row">
+                <a href="customer.html" class="back-btn">← 返回</a>
+                <h1>每日飲食紀錄</h1>
+            </div>
+            <div class="header-meta" id="headerMeta">
+                目標體重：-｜距離目標：-｜已進行：- 週｜剩餘：- 週
+            </div>
         </div>
         <a href="每日飲食紀錄新增.html" class="add-btn">+ 新增資料</a>
     </div>
@@ -782,8 +803,17 @@
                     collection(db, "飲食份數表"),
                     where("userId", "==", userId)
                 );
+                const customerQ = query(
+                    collection(db, "客戶資料"),
+                    where("userId", "==", userId)
+                );
 
-                const [querySnapshot, portionSnapshot] = await Promise.all([getDocs(q), getDocs(portionQ)]);
+                const [querySnapshot, portionSnapshot, customerSnapshot] = await Promise.all([
+                    getDocs(q),
+                    getDocs(portionQ),
+                    getDocs(customerQ)
+                ]);
+                const customerData = customerSnapshot.empty ? null : customerSnapshot.docs[0].data();
                 const portionRecords = portionSnapshot.docs.map((docSnap) => ({
                     id: docSnap.id,
                     ...docSnap.data()
@@ -800,6 +830,7 @@
                 document.getElementById('loading').style.display = 'none';
                 
                 if (querySnapshot.empty) {
+                    updateHeaderMeta(customerData, []);
                     document.getElementById('dataList').innerHTML = `
                         <div class="empty-state">
                             <div class="empty-icon">⚖️</div>
@@ -824,7 +855,8 @@
                     const dateB = b.data.紀錄日期 || '';
                     return dateB.localeCompare(dateA);
                 });
-                
+
+                updateHeaderMeta(customerData, docsArray);
                 let html = '';
                 recordCache = new Map();
                 docsArray.forEach((item) => {
@@ -843,6 +875,54 @@
                     </div>
                 `;
             }
+        }
+
+        function parseDateValue(value) {
+            if (!value) return null;
+            if (typeof value.toDate === 'function') {
+                return value.toDate();
+            }
+            if (value instanceof Date) return value;
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return null;
+            return parsed;
+        }
+
+        function updateHeaderMeta(customerData, docsArray) {
+            const headerMeta = document.getElementById('headerMeta');
+            if (!headerMeta) return;
+
+            const targetWeight = Number(customerData?.目標體重);
+            const totalWeeks = Number(customerData?.課程週數);
+
+            const latestWeightRow = docsArray.find((item) => Number.isFinite(Number(item?.data?.體重)));
+            const latestWeight = latestWeightRow ? Number(latestWeightRow.data.體重) : null;
+            const remainingKg = Number.isFinite(targetWeight) && Number.isFinite(latestWeight)
+                ? Math.max(0, latestWeight - targetWeight)
+                : null;
+
+            let startDate = null;
+            if (docsArray.length) {
+                const lastRow = docsArray[docsArray.length - 1];
+                startDate = parseDateValue(lastRow?.data?.紀錄日期);
+            }
+            if (!startDate && customerData?.建立時間) {
+                startDate = parseDateValue(customerData.建立時間);
+            }
+            const today = new Date();
+            const weeksElapsed = startDate
+                ? Math.max(0, Math.ceil((today - startDate) / (7 * 24 * 60 * 60 * 1000)))
+                : null;
+            const weeksRemaining = Number.isFinite(totalWeeks) && weeksElapsed !== null
+                ? Math.max(0, totalWeeks - weeksElapsed)
+                : null;
+
+            const targetText = Number.isFinite(targetWeight) ? `${targetWeight} kg` : '-';
+            const remainingText = remainingKg !== null ? `${remainingKg.toFixed(1)} kg` : '-';
+            const elapsedText = weeksElapsed !== null ? `${weeksElapsed} 週` : '-';
+            const remainingWeeksText = weeksRemaining !== null ? `${weeksRemaining} 週` : '-';
+
+            headerMeta.textContent = `目標體重：${targetText}｜距離目標：${remainingText}｜已進行：${elapsedText}｜剩餘：${remainingWeeksText}`;
         }
 
         // 建立資料卡片
