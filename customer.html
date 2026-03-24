@@ -1510,6 +1510,7 @@
         let currentStudentUid = null;
         let currentStudentClassId = DEFAULT_CLASS_ID;
         let currentStudentEmail = '';
+        let currentStudentProfileEmail = '';
         let editingPortionDocId = null;
         let pendingDeleteStudent = null;
         let pendingDeleteTargetType = '學員';
@@ -2060,6 +2061,7 @@
                 initialBody,
                 constitution: constitutionData
             };
+            currentStudentProfileEmail = String(basicInfo?.email || '').trim();
             renderStudentBasicInfoCard(basicInfo);
             renderStudentInitialBodyCard(initialBody);
             renderStudentConstitutionCard(constitutionData);
@@ -2071,6 +2073,7 @@
             currentStudentUsername = username;
             currentStudentName = name;
             currentStudentEmail = '';
+            currentStudentProfileEmail = '';
             currentStudentClassId = DEFAULT_CLASS_ID;
             
             const studentList = document.getElementById('studentList');
@@ -2628,7 +2631,11 @@
                     管理員建議: messageText,
                     建議更新時間: new Date()
                 });
-                if (currentStudentEmail) {
+                const notifyEmails = [currentStudentEmail, currentStudentProfileEmail]
+                    .map((email) => String(email || '').trim())
+                    .filter(Boolean);
+                const uniqueEmails = Array.from(new Set(notifyEmails.map((email) => email.toLowerCase())));
+                if (uniqueEmails.length) {
                     const subject = `【體重管理班】管理者有新訊息`;
                     const recordDate = recordData?.紀錄日期 || '-';
                     const senderName = '管理者營養師';
@@ -2644,7 +2651,7 @@
                     const text = `你收到管理者新的建議訊息\n紀錄日期：${recordDate}\n發送者：${senderName}\n訊息內容：${messageText}`;
                     try {
                         await addDoc(collection(db, "emailNotifications"), {
-                            to: [currentStudentEmail],
+                            to: uniqueEmails,
                             message: { subject, text, html },
                             createdAt: new Date(),
                             source: "admin-chat-message"
