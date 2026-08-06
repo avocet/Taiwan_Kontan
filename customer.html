@@ -142,8 +142,10 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
             padding: 20px;
-            max-width: 600px;
-            margin: 0 auto;
+            width: 100%;
+            height: calc(100vh - 80px);
+            box-sizing: border-box;
+            align-content: space-evenly;
         }
 
         .menu-card {
@@ -159,6 +161,7 @@
             aspect-ratio: 1;
             display: flex;
             flex-direction: column;
+            width: 100%;
         }
 
         .menu-card:hover {
@@ -331,28 +334,17 @@
             .mobile-top-actions { display: none; }
             .menu-grid {
                 grid-template-columns: repeat(3, 1fr);
-                gap: 30px;
+                gap: 25px;
                 padding: 40px;
-                max-width: 900px;
-                min-height: calc(100vh - 200px);
-            }
-            .menu-card {
-                border-radius: 24px;
-            }
-            .menu-icon {
-                padding: 25px;
             }
         }
         
-        @media screen and (min-width: 1024px) {
+        @media screen and (min-width: 1200px) {
             .menu-grid {
-                grid-template-columns: repeat(5, 1fr);
-                max-width: 1200px;
-                gap: 40px;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 30px;
                 padding: 60px;
-            }
-            .menu-icon {
-                padding: 30px;
+                align-content: center;
             }
         }
     </style>
