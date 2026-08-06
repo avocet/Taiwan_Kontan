@@ -329,6 +329,31 @@
             #studentRecordsContent { display: none !important; }
             #showPortionTableBtn { display: block; }
             .mobile-top-actions { display: none; }
+            .menu-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 30px;
+                padding: 40px;
+                max-width: 900px;
+                min-height: calc(100vh - 200px);
+            }
+            .menu-card {
+                border-radius: 24px;
+            }
+            .menu-icon {
+                padding: 25px;
+            }
+        }
+        
+        @media screen and (min-width: 1024px) {
+            .menu-grid {
+                grid-template-columns: repeat(5, 1fr);
+                max-width: 1200px;
+                gap: 40px;
+                padding: 60px;
+            }
+            .menu-icon {
+                padding: 30px;
+            }
         }
     </style>
 </head>
