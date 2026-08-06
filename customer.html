@@ -140,26 +140,25 @@
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            padding: 30px 20px;
-            max-width: 800px;
+            gap: 15px;
+            padding: 20px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
         .menu-card {
             background: var(--card-background);
             border-radius: 20px;
-            padding: 30px 20px;
+            padding: 0;
             text-align: center;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
             color: var(--text-primary);
+            aspect-ratio: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 16px;
         }
 
         .menu-card:hover {
@@ -167,20 +166,27 @@
             box-shadow: 0 12px 32px rgba(0, 122, 255, 0.2);
         }
 
-        .menu-card:nth-child(1) .menu-icon { background: linear-gradient(135deg, #007AFF, #5856D6); }
-        .menu-card:nth-child(2) .menu-icon { background: linear-gradient(135deg, #FF9500, #FF3B30); }
-        .menu-card:nth-child(3) .menu-icon { background: linear-gradient(135deg, #34C759, #30D158); }
-        .menu-card:nth-child(4) .menu-icon { background: linear-gradient(135deg, #FF2D55, #FF6B6B); }
-        .menu-card:nth-child(5) .menu-icon { background: linear-gradient(135deg, #5856D6, #AF52DE); }
+        .menu-card:nth-child(1) .menu-icon { background: #fff; }
+        .menu-card:nth-child(2) .menu-icon { background: #fff; }
+        .menu-card:nth-child(3) .menu-icon { background: #fff; }
+        .menu-card:nth-child(4) .menu-icon { background: #fff; }
+        .menu-card:nth-child(5) .menu-icon { background: #fff; }
 
         .menu-icon {
-            width: 70px;
-            height: 70px;
+            width: 100%;
+            height: 100%;
             border-radius: 20px;
             display: flex;
             align-items: center;
-            justify-content: stretch;
-            font-size: 32px;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .menu-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border: none;
         }
 
         .menu-title {
@@ -876,19 +882,19 @@
             const menuGrid = document.getElementById('menuGrid');
             menuGrid.innerHTML = `
                 <a href="客戶基本資料及記錄.html" class="menu-card">
-                    <div class="menu-icon"><img src="images/基本資料.png" style="width:100%;height:100%;object-fit:contain;border:none;"></div>
+                    <div class="menu-icon"><img src="images/基本資料.png"></div>
                 </a>
                 <a href="原始體重三圍.html" class="menu-card">
-                    <div class="menu-icon"><img src="images/原始體重與9圍.png" style="width:100%;height:100%;object-fit:contain;border:none;"></div>
+                    <div class="menu-icon"><img src="images/原始體重與9圍.png"></div>
                 </a>
                 <a href="每日飲食紀錄.html" class="menu-card">
-                    <div class="menu-icon"><img src="images/每日飲食記錄.png" style="width:100%;height:100%;object-fit:contain;border:none;"></div>
+                    <div class="menu-icon"><img src="images/每日飲食記錄.png"></div>
                 </a>
                 <a href="中醫體質四象限.html" class="menu-card">
-                    <div class="menu-icon"><img src="images/四象體質分析.png" style="width:100%;height:100%;object-fit:contain;border:none;"></div>
+                    <div class="menu-icon"><img src="images/四象體質分析.png"></div>
                 </a>
                 <a href="體重紀錄曲線圖.html" class="menu-card">
-                    <div class="menu-icon"><img src="images/每日體重紀錄.png" style="width:100%;height:100%;object-fit:contain;border:none;"></div>
+                    <div class="menu-icon"><img src="images/每日體重紀錄.png"></div>
                 </a>
             `;
         }
