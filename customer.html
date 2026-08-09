@@ -987,7 +987,7 @@
                 : [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME, status: 'active', coachIds: [] }];
             const cards = options.map((classItem) => {
                 const students = allStudents.filter((student) => (student.classId || DEFAULT_CLASS_ID) === classItem.id);
-                const coachCount = allCoaches.filter((coach) => (coach.classId || DEFAULT_CLASS_ID) === classItem.id).length;
+                const coachCount = allCoaches.filter((coach) => (coach.classIds || [coach.classId]).includes(classItem.id)).length;
                 const activeCount = students.filter((student) => getDisplayCourseStatus(student.課程狀態) === '課程中').length;
                 const completedCount = students.length - activeCount;
                 const isSelected = selectedClassId === classItem.id;
@@ -1018,7 +1018,7 @@
                 ? availableClasses
                 : [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME, coachIds: [] }];
             container.innerHTML = options.map((classItem) => {
-                const coachCount = allCoaches.filter((coach) => (coach.classId || DEFAULT_CLASS_ID) === classItem.id).length;
+                const coachCount = allCoaches.filter((coach) => (coach.classIds || [coach.classId]).includes(classItem.id)).length;
                 const studentCount = allStudents.filter((student) => (student.classId || DEFAULT_CLASS_ID) === classItem.id).length;
                 return `
                     <div style="border:1px solid #dbeafe;border-radius:14px;padding:14px;background:#fff;box-shadow:0 2px 8px rgba(37,99,235,0.08);">
@@ -1247,7 +1247,7 @@
                     const classId = btn.dataset.classId || '';
                     const classItem = availableClasses.find((item) => item.id === classId) || { id: classId, name: classId };
                     const classStudents = allStudents.filter((student) => (student.classId || DEFAULT_CLASS_ID) === classId);
-                    const classCoaches = allCoaches.filter((coach) => (coach.classId || DEFAULT_CLASS_ID) === classId);
+                    const classCoaches = allCoaches.filter((coach) => (coach.classIds || [coach.classId]).includes(classId));
                     openDeleteClassModal({
                         id: classId,
                         name: classItem.name || classId,
