@@ -565,7 +565,7 @@
                     
                     <div class="form-group half-width">
                         <label>營養師</label>
-                        <input type="text" id="nutritionist" name="nutritionist" placeholder="系統自動帶入班主任" readonly>
+                        <input type="text" id="nutritionist" name="nutritionist" placeholder="系統自動帶入資深營養師" readonly>
                     </div>
                     
                     <div class="form-group half-width">
@@ -883,7 +883,7 @@
 
                 return [...new Set(coachNames.filter(Boolean))].join('、');
             } catch (error) {
-                console.error('取得班主任名稱失敗:', error);
+                console.error('取得資深營養師名稱失敗:', error);
                 return '';
             }
         }

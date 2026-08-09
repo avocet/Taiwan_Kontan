@@ -203,7 +203,7 @@ exports.deleteStudentAccountData = onCall(
     const isCoach = callerRole === "coach";
 
     if (!isAdmin && !isCoach) {
-      throw new HttpsError("permission-denied", "僅管理員或班主任可執行此操作");
+      throw new HttpsError("permission-denied", "僅管理員或資深營養師可執行此操作");
     }
 
     const payload = request.data || {};

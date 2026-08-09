@@ -360,17 +360,17 @@
         <div class="admin-tools-bar" id="companyToolsBar">
             <button type="button" class="admin-tools-btn" id="companyCreateClassBtn">新增減重班</button>
             <button type="button" class="admin-tools-btn" id="companyManageClassesBtn">刪除/編輯減重班</button>
-            <button type="button" class="admin-tools-btn" id="addCoachBtn">新增班主任帳號</button>
+            <button type="button" class="admin-tools-btn" id="addCoachBtn">新增資深營養師帳號</button>
             <button type="button" class="admin-tools-btn" id="backfillOrgDataBtnCompany">資料補齊</button>
         </div>
         <div style="margin-bottom:14px;">
             <h2 style="font-size:1.25rem;margin:0 0 8px;">減重班管理</h2>
-            <div style="font-size:0.9rem;color:#64748b;">阿克索公司端只管理減重班與班主任帳號，不直接管理學員。</div>
+            <div style="font-size:0.9rem;color:#64748b;">阿克索公司端只管理減重班與資深營養師帳號，不直接管理學員。</div>
         </div>
         <div id="companyClassOverviewContent" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px;"></div>
         <div style="margin-bottom:14px;">
-            <h2 style="font-size:1.25rem;margin:0 0 8px;">班主任帳號</h2>
-            <div style="font-size:0.9rem;color:#64748b;">可新增、指定班級與刪除班主任帳號。</div>
+            <h2 style="font-size:1.25rem;margin:0 0 8px;">資深營養師帳號</h2>
+            <div style="font-size:0.9rem;color:#64748b;">可新增、指定班級與刪除資深營養師帳號。</div>
         </div>
         <div id="coachListContent"></div>
     </div>
@@ -643,7 +643,7 @@
 
     <div id="addCoachModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1120;align-items:center;justify-content:center;">
         <div style="background:white;padding:24px;border-radius:16px;width:90%;max-width:420px;margin:20px;">
-            <h3 style="margin-bottom:16px;font-size:1.125rem;">新增班主任帳號</h3>
+            <h3 style="margin-bottom:16px;font-size:1.125rem;">新增資深營養師帳號</h3>
             <form id="addCoachForm">
                 <div style="margin-bottom:12px;">
                     <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">使用者名稱</label>
@@ -682,9 +682,9 @@
     <div id="deleteClassModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1180;align-items:center;justify-content:center;">
         <div style="background:white;padding:24px;border-radius:16px;width:90%;max-width:440px;margin:20px;">
             <h3 style="margin-bottom:10px;font-size:1.125rem;color:#b91c1c;">刪除整個減重班</h3>
-            <p id="deleteClassHint" style="font-size:0.875rem;color:#666;line-height:1.6;margin-bottom:12px;">此操作會刪除班級與學員帳號與相關資料。班主任帳號將保留。請輸入管理員密碼以確認。</p>
+            <p id="deleteClassHint" style="font-size:0.875rem;color:#666;line-height:1.6;margin-bottom:12px;">此操作會刪除班級與學員帳號與相關資料。資深營養師帳號將保留。請輸入管理員密碼以確認。</p>
             <div style="margin-bottom:12px;padding:10px 12px;border-radius:10px;background:#fef2f2;color:#991b1b;font-size:0.84rem;line-height:1.6;">
-                刪除後無法復原，包含學員基本資料、每日紀錄、飲食份數表與班主任帳號。
+                刪除後無法復原，包含學員基本資料、每日紀錄、飲食份數表與資深營養師帳號。
             </div>
             <div style="margin-bottom:12px;">
                 <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">管理員密碼</label>
@@ -859,7 +859,7 @@
                 const titleMap = {
                     super_admin: '阿克索公司管理員',
                     admin: '體重管理班管理員',
-                    coach: '體重管理班班主任'
+                    coach: '體重管理班資深營養師'
                 };
                 headerTitle.textContent = `${titleMap[userRole] || '體重管理班管理員'} ${userName}`;
                 menuGrid.style.display = 'none';
@@ -996,7 +996,7 @@
                 return `
                     <button type="button" class="classOverviewCard" data-class-id="${classItem.id}" style="text-align:left;border:${isSelected ? '2px solid #2563eb' : '1px solid #dbeafe'};background:${isSelected ? '#eff6ff' : '#fff'};border-radius:12px;padding:12px;cursor:pointer;box-shadow:0 2px 8px rgba(37,99,235,0.08);">
                         <div style="font-weight:700;color:#1e3a8a;">${escapeHtml(classItem.name || classItem.id)}</div>
-                        <div style="font-size:0.8rem;color:#64748b;margin-top:4px;">班主任 ${coachCount} 人 ${coachNames ? '：' + escapeHtml(coachNames) : ''}</div>
+                        <div style="font-size:0.8rem;color:#64748b;margin-top:4px;">資深營養師 ${coachCount} 人 ${coachNames ? '：' + escapeHtml(coachNames) : ''}</div>
                         <div style="font-size:0.8rem;color:#475569;margin-top:8px;">學員 ${students.length} 人</div>
                         <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">課程中 ${activeCount} / 已完成 ${completedCount}</div>
                     </button>
@@ -1028,7 +1028,7 @@
                     <div style="border:1px solid #dbeafe;border-radius:14px;padding:14px;background:#fff;box-shadow:0 2px 8px rgba(37,99,235,0.08);">
                         <div style="font-weight:700;color:#1e3a8a;">${escapeHtml(classItem.name || classItem.id)}</div>
                         <div style="font-size:0.82rem;color:#64748b;margin-top:4px;">ID: ${escapeHtml(classItem.id)}</div>
-                        <div style="font-size:0.82rem;color:#475569;margin-top:10px;">班主任 ${coachCount} 人 ${coachNames ? '：' + escapeHtml(coachNames) : ''}</div>
+                        <div style="font-size:0.82rem;color:#475569;margin-top:10px;">資深營養師 ${coachCount} 人 ${coachNames ? '：' + escapeHtml(coachNames) : ''}</div>
                         <div style="font-size:0.82rem;color:#475569;margin-top:2px;">學員 ${studentCount} 人</div>
                     </div>
                 `;
@@ -1039,7 +1039,7 @@
             const container = document.getElementById('coachListContent');
             if (!container) return;
             if (!allCoaches.length) {
-                container.innerHTML = '<div style="color:#64748b;">目前沒有班主任帳號</div>';
+                container.innerHTML = '<div style="color:#64748b;">目前沒有資深營養師帳號</div>';
                 return;
             }
             container.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;">${allCoaches.map((coach) => {
@@ -1057,7 +1057,7 @@
                         <div style="padding:6px 10px;border:1px solid #dbeafe;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:0.8125rem;font-weight:600;white-space:nowrap;">
                             ${escapeHtml(coachClassNames)}
                         </div>
-                        <button type="button" class="deleteCoachBtn" data-uid="${coach.uid}" data-username="${escapeHtml(coach.username || '')}" data-email="${escapeHtml(coach.email || '')}" style="border:none;border-radius:8px;padding:6px 8px;font-size:0.75rem;background:#FF3B30;color:#fff;cursor:pointer;white-space:nowrap;">刪除班主任</button>
+                        <button type="button" class="deleteCoachBtn" data-uid="${coach.uid}" data-username="${escapeHtml(coach.username || '')}" data-email="${escapeHtml(coach.email || '')}" style="border:none;border-radius:8px;padding:6px 8px;font-size:0.75rem;background:#FF3B30;color:#fff;cursor:pointer;white-space:nowrap;">刪除資深營養師</button>
                     </div>
                 </div>`;
             }).join('')}</div>`;
@@ -1179,7 +1179,7 @@
                                 <input type="date" name="endDate" value="${escapeHtml(classItem.endDate || '')}" style="width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;">
                             </div>
                         </div>
-                            <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">班主任帳號（可複選）</label>
+                            <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">資深營養師帳號（可複選）</label>
                             <select name="coachNames" multiple style="width:100%;min-height:80px;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;font-size:0.875rem;">
                                 ${allCoaches.map((coach) => {
                                     const coachUsername = escapeHtml(coach.username || coach.email || coach.uid || '');
@@ -1266,7 +1266,7 @@
             pendingDeleteClass = classInfo;
             if (deleteClassPassword) deleteClassPassword.value = '';
             if (deleteClassHint) {
-                deleteClassHint.textContent = `即將刪除「${classInfo.name || classInfo.id}」，包含 ${classInfo.studentCount || 0} 位學員及其相關資料。班主任帳號將保留。請輸入管理員密碼以確認。`;
+                deleteClassHint.textContent = `即將刪除「${classInfo.name || classInfo.id}」，包含 ${classInfo.studentCount || 0} 位學員及其相關資料。資深營養師帳號將保留。請輸入管理員密碼以確認。`;
             }
             if (deleteClassModal) {
                 deleteClassModal.style.display = 'flex';
@@ -1558,8 +1558,8 @@
                 renderCoachList();
                 renderCompanyClassOverview();
             } catch (error) {
-                console.error('更新班主任班級失敗:', error);
-                alert(`更新班主任班級失敗：${error.message}`);
+                console.error('更新資深營養師班級失敗:', error);
+                alert(`更新資深營養師班級失敗：${error.message}`);
             } finally {
                 select.disabled = false;
             }
@@ -3151,10 +3151,10 @@
                     addCoachModal.style.display = 'none';
                     addCoachForm.reset();
                     await loadCoachList();
-                    alert('班主任帳號新增成功');
+                    alert('資深營養師帳號新增成功');
                 } catch (error) {
-                    console.error('新增班主任失敗:', error);
-                    alert(`新增班主任失敗：${error.message}`);
+                    console.error('新增資深營養師失敗:', error);
+                    alert(`新增資深營養師失敗：${error.message}`);
                     try { await signOut(secondaryAuth); } catch (signOutError) { console.warn(signOutError); }
                 } finally {
                     submitAddCoachBtn.disabled = false;
@@ -3397,8 +3397,8 @@
                     uid: btn.getAttribute('data-uid') || '',
                     username: btn.getAttribute('data-username') || '',
                     email: btn.getAttribute('data-email') || '',
-                    studentName: btn.getAttribute('data-username') || '班主任'
-                }, '班主任');
+                    studentName: btn.getAttribute('data-username') || '資深營養師'
+                }, '資深營養師');
             }, true);
         }
 
@@ -3508,7 +3508,7 @@
                     closeDeleteStudentModal();
                     alert(`${deletedTargetType}帳號與相關資料已刪除`);
                     await loadStudentList();
-                    if (deletedTargetType === '班主任') {
+                    if (deletedTargetType === '資深營養師') {
                         await loadCoachList();
                     }
                 } catch (error) {
@@ -3709,7 +3709,7 @@
                     
                     const headerTitle = document.getElementById('pageTitle');
                     if (userRole === 'admin') {
-                        headerTitle.textContent = '體重管理班主任 ' + userName;
+                        headerTitle.textContent = '體重管理資深營養師 ' + userName;
                     } else {
                         headerTitle.textContent = '體重管理班學員 ' + userName;
                     }
