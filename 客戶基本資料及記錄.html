@@ -518,7 +518,7 @@
                     <div class="form-group half-width">
                         <label>產前體重</label>
                         <div class="weight-group">
-                            <input type="number" id="prePregnancyWeight" name="prePregnancyWeight" placeholder="體重" step="0.1" min="0">
+                            <input type="number" id="prePregnancyWeight" name="prePregnancyWeight" placeholder="體重" step="0.1" min="0" onkeydown="return event.key !== '-'">
                             <span>kg</span>
                         </div>
                     </div>
@@ -526,7 +526,7 @@
                     <div class="form-group half-width">
                         <label>產後體重</label>
                         <div class="weight-group">
-                            <input type="number" id="postPregnancyWeight" name="postPregnancyWeight" placeholder="體重" step="0.1" min="0">
+                            <input type="number" id="postPregnancyWeight" name="postPregnancyWeight" placeholder="體重" step="0.1" min="0" onkeydown="return event.key !== '-'">
                             <span>kg</span>
                         </div>
                     </div>
