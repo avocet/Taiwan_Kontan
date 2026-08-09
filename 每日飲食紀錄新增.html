@@ -779,7 +779,7 @@
                     <div class="form-group">
                         <label>上傳照片（可多張）</label>
                         <div class="photo-upload" id="photoUpload">
-                            <input type="file" id="photo" name="photo" accept="image/*" multiple>
+                            <input type="file" id="photo" name="photo" accept="image/*" multiple capture="environment">
                             <div class="upload-icon">📷</div>
                             <div class="upload-text">點擊上傳照片（可多張）</div>
                         </div>
@@ -1112,8 +1112,7 @@
 
         photoInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
-            photoPreviewContainer.innerHTML = '';
-            uploadedPhotos = [];
+            let currentIndex = uploadedPhotos.length;
             
             files.forEach((file, index) => {
                 const reader = new FileReader();
@@ -1129,7 +1128,7 @@
                     removeBtn.innerHTML = '✕';
                     removeBtn.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;';
                     removeBtn.onclick = () => {
-                        uploadedPhotos.splice(index, 1);
+                        uploadedPhotos.splice(currentIndex + index, 1);
                         imgContainer.remove();
                     };
                     
@@ -1140,6 +1139,8 @@
                 };
                 reader.readAsDataURL(file);
             });
+            
+            photoInput.value = '';
         });
 
         function showMessage(element, duration = 3000) {
