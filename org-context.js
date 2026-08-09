@@ -152,8 +152,9 @@ export async function ensureUserOrgProfile(db, authUser, context, extra = {}) {
     
     let existingClassIds = [];
     const existingUserDoc = await getDoc(doc(db, "users", docId));
-    if (existingUserDoc.exists && existingUserDoc.data()?.classIds) {
-        existingClassIds = existingUserDoc.data().classIds;
+    if (existingUserDoc.exists) {
+        const existingData = existingUserDoc.data() || {};
+        existingClassIds = Array.isArray(existingData.classIds) ? existingData.classIds : [];
     }
     
     const payload = {
@@ -163,7 +164,7 @@ export async function ensureUserOrgProfile(db, authUser, context, extra = {}) {
         role: context.role === "student" ? "customer" : context.role,
         companyId: context.companyId || DEFAULT_COMPANY_ID,
         primaryClassId: context.primaryClassId || DEFAULT_CLASS_ID,
-        classIds: (context.classIds && context.classIds.length) ? context.classIds : existingClassIds,
+        classIds: Array.isArray(context.classIds) && context.classIds.length > 0 ? context.classIds : existingClassIds,
         updatedAt: serverTimestamp(),
         ...extra
     };
