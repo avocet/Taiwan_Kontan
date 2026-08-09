@@ -189,9 +189,14 @@ exports.deleteStudentAccountData = onCall(
     if (callerUserDoc.exists) {
       callerRole = String(callerUserDoc.data()?.role || "").toLowerCase();
     } else {
-      const callerByEmail = await db.collection("users").where("email", "==", callerEmail).limit(1).get();
-      if (!callerByEmail.empty) {
-        callerRole = String(callerByEmail.docs[0].data()?.role || "").toLowerCase();
+      const callerByUid = await db.collection("users").where("uid", "==", callerUid).limit(1).get();
+      if (!callerByUid.empty) {
+        callerRole = String(callerByUid.docs[0].data()?.role || "").toLowerCase();
+      } else {
+        const callerByEmail = await db.collection("users").where("email", "==", callerEmail).limit(1).get();
+        if (!callerByEmail.empty) {
+          callerRole = String(callerByEmail.docs[0].data()?.role || "").toLowerCase();
+        }
       }
     }
 
