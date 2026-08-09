@@ -164,7 +164,7 @@ export async function ensureUserOrgProfile(db, authUser, context, extra = {}) {
         role: context.role === "student" ? "customer" : context.role,
         companyId: context.companyId || DEFAULT_COMPANY_ID,
         primaryClassId: context.primaryClassId || DEFAULT_CLASS_ID,
-        classIds: Array.isArray(context.classIds) && context.classIds.length > 0 ? context.classIds : existingClassIds,
+        classIds: existingClassIds.length > 0 ? existingClassIds : (Array.isArray(context.classIds) ? context.classIds : []),
         updatedAt: serverTimestamp(),
         ...extra
     };
