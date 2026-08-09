@@ -56,7 +56,6 @@ function normalizeClassIds(profile) {
 
 export async function ensureDefaultOrgStructure(db) {
     const companyRef = doc(db, "companies", DEFAULT_COMPANY_ID);
-    const classRef = doc(db, "classes", DEFAULT_CLASS_ID);
 
     await setDoc(companyRef, {
         name: DEFAULT_COMPANY_NAME,
@@ -66,21 +65,8 @@ export async function ensureDefaultOrgStructure(db) {
         createdAt: serverTimestamp()
     }, { merge: true });
 
-    const existingClass = await getDoc(classRef);
-    if (!existingClass.exists) {
-        await setDoc(classRef, {
-            companyId: DEFAULT_COMPANY_ID,
-            name: DEFAULT_CLASS_NAME,
-            status: "active",
-            coachIds: [],
-            updatedAt: serverTimestamp(),
-            createdAt: serverTimestamp()
-        });
-    }
-
     return {
-        companyId: DEFAULT_COMPANY_ID,
-        classId: DEFAULT_CLASS_ID
+        companyId: DEFAULT_COMPANY_ID
     };
 }
 
