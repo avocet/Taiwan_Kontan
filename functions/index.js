@@ -185,7 +185,15 @@ exports.deleteStudentAccountData = onCall(
     const db = admin.firestore();
     const isAdmin = await resolveAdminRole(db, callerUid, callerEmail);
     const callerUserDoc = await db.collection("users").doc(callerUid).get();
-    const callerRole = callerUserDoc.data()?.role || "";
+    let callerRole = "";
+    if (callerUserDoc.exists) {
+      callerRole = String(callerUserDoc.data()?.role || "").toLowerCase();
+    } else {
+      const callerByEmail = await db.collection("users").where("email", "==", callerEmail).limit(1).get();
+      if (!callerByEmail.empty) {
+        callerRole = String(callerByEmail.docs[0].data()?.role || "").toLowerCase();
+      }
+    }
 
     const isCoach = callerRole === "coach";
 
