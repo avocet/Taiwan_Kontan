@@ -149,6 +149,13 @@ export async function resolveUserContext(db, authUser, options = {}) {
 
 export async function ensureUserOrgProfile(db, authUser, context, extra = {}) {
     const docId = context.sourceUserDocId || authUser.uid;
+    
+    let existingClassIds = [];
+    const existingUserDoc = await getDoc(doc(db, "users", docId));
+    if (existingUserDoc.exists && existingUserDoc.data()?.classIds) {
+        existingClassIds = existingUserDoc.data().classIds;
+    }
+    
     const payload = {
         uid: authUser.uid,
         email: normalizeLower(authUser.email || context.email || ""),
@@ -156,7 +163,7 @@ export async function ensureUserOrgProfile(db, authUser, context, extra = {}) {
         role: context.role === "student" ? "customer" : context.role,
         companyId: context.companyId || DEFAULT_COMPANY_ID,
         primaryClassId: context.primaryClassId || DEFAULT_CLASS_ID,
-        classIds: unique(context.classIds && context.classIds.length ? context.classIds : [context.primaryClassId || DEFAULT_CLASS_ID]),
+        classIds: (context.classIds && context.classIds.length) ? context.classIds : existingClassIds,
         updatedAt: serverTimestamp(),
         ...extra
     };
