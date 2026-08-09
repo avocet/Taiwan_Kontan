@@ -701,7 +701,7 @@
         <div style="background:white;padding:24px;border-radius:16px;width:90%;max-width:420px;margin:20px;">
             <h3 style="margin-bottom:10px;font-size:1.125rem;">刪除學員帳號</h3>
             <p id="deleteStudentHint" style="font-size:0.875rem;color:#666;margin-bottom:12px;">請輸入管理員密碼以確認刪除。</p>
-            <div style="margin-bottom:12px;">
+            <div id="deletePasswordSection" style="margin-bottom:12px;">
                 <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">管理員密碼</label>
                 <input type="password" id="deleteStudentPassword" autocomplete="current-password" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
             </div>
@@ -3297,7 +3297,18 @@
             pendingDeleteStudent = student;
             pendingDeleteTargetType = targetType;
             deleteStudentPassword.value = '';
-            deleteStudentHint.textContent = `請輸入管理員密碼以刪除「${student.studentName || student.username || targetType}」帳號與相關資料。`;
+            
+            const isCoachUser = (currentOrgContext || window.currentOrgContext)?.role === 'coach';
+            const deletePasswordSection = document.getElementById('deletePasswordSection');
+            
+            if (isCoachUser) {
+                deleteStudentHint.textContent = `確定要刪除「${student.studentName || student.username || targetType}」帳號與相關資料嗎？`;
+                deletePasswordSection.style.display = 'none';
+            } else {
+                deleteStudentHint.textContent = `請輸入管理員密碼以刪除「${student.studentName || student.username || targetType}」帳號與相關資料。`;
+                deletePasswordSection.style.display = 'block';
+            }
+            
             deleteStudentModal.style.display = 'flex';
         }
 
