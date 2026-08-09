@@ -1156,8 +1156,14 @@
                                 <input type="date" name="endDate" value="${escapeHtml(classItem.endDate || '')}" style="width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;">
                             </div>
                         </div>
-                        <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">班主任帳號（逗號分隔）</label>
-                        <input name="coachNames" value="${escapeHtml(coachNames)}" placeholder="例如 tracy" style="width:100%;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;">
+                            <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">班主任帳號（可複選）</label>
+                            <select name="coachNames" multiple style="width:100%;min-height:80px;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;font-size:0.875rem;">
+                                ${allCoaches.map((coach) => {
+                                    const coachUsername = escapeHtml(coach.username || coach.email || coach.uid || '');
+                                    const isSelected = (classItem.coachIds || []).includes(coach.uid);
+                                    return `<option value="${coachUsername}" ${isSelected ? 'selected' : ''}>${coachUsername}</option>`;
+                                }).join('')}
+                            </select>
                         <div style="font-size:0.8rem;color:#475569;margin-bottom:12px;">學員 ${students.length} 人</div>
                         <div style="display:flex;justify-content:space-between;gap:10px;">
                             <button type="button" class="deleteClassBtn" data-class-id="${classItem.id}" style="padding:9px 12px;border:none;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer;">刪除班級</button>
@@ -1173,9 +1179,8 @@
                     event.preventDefault();
                     const classId = formEl.dataset.classId;
                     const fd = new FormData(formEl);
-                    const coachNameValues = String(fd.get('coachNames') || '')
-                        .split(',')
-                        .map((item) => item.trim().toLowerCase())
+                    const coachNameValues = Array.from(fd.getAll('coachNames') || [])
+                        .map((item) => String(item).trim().toLowerCase())
                         .filter(Boolean);
                     const usersSnapshot = await getDocs(collection(db, "users"));
                     const coachIds = usersSnapshot.docs
