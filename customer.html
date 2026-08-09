@@ -1013,6 +1013,14 @@
                 )).join('');
                 newCoachClassId.value = selectedClassId || currentClassId || options[0].id;
             }
+
+            const newAssistantClassId = document.getElementById('newAssistantClassId');
+            if (newAssistantClassId) {
+                newAssistantClassId.innerHTML = options.map((item) => (
+                    `<option value="${item.id}">${item.name || item.id}</option>`
+                )).join('');
+                newAssistantClassId.value = selectedClassId || currentClassId || options[0].id;
+            }
         }
 
         function renderClassOverview() {
