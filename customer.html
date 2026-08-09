@@ -1038,35 +1038,54 @@
                 container.innerHTML = '<div style="color:#64748b;">目前沒有班主任帳號</div>';
                 return;
             }
-            container.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;">${allCoaches.map((coach) => `
+            container.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;">${allCoaches.map((coach) => {
+                const coachClassNames = (coach.classIds || [coach.classId || DEFAULT_CLASS_ID])
+                    .map((cid) => availableClasses.find((c) => c.id === cid)?.name || cid)
+                    .filter(Boolean).join('、') || DEFAULT_CLASS_NAME;
+                return `
                 <div style="background:#fff;padding:14px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center;gap:12px;">
                     <div style="min-width:0;flex:1;">
                         <div style="font-weight:700;">${escapeHtml(coach.username || coach.email || coach.uid)}</div>
                         <div style="font-size:0.84rem;color:#64748b;">${escapeHtml(coach.email || '-')}</div>
-                        <div style="font-size:0.82rem;color:#475569;margin-top:6px;">負責班級：${escapeHtml(availableClasses.find((classItem) => classItem.id === (coach.classId || DEFAULT_CLASS_ID))?.name || coach.className || DEFAULT_CLASS_NAME)}</div>
+                        <div style="font-size:0.82rem;color:#475569;margin-top:6px;">負責班級：${escapeHtml(coachClassNames)}</div>
                     </div>
                     <div style="display:flex;align-items:center;gap:8px;">
                         <div style="padding:6px 10px;border:1px solid #dbeafe;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:0.8125rem;font-weight:600;white-space:nowrap;">
-                            ${escapeHtml(availableClasses.find((classItem) => classItem.id === (coach.classId || DEFAULT_CLASS_ID))?.name || coach.className || DEFAULT_CLASS_NAME)}
+                            ${escapeHtml(coachClassNames)}
                         </div>
                         <button type="button" class="deleteCoachBtn" data-uid="${coach.uid}" data-username="${escapeHtml(coach.username || '')}" data-email="${escapeHtml(coach.email || '')}" style="border:none;border-radius:8px;padding:6px 8px;font-size:0.75rem;background:#FF3B30;color:#fff;cursor:pointer;white-space:nowrap;">刪除班主任</button>
                     </div>
-                </div>
-            `).join('')}</div>`;
+                </div>`;
+            }).join('')}</div>`;
         }
 
         async function loadCoachList() {
             const usersSnapshot = await getDocs(collection(db, "users"));
+            const classesSnapshot = await getDocs(collection(db, "classes"));
+            const classMap = {};
+            classesSnapshot.docs.forEach((doc) => {
+                classMap[doc.id] = { id: doc.id, ...doc.data() };
+            });
+
             allCoaches = usersSnapshot.docs
                 .map((docSnap) => ({ uid: docSnap.id, ...docSnap.data() }))
                 .filter((row) => {
                     const role = String(row.role || '').toLowerCase();
                     return role === 'coach';
                 })
-                .map((row) => ({
-                    ...row,
-                    classId: row.primaryClassId || row.classId || DEFAULT_CLASS_ID
-                }))
+                .map((row) => {
+                    const coachClassIds = [];
+                    Object.values(classMap).forEach((cls) => {
+                        if ((cls.coachIds || []).includes(row.uid)) {
+                            coachClassIds.push(cls.id);
+                        }
+                    });
+                    return {
+                        ...row,
+                        classIds: coachClassIds,
+                        classId: coachClassIds[0] || DEFAULT_CLASS_ID
+                    };
+                })
                 .sort((a, b) => String(a.username || a.email || '').localeCompare(String(b.username || b.email || ''), 'zh-Hant'));
             renderCoachList();
             renderClassOverview();
@@ -1201,11 +1220,20 @@
 
                     for (const coachId of previousCoachIds) {
                         if (!coachIds.includes(coachId)) {
-                            await updateDoc(doc(db, "users", coachId), { primaryClassId: null });
+                            const coachDoc = await getDoc(doc(db, "users", coachId));
+                            const coachData = coachDoc.data() || {};
+                            const coachClassIds = coachData.classIds || [];
+                            const newClassIds = coachClassIds.filter((id) => id !== classId);
+                            await updateDoc(doc(db, "users", coachId), { classIds: newClassIds });
                         }
                     }
                     for (const coachId of coachIds) {
-                        await updateDoc(doc(db, "users", coachId), { primaryClassId: classId });
+                        const coachDoc = await getDoc(doc(db, "users", coachId));
+                        const coachData = coachDoc.data() || {};
+                        const coachClassIds = coachData.classIds || [];
+                        if (!coachClassIds.includes(classId)) {
+                            await updateDoc(doc(db, "users", coachId), { classIds: [...coachClassIds, classId] });
+                        }
                     }
 
                     await loadCoachList();
