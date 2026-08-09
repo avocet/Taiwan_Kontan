@@ -301,7 +301,7 @@ exports.deleteClassAccountData = onCall(
       .map((docSnap) => ({ ref: docSnap.ref, uid: docSnap.id, ...docSnap.data() }))
       .filter((row) => {
         const role = String(row.role || "").toLowerCase();
-        return role === "student" || role === "customer" || role === "coach";
+        return role === "student" || role === "customer";
       });
 
     const collectionsToDeleteByUser = [
