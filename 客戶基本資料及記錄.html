@@ -538,6 +538,29 @@
                 </div>
 
                 <div class="form-section">
+                    <div class="section-title">體重歷史</div>
+                    <div class="form-group half-width">
+                        <label>最輕體重</label>
+                        <div class="weight-group">
+                            <input type="number" id="lightestWeightAge" name="lightestWeightAge" placeholder="歲" min="1" max="150" style="width:60px;">
+                            <span>歲（持續</span>
+                            <input type="number" id="lightestWeightYears" name="lightestWeightYears" placeholder="年" min="1" style="width:60px;">
+                            <span>年）</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group half-width">
+                        <label>最重體重</label>
+                        <div class="weight-group">
+                            <input type="number" id="heaviestWeightAge" name="heaviestWeightAge" placeholder="歲" min="1" max="150" style="width:60px;">
+                            <span>歲（持續</span>
+                            <input type="number" id="heaviestWeightYears" name="heaviestWeightYears" placeholder="年" min="1" style="width:60px;">
+                            <span>年）</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
                     <div class="section-title">服務資訊</div>
                     
                     <div class="form-group half-width">
@@ -644,6 +667,10 @@
                     if (!nutritionistName && data.營養師) document.getElementById('nutritionist').value = data.營養師;
                     if (data.目標體重) document.getElementById('targetWeight').value = data.目標體重;
                     if (data.課程週數) document.getElementById('courseWeeks').value = data.課程週數;
+                    if (data.最輕體重年齡) document.getElementById('lightestWeightAge').value = data.最輕體重年齡;
+                    if (data.最輕體重年數) document.getElementById('lightestWeightYears').value = data.最輕體重年數;
+                    if (data.最重體重年齡) document.getElementById('heaviestWeightAge').value = data.最重體重年齡;
+                    if (data.最重體重年數) document.getElementById('heaviestWeightYears').value = data.最重體重年數;
                     if (data.產前體重) document.getElementById('prePregnancyWeight').value = data.產前體重;
                     if (data.產後體重) document.getElementById('postPregnancyWeight').value = data.產後體重;
                     if (data.上月mc週期) document.getElementById('mcCycle').value = data.上月mc週期;
@@ -932,6 +959,10 @@
                 營養師: document.getElementById('nutritionist').value.trim(),
                 目標體重: document.getElementById('targetWeight').value.trim(),
                 課程週數: document.getElementById('courseWeeks').value.trim(),
+                最輕體重年齡: document.getElementById('lightestWeightAge').value.trim(),
+                最輕體重年數: document.getElementById('lightestWeightYears').value.trim(),
+                最重體重年齡: document.getElementById('heaviestWeightAge').value.trim(),
+                最重體重年數: document.getElementById('heaviestWeightYears').value.trim(),
                 產前體重: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('prePregnancyWeight').value.trim() : '',
                 產後體重: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('postPregnancyWeight').value.trim() : '',
                 上月mc週期: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('mcCycle').value : '',
