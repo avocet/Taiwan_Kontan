@@ -361,6 +361,7 @@
             <button type="button" class="admin-tools-btn" id="companyCreateClassBtn">新增減重班</button>
             <button type="button" class="admin-tools-btn" id="companyManageClassesBtn">刪除/編輯減重班</button>
             <button type="button" class="admin-tools-btn" id="addCoachBtn">新增資深營養師帳號</button>
+            <button type="button" class="admin-tools-btn" id="addAssistantBtn">新增助教帳號</button>
             <button type="button" class="admin-tools-btn" id="backfillOrgDataBtnCompany">資料補齊</button>
         </div>
         <div style="margin-bottom:14px;">
@@ -373,6 +374,11 @@
             <div style="font-size:0.9rem;color:#64748b;">可新增、指定班級與刪除資深營養師帳號。</div>
         </div>
         <div id="coachListContent"></div>
+        <div style="margin-bottom:14px;margin-top:24px;">
+            <h2 style="font-size:1.25rem;margin:0 0 8px;">助教帳號</h2>
+            <div style="font-size:0.9rem;color:#64748b;">可新增與刪除助教帳號。助教可以批改每日飲食紀錄，但不能編輯飲食份數表。</div>
+        </div>
+        <div id="assistantListContent"></div>
     </div>
 
     <!-- 學員列表（管理員用） -->
@@ -669,6 +675,34 @@
         </div>
     </div>
 
+    <div id="addAssistantModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1120;align-items:center;justify-content:center;">
+        <div style="background:white;padding:24px;border-radius:16px;width:90%;max-width:420px;margin:20px;">
+            <h3 style="margin-bottom:16px;font-size:1.125rem;">新增助教帳號</h3>
+            <form id="addAssistantForm">
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">使用者名稱</label>
+                    <input type="text" id="newAssistantUsername" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">電子郵件</label>
+                    <input type="email" id="newAssistantEmail" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">負責班級</label>
+                    <select id="newAssistantClassId" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;"></select>
+                </div>
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:#666;">密碼</label>
+                    <input type="password" id="newAssistantPassword" required minlength="6" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:1rem;">
+                </div>
+                <div style="display:flex;gap:10px;margin-top:20px;">
+                    <button type="button" id="cancelAddAssistantBtn" style="flex:1;padding:12px;border:1px solid #ddd;background:white;border-radius:8px;cursor:pointer;">取消</button>
+                    <button type="submit" id="submitAddAssistantBtn" style="flex:1;padding:12px;background:#007AFF;color:white;border:none;border-radius:8px;cursor:pointer;">新增</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="manageClassesModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1150;align-items:center;justify-content:center;">
         <div style="background:white;padding:24px;border-radius:16px;width:min(920px,94vw);max-height:88vh;overflow:auto;margin:20px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px;">
@@ -790,6 +824,7 @@
         let availableClasses = [];
         let selectedClassId = '';
         let allCoaches = [];
+        let allAssistants = [];
 
         async function redirectIfCourseCompleted(user, userRole, savedUsername = '') {
             if (!user || userRole === 'admin' || userRole === 'super_admin' || userRole === 'coach') {
@@ -882,6 +917,7 @@
                 await refreshClassOptions();
                 await loadStudentList();
                 await loadCoachList();
+                await loadAssistantList();
             } else {
                 headerTitle.textContent = '體重管理班學員 ' + userName;
                 menuGrid.style.display = 'grid';
@@ -1094,6 +1130,62 @@
             renderCoachList();
             renderClassOverview();
             renderCompanyClassOverview();
+        }
+
+        function renderAssistantList() {
+            const container = document.getElementById('assistantListContent');
+            if (!container) return;
+            if (!allAssistants.length) {
+                container.innerHTML = '<div style="color:#64748b;">目前沒有助教帳號</div>';
+                return;
+            }
+            container.innerHTML = `<div style="display:flex;flex-direction:column;gap:12px;">${allAssistants.map((assistant) => {
+                const assistantClassNames = (assistant.classIds || [assistant.classId || DEFAULT_CLASS_ID])
+                    .map((cid) => availableClasses.find((c) => c.id === cid)?.name || cid)
+                    .filter(Boolean).join('、') || DEFAULT_CLASS_NAME;
+                return `
+                <div style="background:#fff;padding:14px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                    <div style="min-width:0;flex:1;">
+                        <div style="font-weight:700;">${escapeHtml(assistant.username || assistant.email || assistant.uid)}</div>
+                        <div style="font-size:0.84rem;color:#64748b;">${escapeHtml(assistant.email || '-')}</div>
+                        <div style="font-size:0.82rem;color:#475569;margin-top:6px;">負責班級：${escapeHtml(assistantClassNames)}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <button type="button" class="deleteAssistantBtn" data-uid="${assistant.uid}" data-username="${escapeHtml(assistant.username || '')}" data-email="${escapeHtml(assistant.email || '')}" style="border:none;border-radius:8px;padding:6px 8px;font-size:0.75rem;background:#FF3B30;color:#fff;cursor:pointer;white-space:nowrap;">刪除助教</button>
+                    </div>
+                </div>`;
+            }).join('')}</div>`;
+        }
+
+        async function loadAssistantList() {
+            const usersSnapshot = await getDocs(collection(db, "users"));
+            const classesSnapshot = await getDocs(collection(db, "classes"));
+            const classMap = {};
+            classesSnapshot.docs.forEach((doc) => {
+                classMap[doc.id] = { id: doc.id, ...doc.data() };
+            });
+
+            allAssistants = usersSnapshot.docs
+                .map((docSnap) => ({ uid: docSnap.id, ...docSnap.data() }))
+                .filter((row) => {
+                    const role = String(row.role || '').toLowerCase();
+                    return role === 'assistant';
+                })
+                .map((row) => {
+                    const assistantClassIds = [];
+                    Object.values(classMap).forEach((cls) => {
+                        if ((cls.assistantIds || []).includes(row.uid)) {
+                            assistantClassIds.push(cls.id);
+                        }
+                    });
+                    return {
+                        ...row,
+                        classIds: assistantClassIds,
+                        classId: assistantClassIds[0] || DEFAULT_CLASS_ID
+                    };
+                })
+                .sort((a, b) => String(a.username || a.email || '').localeCompare(String(b.username || b.email || ''), 'zh-Hant'));
+            renderAssistantList();
         }
 
         async function buildUserOrgLookup() {
@@ -2193,6 +2285,12 @@
             studentNameTitle.textContent = name + ' 的飲食紀錄';
             recordsContent.innerHTML = '<p>載入中...</p>';
             mobileRecordsContent.innerHTML = '<p>載入中...</p>';
+
+            const showPortionTableBtn = document.getElementById('showPortionTableBtn');
+            const currentUserRole = (currentOrgContext || window.currentOrgContext)?.role;
+            if (showPortionTableBtn) {
+                showPortionTableBtn.style.display = (currentUserRole === 'assistant') ? 'none' : 'inline-block';
+            }
             
             try {
                 console.log('Querying for name:', name);
@@ -2507,7 +2605,7 @@
                     rightHtml += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);display:flex;justify-content:space-between;align-items:flex-start;">
                             <div style="flex:1;">${portionHtml}</div>
-                            <button class="editPortionBtn" data-portion-id="${portion.id}" style="background:#007AFF;color:white;border:none;padding:8px 12px;border-radius:8px;font-size:0.75rem;cursor:pointer;margin-left:10px;white-space:nowrap;">編輯</button>
+                            ${currentUserRole !== 'assistant' ? `<button class="editPortionBtn" data-portion-id="${portion.id}" style="background:#007AFF;color:white;border:none;padding:8px 12px;border-radius:8px;font-size:0.75rem;cursor:pointer;margin-left:10px;white-space:nowrap;">編輯</button>` : ''}
                         </div>
                     `;
                 }
@@ -2709,6 +2807,8 @@
             rightAlignedDisplay.addEventListener('click', (e) => {
                 const btn = e.target.closest('.editPortionBtn');
                 if (!btn) return;
+                const currentRole = (currentOrgContext || window.currentOrgContext)?.role;
+                if (currentRole === 'assistant') return;
                 const portionId = btn.getAttribute('data-portion-id');
                 if (!portionId) return;
                 editPortionRecordById(portionId);
@@ -3045,6 +3145,11 @@
         const addCoachForm = document.getElementById('addCoachForm');
         const cancelAddCoachBtn = document.getElementById('cancelAddCoachBtn');
         const submitAddCoachBtn = document.getElementById('submitAddCoachBtn');
+        const addAssistantBtn = document.getElementById('addAssistantBtn');
+        const addAssistantModal = document.getElementById('addAssistantModal');
+        const addAssistantForm = document.getElementById('addAssistantForm');
+        const cancelAddAssistantBtn = document.getElementById('cancelAddAssistantBtn');
+        const submitAddAssistantBtn = document.getElementById('submitAddAssistantBtn');
         const deleteClassModal = document.getElementById('deleteClassModal');
         const deleteClassHint = document.getElementById('deleteClassHint');
         const deleteClassPassword = document.getElementById('deleteClassPassword');
@@ -3159,6 +3264,78 @@
                 } finally {
                     submitAddCoachBtn.disabled = false;
                     submitAddCoachBtn.textContent = '新增';
+                }
+            });
+        }
+
+        if (addAssistantBtn) {
+            addAssistantBtn.addEventListener('click', () => {
+                renderClassOptions();
+                addAssistantForm.reset();
+                addAssistantModal.style.display = 'flex';
+            });
+        }
+
+        if (cancelAddAssistantBtn) {
+            cancelAddAssistantBtn.addEventListener('click', () => {
+                addAssistantModal.style.display = 'none';
+                addAssistantForm.reset();
+            });
+        }
+
+        if (addAssistantModal) {
+            addAssistantModal.addEventListener('click', (e) => {
+                if (e.target === addAssistantModal) {
+                    addAssistantModal.style.display = 'none';
+                }
+            });
+        }
+
+        if (addAssistantForm) {
+            addAssistantForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = document.getElementById('newAssistantUsername').value.trim();
+                const email = document.getElementById('newAssistantEmail').value.trim();
+                const password = document.getElementById('newAssistantPassword').value;
+                const assignedClassId = document.getElementById('newAssistantClassId').value || DEFAULT_CLASS_ID;
+                if (!username || !email || !password) {
+                    alert('請填寫所有欄位');
+                    return;
+                }
+                submitAddAssistantBtn.disabled = true;
+                submitAddAssistantBtn.textContent = '新增中...';
+                try {
+                    const checkQuery = query(collection(db, "users"), where("username", "==", username.toLowerCase()));
+                    const checkSnapshot = await getDocs(checkQuery);
+                    if (!checkSnapshot.empty) throw new Error('此使用者名稱已被使用');
+
+                    const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+                    const user = userCredential.user;
+                    const classInfo = availableClasses.find((item) => item.id === assignedClassId);
+                    await setDoc(doc(db, "users", user.uid), {
+                        uid: user.uid,
+                        username: username.toLowerCase(),
+                        email: email.toLowerCase(),
+                        role: 'assistant',
+                        companyId: currentOrgContext?.companyId || 'akso-company',
+                        primaryClassId: assignedClassId,
+                        classId: assignedClassId,
+                        classIds: [assignedClassId],
+                        className: classInfo?.name || assignedClassId,
+                        createdAt: serverTimestamp()
+                    });
+                    await signOut(secondaryAuth);
+                    addAssistantModal.style.display = 'none';
+                    addAssistantForm.reset();
+                    await loadAssistantList();
+                    alert('助教帳號新增成功');
+                } catch (error) {
+                    console.error('新增助教失敗:', error);
+                    alert(`新增助教失敗：${error.message}`);
+                    try { await signOut(secondaryAuth); } catch (signOutError) { console.warn(signOutError); }
+                } finally {
+                    submitAddAssistantBtn.disabled = false;
+                    submitAddAssistantBtn.textContent = '新增';
                 }
             });
         }
@@ -3401,6 +3578,21 @@
                 }, '資深營養師');
             }, true);
         }
+        const assistantListContent = document.getElementById('assistantListContent');
+        if (assistantListContent) {
+            assistantListContent.addEventListener('click', (e) => {
+                const btn = e.target.closest('.deleteAssistantBtn');
+                if (!btn) return;
+                e.preventDefault();
+                e.stopPropagation();
+                openDeleteStudentModal({
+                    uid: btn.getAttribute('data-uid') || '',
+                    username: btn.getAttribute('data-username') || '',
+                    email: btn.getAttribute('data-email') || '',
+                    studentName: btn.getAttribute('data-username') || '助教'
+                }, '助教');
+            }, true);
+        }
 
         if (cancelDeleteStudentBtn) {
             cancelDeleteStudentBtn.addEventListener('click', closeDeleteStudentModal);
@@ -3510,6 +3702,8 @@
                     await loadStudentList();
                     if (deletedTargetType === '資深營養師') {
                         await loadCoachList();
+                    } else if (deletedTargetType === '助教') {
+                        await loadAssistantList();
                     }
                 } catch (error) {
                     console.error('刪除學員失敗:', error);

@@ -32,6 +32,7 @@ function normalizeRole(roleValue, adminFallback = false) {
     if (role === "super_admin" || role === "super-admin") return "super_admin";
     if (role === "admin") return "admin";
     if (role === "coach" || role === "class_admin" || role === "class-admin") return "coach";
+    if (role === "assistant") return "assistant";
     if (role === "student" || role === "customer") return "student";
     return adminFallback ? "admin" : "student";
 }
