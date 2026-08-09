@@ -177,16 +177,20 @@ exports.deleteStudentAccountData = onCall(
   { region: MAIL_REGION, timeoutSeconds: 120, memory: "512MiB" },
   async (request) => {
     if (!request.auth?.uid) {
-      throw new HttpsError("unauthenticated", "需要先登入管理員帳號");
+      throw new HttpsError("unauthenticated", "需要先登入");
     }
 
     const callerUid = request.auth.uid;
     const callerEmail = String(request.auth.token?.email || "").trim().toLowerCase();
     const db = admin.firestore();
     const isAdmin = await resolveAdminRole(db, callerUid, callerEmail);
+    const callerUserDoc = await db.collection("users").doc(callerUid).get();
+    const callerRole = callerUserDoc.data()?.role || "";
 
-    if (!isAdmin) {
-      throw new HttpsError("permission-denied", "僅管理員可執行此操作");
+    const isCoach = callerRole === "coach";
+
+    if (!isAdmin && !isCoach) {
+      throw new HttpsError("permission-denied", "僅管理員或班主任可執行此操作");
     }
 
     const payload = request.data || {};

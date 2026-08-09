@@ -3409,14 +3409,17 @@
         if (confirmDeleteStudentBtn) {
             confirmDeleteStudentBtn.addEventListener('click', async () => {
                 if (!pendingDeleteStudent) return;
+                
+                const isCoachUser = currentOrgContext?.role === 'coach';
                 const password = deleteStudentPassword.value || '';
-                if (!password.trim()) {
+                
+                if (!isCoachUser && !password.trim()) {
                     alert('請輸入管理員密碼');
                     return;
                 }
 
                 const user = auth.currentUser;
-                if (!user || !user.email) {
+                if (!isCoachUser && (!user || !user.email)) {
                     alert('目前登入資訊異常，請重新登入後再試');
                     return;
                 }
@@ -3425,8 +3428,10 @@
                 confirmDeleteStudentBtn.disabled = true;
                 confirmDeleteStudentBtn.textContent = '刪除中...';
                 try {
-                    const credential = EmailAuthProvider.credential(user.email, password);
-                    await reauthenticateWithCredential(user, credential);
+                    if (!isCoachUser) {
+                        const credential = EmailAuthProvider.credential(user.email, password);
+                        await reauthenticateWithCredential(user, credential);
+                    }
 
                     const deleteStudentCallable = httpsCallable(functions, "deleteStudentAccountData");
                     await deleteStudentCallable({
@@ -3445,7 +3450,9 @@
                 } catch (error) {
                     console.error('刪除學員失敗:', error);
                     const code = error?.code || '';
-                    if (code.includes('auth/wrong-password') || code.includes('auth/invalid-credential')) {
+                    if (isCoachUser) {
+                        alert('刪除失敗：' + (error?.message || '請稍後再試'));
+                    } else if (code.includes('auth/wrong-password') || code.includes('auth/invalid-credential')) {
                         alert('管理員密碼錯誤');
                     } else if (code.includes('permission-denied')) {
                         alert('目前登入狀態不是管理員，請重新登入管理員帳號後再試');
