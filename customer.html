@@ -1187,6 +1187,9 @@
                         .filter((docSnap) => coachNameValues.includes(String(docSnap.data()?.username || '').toLowerCase()))
                         .map((docSnap) => docSnap.data()?.uid || docSnap.id);
 
+                    const classDoc = await getDoc(doc(db, "classes", classId));
+                    const previousCoachIds = classDoc.data()?.coachIds || [];
+
                     await updateDoc(doc(db, "classes", classId), {
                         name: String(fd.get('className') || '').trim() || classId,
                         startDate: String(fd.get('startDate') || ''),
@@ -1195,6 +1198,17 @@
                         coachNames: coachNameValues,
                         updatedAt: serverTimestamp()
                     });
+
+                    for (const coachId of previousCoachIds) {
+                        if (!coachIds.includes(coachId)) {
+                            await updateDoc(doc(db, "users", coachId), { primaryClassId: null });
+                        }
+                    }
+                    for (const coachId of coachIds) {
+                        await updateDoc(doc(db, "users", coachId), { primaryClassId: classId });
+                    }
+
+                    await loadCoachList();
                     await refreshClassOptions();
                     await loadStudentList();
                     alert('班級已更新');
