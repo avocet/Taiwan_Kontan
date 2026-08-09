@@ -786,6 +786,7 @@
         const functions = getFunctions(app, "asia-east1");
         const constitutionConfigRef = doc(db, "中醫體質問卷設定", "current");
         let currentOrgContext = null;
+        window.currentOrgContext = null;
         let availableClasses = [];
         let selectedClassId = '';
         let allCoaches = [];
@@ -832,6 +833,7 @@
             console.log('savedUsername:', savedUsername);
 
             currentOrgContext = await resolveUserContext(db, user, { savedUsername });
+            window.currentOrgContext = currentOrgContext;
             await ensureUserOrgProfile(db, user, currentOrgContext);
 
             const userName = currentOrgContext.displayName || '';
@@ -3410,7 +3412,7 @@
             confirmDeleteStudentBtn.addEventListener('click', async () => {
                 if (!pendingDeleteStudent) return;
                 
-                const isCoachUser = currentOrgContext?.role === 'coach';
+                const isCoachUser = (currentOrgContext || window.currentOrgContext)?.role === 'coach';
                 const password = deleteStudentPassword.value || '';
                 
                 if (!isCoachUser && !password.trim()) {
