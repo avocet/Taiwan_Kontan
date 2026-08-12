@@ -263,6 +263,46 @@
 
         .radio-label {
             font-size: 0.9375rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .radio-label input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9375rem;
+        }
+
+        .checkbox-option:hover {
+            border-color: var(--primary-color);
+            background: rgba(0, 122, 255, 0.05);
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary-color);
         }
 
         .hidden {
@@ -569,6 +609,74 @@
                 </div>
 
                 <div class="form-section">
+                    <div class="section-title">疾病狀況<span style="font-size:0.8rem;color:#666;font-weight:normal;margin-left:8px;">※ 勾選「無」者，其他選項請勿勾選</span></div>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="高血壓"> 高血壓</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="高血脂"> 高血脂</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="糖尿病／血糖異常"> 糖尿病／血糖異常</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="脂肪肝"> 脂肪肝</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="高尿酸／痛風"> 高尿酸／痛風</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="心血管疾病"> 心血管疾病</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="腎臟疾病"> 腎臟疾病</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="肝臟疾病"> 肝臟疾病</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="甲狀腺疾病"> 甲狀腺疾病</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="腸胃疾病"> 腸胃疾病</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="多囊性卵巢症候群"> 多囊性卵巢症候群</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="癌症治療中"> 癌症治療中</label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="其他"> 其他 <input type="text" id="diseaseOther" name="diseaseOther" placeholder="請說明" style="width:120px;padding:6px 10px;font-size:0.9rem;"></label>
+                        <label class="checkbox-option"><input type="checkbox" name="disease" value="無" onchange="toggleDiseaseOthers(this)"> 無</label>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">健康檢查<span style="font-size:0.8rem;color:#666;font-weight:normal;margin-left:8px;">最近3個月健康檢查是否曾出現以下異常？【可複選】</span></div>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="血糖／糖化血色素"> 血糖／糖化血色素</label>
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="三酸甘油脂"> 三酸甘油脂</label>
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="LDL膽固醇"> LDL膽固醇</label>
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="HDL膽固醇"> HDL膽固醇</label>
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="肝功能"> 肝功能</label>
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="腎功能"> 腎功能</label>
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="尿酸"> 尿酸</label>
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="血壓"> 血壓</label>
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="不知道（檢驗報告超過3個月）"> 不知道（檢驗報告超過3個月）</label>
+                        <label class="checkbox-option"><input type="checkbox" name="healthCheck" value="皆無"> 皆無</label>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">服用藥物</div>
+                    <div class="form-group">
+                        <label class="radio-label"><input type="radio" name="medication" value="無" checked onchange="toggleMedicationInput(this)"> 無</label>
+                        <label class="radio-label"><input type="radio" name="medication" value="有" onchange="toggleMedicationInput(this)"> 有，請填寫：</label>
+                        <input type="text" id="medicationText" name="medicationText" placeholder="藥物名稱" style="display:none;margin-top:8px;">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">保健食品</div>
+                    <div class="form-group">
+                        <label class="radio-label"><input type="radio" name="supplement" value="無" checked onchange="toggleSupplementInput(this)"> 無</label>
+                        <label class="radio-label"><input type="radio" name="supplement" value="有" onchange="toggleSupplementInput(this)"> 有，請填寫：</label>
+                        <input type="text" id="supplementText" name="supplementText" placeholder="保健食品名稱" style="display:none;margin-top:8px;">
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <div class="section-title">腸胃問題<span style="font-size:0.8rem;color:#666;font-weight:normal;margin-left:8px;">【可複選】</span></div>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-option"><input type="checkbox" name="giIssue" value="便秘"> 便秘</label>
+                        <label class="checkbox-option"><input type="checkbox" name="giIssue" value="腹瀉"> 腹瀉</label>
+                        <label class="checkbox-option"><input type="checkbox" name="giIssue" value="腹脹"> 腹脹</label>
+                        <label class="checkbox-option"><input type="checkbox" name="giIssue" value="胃痛／胃部不適"> 胃痛／胃部不適</label>
+                        <label class="checkbox-option"><input type="checkbox" name="giIssue" value="胃食道逆流"> 胃食道逆流</label>
+                        <label class="checkbox-option"><input type="checkbox" name="giIssue" value="噁心"> 噁心</label>
+                        <label class="checkbox-option"><input type="checkbox" name="giIssue" value="排便不規律"> 排便不規律</label>
+                        <label class="checkbox-option"><input type="checkbox" name="giIssue" value="無"> 無</label>
+                    </div>
+                </div>
+
+                <div class="form-section">
                     <div class="section-title">體重歷史（不再長高後）</div>
                     <div class="form-group half-width">
                         <label>最輕體重</label>
@@ -710,7 +818,45 @@
                     if (data.身高) document.getElementById('height').value = data.身高;
                     if (data.體重) document.getElementById('weight').value = data.體重;
                     if (data.BMI) document.getElementById('bmi').value = data.BMI;
-                    
+                    if (data.疾病 && Array.isArray(data.疾病)) {
+                        data.疾病.forEach(val => {
+                            const cb = document.querySelector(`input[name="disease"][value="${val}"]`);
+                            if (cb) cb.checked = true;
+                        });
+                    }
+                    if (data.健康檢查 && Array.isArray(data.健康檢查)) {
+                        data.健康檢查.forEach(val => {
+                            const cb = document.querySelector(`input[name="healthCheck"][value="${val}"]`);
+                            if (cb) cb.checked = true;
+                        });
+                    }
+                    if (data.服用藥物) {
+                        const medRadio = document.querySelector(`input[name="medication"][value="${data.服用藥物}"]`);
+                        if (medRadio) {
+                            medRadio.checked = true;
+                            if (data.服用藥物 === '有' && data.藥物內容) {
+                                document.getElementById('medicationText').value = data.藥物內容;
+                                document.getElementById('medicationText').style.display = 'block';
+                            }
+                        }
+                    }
+                    if (data.保健食品) {
+                        const suppRadio = document.querySelector(`input[name="supplement"][value="${data.保健食品}"]`);
+                        if (suppRadio) {
+                            suppRadio.checked = true;
+                            if (data.保健食品 === '有' && data.保健食品內容) {
+                                document.getElementById('supplementText').value = data.保健食品內容;
+                                document.getElementById('supplementText').style.display = 'block';
+                            }
+                        }
+                    }
+                    if (data.腸胃問題 && Array.isArray(data.腸胃問題)) {
+                        data.腸胃問題.forEach(val => {
+                            const cb = document.querySelector(`input[name="giIssue"][value="${val}"]`);
+                            if (cb) cb.checked = true;
+                        });
+                    }
+
                     document.getElementById('submitBtn').textContent = '更新資料';
                     document.getElementById('formTitle').textContent = '體重管理班學員基本資料';
                 }
@@ -779,6 +925,32 @@
                 bmiField.value = bmi;
             } else {
                 bmiField.value = '';
+            }
+        }
+
+        function toggleDiseaseOthers(checkbox) {
+            if (checkbox.checked && checkbox.value === '無') {
+                document.querySelectorAll('input[name="disease"]:not([value="無"])').forEach(cb => cb.checked = false);
+            }
+        }
+
+        function toggleMedicationInput(radio) {
+            const textInput = document.getElementById('medicationText');
+            if (radio.value === '有' && radio.checked) {
+                textInput.style.display = 'block';
+            } else {
+                textInput.style.display = 'none';
+                textInput.value = '';
+            }
+        }
+
+        function toggleSupplementInput(radio) {
+            const textInput = document.getElementById('supplementText');
+            if (radio.value === '有' && radio.checked) {
+                textInput.style.display = 'block';
+            } else {
+                textInput.style.display = 'none';
+                textInput.value = '';
             }
         }
 
@@ -1022,6 +1194,13 @@
                 身高: document.getElementById('height').value,
                 體重: document.getElementById('weight').value,
                 BMI: document.getElementById('bmi').value,
+                疾病: Array.from(document.querySelectorAll('input[name="disease"]:checked')).map(cb => cb.value),
+                健康檢查: Array.from(document.querySelectorAll('input[name="healthCheck"]:checked')).map(cb => cb.value),
+                服用藥物: document.querySelector('input[name="medication"]:checked')?.value || '',
+                藥物內容: document.getElementById('medicationText').value,
+                保健食品: document.querySelector('input[name="supplement"]:checked')?.value || '',
+                保健食品內容: document.getElementById('supplementText').value,
+                腸胃問題: Array.from(document.querySelectorAll('input[name="giIssue"]:checked')).map(cb => cb.value),
                 建立時間: serverTimestamp()
             }, currentOrgContext || { companyId: 'akso-company', primaryClassId: 'akso-default-class', classIds: ['akso-default-class'] });
 
