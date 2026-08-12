@@ -2703,7 +2703,7 @@
                                             </div>
                                             <div style="display:flex;align-items:center;gap:2px;">
                                                 <span style="font-size:0.7rem;color:#666;">V:</span>
-                                                <input type="number" id="cpfv-${daily.id}-${meal}V" value="${daily[`${meal}V`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="V" oninput="calcTotalKcal('${daily.id}')">
+                                                <input type="number" id="cpfv-${daily.id}-${meal}V" value="${v}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="V" oninput="calcTotalKcal('${daily.id}')">
                                             </div>
                                         </div>
                                         ` : (hasCPFV ? `<div style="font-size:0.75rem;color:#007AFF;margin-top:2px;margin-left:12px;">C:${c} P:${p} F:${f} V:${v}</div>` : '')}
