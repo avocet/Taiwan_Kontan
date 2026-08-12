@@ -123,6 +123,16 @@
             <div class="loading" id="loading">載入中...</div>
             <div class="empty" id="empty" style="display:none;">尚無可繪製的體重/體脂資料</div>
         </div>
+
+        <div class="chart-card" style="margin-top:16px;">
+            <div class="card-title">9圍紀錄趨勢</div>
+            <div class="card-subtitle">依紀錄日期顯示身體9圍尺寸（cm）</div>
+            <div class="canvas-wrap">
+                <canvas id="nineInchChart"></canvas>
+            </div>
+            <div class="loading" id="loading9">載入中...</div>
+            <div class="empty" id="empty9" style="display:none;">尚無可繪製的9圍資料</div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -150,6 +160,7 @@
         };
 
         let trendChart = null;
+        let nineInchChart = null;
         const pointValueLabelPlugin = {
             id: 'pointValueLabelPlugin',
             afterDatasetsDraw(chart) {
@@ -191,6 +202,8 @@
         async function loadChartData(userId) {
             const loadingEl = document.getElementById('loading');
             const emptyEl = document.getElementById('empty');
+            const loading9El = document.getElementById('loading9');
+            const empty9El = document.getElementById('empty9');
             try {
                 const q = query(collection(db, "每日體重三圍"), where("userId", "==", userId));
                 const snapshot = await getDocs(q);
@@ -209,24 +222,52 @@
 
                 if (!rows.length) {
                     emptyEl.style.display = 'block';
-                    return;
+                } else {
+                    const labels = rows.map((d) => d.紀錄日期);
+                    const weightValues = rows.map((d) => {
+                        const n = Number(d.體重);
+                        return Number.isFinite(n) ? n : null;
+                    });
+                    const fatValues = rows.map((d) => {
+                        const n = Number(d.體脂);
+                        return Number.isFinite(n) ? n : null;
+                    });
+
+                    renderChart(labels, weightValues, fatValues);
                 }
 
-                const labels = rows.map((d) => d.紀錄日期);
-                const weightValues = rows.map((d) => {
-                    const n = Number(d.體重);
-                    return Number.isFinite(n) ? n : null;
-                });
-                const fatValues = rows.map((d) => {
-                    const n = Number(d.體脂);
-                    return Number.isFinite(n) ? n : null;
-                });
+                const q9 = query(collection(db, "原始體重三圍"), where("userId", "==", userId));
+                const snapshot9 = await getDocs(q9);
 
-                renderChart(labels, weightValues, fatValues);
+                const rows9 = snapshot9.docs
+                    .map((docSnap) => docSnap.data())
+                    .filter((d) => d.紀錄日期)
+                    .sort((a, b) => String(a.紀錄日期).localeCompare(String(b.紀錄日期)));
+
+                loading9El.style.display = 'none';
+
+                if (!rows9.length) {
+                    empty9El.style.display = 'block';
+                } else {
+                    const labels9 = rows9.map((d) => d.紀錄日期);
+                    const chestValues = rows9.map((d) => Number(d.胸圍) || null);
+                    const waistValues = rows9.map((d) => Number(d.腰圍) || null);
+                    const hipValues = rows9.map((d) => Number(d.臀圍) || null);
+                    const leftArmValues = rows9.map((d) => Number(d.左手臂圍) || null);
+                    const rightArmValues = rows9.map((d) => Number(d.右手臂圍) || null);
+                    const leftThighValues = rows9.map((d) => Number(d.左大腿圍) || null);
+                    const rightThighValues = rows9.map((d) => Number(d.右大腿圍) || null);
+                    const leftCalfValues = rows9.map((d) => Number(d.左小腿圍) || null);
+                    const rightCalfValues = rows9.map((d) => Number(d.右小腿圍) || null);
+
+                    renderNineInchChart(labels9, chestValues, waistValues, hipValues, leftArmValues, rightArmValues, leftThighValues, rightThighValues, leftCalfValues, rightCalfValues);
+                }
             } catch (error) {
                 loadingEl.style.display = 'none';
                 emptyEl.style.display = 'block';
                 emptyEl.textContent = '載入失敗，請稍後再試';
+                loading9El.style.display = 'none';
+                empty9El.style.display = 'block';
                 console.error('載入曲線圖資料失敗:', error);
             }
         }
@@ -309,6 +350,53 @@
                     }
                 },
                 plugins: [pointValueLabelPlugin]
+            });
+        }
+
+        function renderNineInchChart(labels, chestValues, waistValues, hipValues, leftArmValues, rightArmValues, leftThighValues, rightThighValues, leftCalfValues, rightCalfValues) {
+            const ctx = document.getElementById('nineInchChart').getContext('2d');
+            if (nineInchChart) {
+                nineInchChart.destroy();
+            }
+
+            nineInchChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: '胸圍', data: chestValues, borderColor: '#FF6B6B', backgroundColor: 'rgba(255,107,107,0.18)', borderWidth: 2, pointRadius: 2.5, tension: 0.28, spanGaps: true },
+                        { label: '腰圍', data: waistValues, borderColor: '#FFA94D', backgroundColor: 'rgba(255,169,77,0.18)', borderWidth: 2, pointRadius: 2.5, tension: 0.28, spanGaps: true },
+                        { label: '臀圍', data: hipValues, borderColor: '#FFD43B', backgroundColor: 'rgba(255,212,59,0.18)', borderWidth: 2, pointRadius: 2.5, tension: 0.28, spanGaps: true },
+                        { label: '左手臂', data: leftArmValues, borderColor: '#69DB7C', backgroundColor: 'rgba(105,219,124,0.18)', borderWidth: 2, pointRadius: 2.5, tension: 0.28, spanGaps: true },
+                        { label: '右手臂', data: rightArmValues, borderColor: '#38D9A9', backgroundColor: 'rgba(56,217,169,0.18)', borderWidth: 2, pointRadius: 2.5, tension: 0.28, spanGaps: true },
+                        { label: '左大腿', data: leftThighValues, borderColor: '#4DABF7', backgroundColor: 'rgba(77,171,247,0.18)', borderWidth: 2, pointRadius: 2.5, tension: 0.28, spanGaps: true },
+                        { label: '右大腿', data: rightThighValues, borderColor: '#748FFC', backgroundColor: 'rgba(116,143,252,0.18)', borderWidth: 2, pointRadius: 2.5, tension: 0.28, spanGaps: true },
+                        { label: '左小腿', data: leftCalfValues, borderColor: '#DA77F2', backgroundColor: 'rgba(218,119,242,0.18)', borderWidth: 2, pointRadius: 2.5, tension: 0.28, spanGaps: true },
+                        { label: '右小腿', data: rightCalfValues, borderColor: '#F783AC', backgroundColor: 'rgba(247,131,172,0.18)', borderWidth: 2, pointRadius: 2.5, tension: 0.28, spanGaps: true }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { boxWidth: 12, usePointStyle: true }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: { display: true, text: '日期' },
+                            ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8 },
+                            grid: { color: '#EEF2F7' }
+                        },
+                        y: {
+                            title: { display: true, text: '尺寸 (cm)' },
+                            grid: { color: '#EEF2F7' }
+                        }
+                    }
+                }
             });
         }
     </script>
