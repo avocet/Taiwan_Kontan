@@ -1304,6 +1304,14 @@
                                     return `<option value="${coachUsername}" ${isSelected ? 'selected' : ''}>${coachUsername}</option>`;
                                 }).join('')}
                             </select>
+                            <label style="display:block;font-size:0.8rem;color:#64748b;margin-bottom:4px;">助教營養師帳號（可複選）</label>
+                            <select name="assistantNames" multiple style="width:100%;min-height:80px;padding:9px 10px;border:1px solid #cbd5e1;border-radius:8px;margin-bottom:10px;font-size:0.875rem;">
+                                ${allAssistants.map((assistant) => {
+                                    const assistantUsername = escapeHtml(assistant.username || assistant.email || assistant.uid || '');
+                                    const isSelected = (classItem.assistantIds || []).includes(assistant.uid);
+                                    return `<option value="${assistantUsername}" ${isSelected ? 'selected' : ''}>${assistantUsername}</option>`;
+                                }).join('')}
+                            </select>
                         <div style="font-size:0.8rem;color:#475569;margin-bottom:12px;">學員 ${students.length} 人</div>
                         <div style="display:flex;justify-content:space-between;gap:10px;">
                             <button type="button" class="deleteClassBtn" data-class-id="${classItem.id}" style="padding:9px 12px;border:none;border-radius:8px;background:#ef4444;color:#fff;cursor:pointer;">刪除班級</button>
@@ -1322,13 +1330,20 @@
                     const coachNameValues = Array.from(fd.getAll('coachNames') || [])
                         .map((item) => String(item).trim().toLowerCase())
                         .filter(Boolean);
+                    const assistantNameValues = Array.from(fd.getAll('assistantNames') || [])
+                        .map((item) => String(item).trim().toLowerCase())
+                        .filter(Boolean);
                     const usersSnapshot = await getDocs(collection(db, "users"));
                     const coachIds = usersSnapshot.docs
                         .filter((docSnap) => coachNameValues.includes(String(docSnap.data()?.username || '').toLowerCase()))
                         .map((docSnap) => docSnap.data()?.uid || docSnap.id);
+                    const assistantIds = usersSnapshot.docs
+                        .filter((docSnap) => assistantNameValues.includes(String(docSnap.data()?.username || '').toLowerCase()))
+                        .map((docSnap) => docSnap.data()?.uid || docSnap.id);
 
                     const classDoc = await getDoc(doc(db, "classes", classId));
                     const previousCoachIds = classDoc.data()?.coachIds || [];
+                    const previousAssistantIds = classDoc.data()?.assistantIds || [];
 
                     await updateDoc(doc(db, "classes", classId), {
                         name: String(fd.get('className') || '').trim() || classId,
@@ -1336,6 +1351,8 @@
                         endDate: String(fd.get('endDate') || ''),
                         coachIds,
                         coachNames: coachNameValues,
+                        assistantIds,
+                        assistantNames: assistantNameValues,
                         updatedAt: serverTimestamp()
                     });
 
@@ -1356,8 +1373,26 @@
                             await updateDoc(doc(db, "users", coachId), { classIds: [...coachClassIds, classId] });
                         }
                     }
+                    for (const assistantId of previousAssistantIds) {
+                        if (!assistantIds.includes(assistantId)) {
+                            const assistantDoc = await getDoc(doc(db, "users", assistantId));
+                            const assistantData = assistantDoc.data() || {};
+                            const assistantClassIds = assistantData.classIds || [];
+                            const newClassIds = assistantClassIds.filter((id) => id !== classId);
+                            await updateDoc(doc(db, "users", assistantId), { classIds: newClassIds });
+                        }
+                    }
+                    for (const assistantId of assistantIds) {
+                        const assistantDoc = await getDoc(doc(db, "users", assistantId));
+                        const assistantData = assistantDoc.data() || {};
+                        const assistantClassIds = assistantData.classIds || [];
+                        if (!assistantClassIds.includes(classId)) {
+                            await updateDoc(doc(db, "users", assistantId), { classIds: [...assistantClassIds, classId] });
+                        }
+                    }
 
                     await loadCoachList();
+                    await loadAssistantList();
                     await refreshClassOptions();
                     await loadStudentList();
                     alert('班級已更新');
