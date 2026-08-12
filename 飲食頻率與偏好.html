@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>飲食頻率與偏好</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #007AFF;
+            --secondary-color: #5856D6;
+            --background-color: #F2F2F7;
+            --card-background: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #8E8E93;
+            --border-color: #C6C6C8;
+            --success-color: #34C759;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF9500, #FF3B30);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .header h1 {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        .content {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .intro-card {
+            background: var(--card-background);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .intro-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .intro-text {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .question-card {
+            background: var(--card-background);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .question-number {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .question-text {
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .question-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: var(--background-color);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .option-item:hover {
+            background: #E8F3FF;
+        }
+
+        .option-item.selected {
+            background: #E8F3FF;
+            border: 1px solid var(--primary-color);
+        }
+
+        .option-item input[type="radio"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .option-item label {
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #FF9500, #FF3B30);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 16px;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 149, 0, 0.3);
+        }
+
+        .save-btn:active {
+            transform: translateY(0);
+        }
+
+        .save-btn:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: var(--success-color);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 14px;
+            text-align: center;
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+            min-width: 220px;
+            max-width: min(90vw, 320px);
+            box-shadow: 0 18px 40px rgba(52, 199, 89, 0.28);
+        }
+
+        .success-message.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media screen and (max-width: 428px) {
+            .header {
+                padding: 16px;
+            }
+            .header h1 {
+                font-size: 1rem;
+            }
+            .content {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="customer.html" class="back-btn">← 返回</a>
+        <h1>飲食頻率與偏好</h1>
+    </div>
+
+    <div class="content">
+        <div class="success-message" id="successMessage">資料已儲存！</div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>載入中...</p>
+        </div>
+
+        <div class="form-card" id="formCard" style="display: none;">
+            <div class="intro-card">
+                <div class="intro-title">飲食與營養評估</div>
+                <div class="intro-text">以下請以「最近30天」最常見的狀況回答（答案無對錯，依日常實際回答即可）。</div>
+            </div>
+
+            <form id="dataForm">
+                <div class="question-card" data-question="1">
+                    <div class="question-number">問題 1</div>
+                    <div class="question-text">一天通常吃幾餐正餐？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q1" id="q1_1" value="1餐"><label for="q1_1">1餐</label></div>
+                        <div class="option-item"><input type="radio" name="q1" id="q1_2" value="2餐"><label for="q1_2">2餐</label></div>
+                        <div class="option-item"><input type="radio" name="q1" id="q1_3" value="3餐"><label for="q1_3">3餐</label></div>
+                        <div class="option-item"><input type="radio" name="q1" id="q1_4" value="4餐以上"><label for="q1_4">4餐以上</label></div>
+                        <div class="option-item"><input type="radio" name="q1" id="q1_5" value="很不固定"><label for="q1_5">很不固定</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="2">
+                    <div class="question-number">問題 2</div>
+                    <div class="question-text">一週吃早餐幾天？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q2" id="q2_1" value="0-1天"><label for="q2_1">0–1天</label></div>
+                        <div class="option-item"><input type="radio" name="q2" id="q2_2" value="2-3天"><label for="q2_2">2–3天</label></div>
+                        <div class="option-item"><input type="radio" name="q2" id="q2_3" value="4-5天"><label for="q2_3">4–5天</label></div>
+                        <div class="option-item"><input type="radio" name="q2" id="q2_4" value="6-7天"><label for="q2_4">6–7天</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="3">
+                    <div class="question-number">問題 3</div>
+                    <div class="question-text">一週外食／外送約幾餐？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q3" id="q3_1" value="0-3餐"><label for="q3_1">0–3餐</label></div>
+                        <div class="option-item"><input type="radio" name="q3" id="q3_2" value="4-7餐"><label for="q3_2">4–7餐</label></div>
+                        <div class="option-item"><input type="radio" name="q3" id="q3_3" value="8-14餐"><label for="q3_3">8–14餐</label></div>
+                        <div class="option-item"><input type="radio" name="q3" id="q3_4" value="15餐以上"><label for="q3_4">≥15餐</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="4">
+                    <div class="question-number">問題 4</div>
+                    <div class="question-text">每餐大約吃多少主食？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q4" id="q4_1" value="幾乎不吃"><label for="q4_1">幾乎不吃</label></div>
+                        <div class="option-item"><input type="radio" name="q4" id="q4_2" value="約1/4碗"><label for="q4_2">約1/4碗</label></div>
+                        <div class="option-item"><input type="radio" name="q4" id="q4_3" value="約半碗"><label for="q4_3">約半碗</label></div>
+                        <div class="option-item"><input type="radio" name="q4" id="q4_4" value="約1碗"><label for="q4_4">約1碗</label></div>
+                        <div class="option-item"><input type="radio" name="q4" id="q4_5" value="超過1碗"><label for="q4_5">超過1碗</label></div>
+                        <div class="option-item"><input type="radio" name="q4" id="q4_6" value="不一定，有就吃"><label for="q4_6">不一定，有就吃</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="5">
+                    <div class="question-number">問題 5</div>
+                    <div class="question-text">每天大約吃多少蛋白質食物？</div>
+                    <div class="question-hint">（蛋、豆腐、魚、肉、海鮮等）</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q5" id="q5_1" value="幾乎沒有"><label for="q5_1">幾乎沒有</label></div>
+                        <div class="option-item"><input type="radio" name="q5" id="q5_2" value="約1掌心"><label for="q5_2">約1掌心</label></div>
+                        <div class="option-item"><input type="radio" name="q5" id="q5_3" value="約2掌心"><label for="q5_3">約2掌心</label></div>
+                        <div class="option-item"><input type="radio" name="q5" id="q5_4" value="約3掌心"><label for="q5_4">約3掌心</label></div>
+                        <div class="option-item"><input type="radio" name="q5" id="q5_5" value="4掌心以上"><label for="q5_5">≥4掌心</label></div>
+                        <div class="option-item"><input type="radio" name="q5" id="q5_6" value="不知道"><label for="q5_6">不知道</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="6">
+                    <div class="question-number">問題 6</div>
+                    <div class="question-text">每天吃多少蔬菜？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q6" id="q6_1" value="幾乎不吃"><label for="q6_1">幾乎不吃</label></div>
+                        <div class="option-item"><input type="radio" name="q6" id="q6_2" value="少於1碗"><label for="q6_2">＜1碗</label></div>
+                        <div class="option-item"><input type="radio" name="q6" id="q6_3" value="約1-2碗"><label for="q6_3">約1–2碗</label></div>
+                        <div class="option-item"><input type="radio" name="q6" id="q6_4" value="約2-3碗"><label for="q6_4">約2–3碗</label></div>
+                        <div class="option-item"><input type="radio" name="q6" id="q6_5" value="3碗以上"><label for="q6_5">≥3碗</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="7">
+                    <div class="question-number">問題 7</div>
+                    <div class="question-text">每天吃多少水果？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q7" id="q7_1" value="幾乎不吃"><label for="q7_1">幾乎不吃</label></div>
+                        <div class="option-item"><input type="radio" name="q7" id="q7_2" value="少於1份"><label for="q7_2">＜1份</label></div>
+                        <div class="option-item"><input type="radio" name="q7" id="q7_3" value="1-2份"><label for="q7_3">1–2份</label></div>
+                        <div class="option-item"><input type="radio" name="q7" id="q7_4" value="3份"><label for="q7_4">3份</label></div>
+                        <div class="option-item"><input type="radio" name="q7" id="q7_5" value="4份以上"><label for="q7_5">≥4份</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="8">
+                    <div class="question-number">問題 8</div>
+                    <div class="question-text">每天喝多少水？（飲料、湯不屬於水）</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q8" id="q8_1" value="少於500mL"><label for="q8_1">＜500 mL</label></div>
+                        <div class="option-item"><input type="radio" name="q8" id="q8_2" value="500-999mL"><label for="q8_2">500–999 mL</label></div>
+                        <div class="option-item"><input type="radio" name="q8" id="q8_3" value="1000-1499mL"><label for="q8_3">1000–1499 mL</label></div>
+                        <div class="option-item"><input type="radio" name="q8" id="q8_4" value="1500-1999mL"><label for="q8_4">1500–1999 mL</label></div>
+                        <div class="option-item"><input type="radio" name="q8" id="q8_5" value="2000mL以上"><label for="q8_5">≥2000 mL</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="9">
+                    <div class="question-number">問題 9</div>
+                    <div class="question-text">一週喝飲料、咖啡...幾次？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q9" id="q9_1" value="0"><label for="q9_1">0</label></div>
+                        <div class="option-item"><input type="radio" name="q9" id="q9_2" value="1-2次"><label for="q9_2">1–2次</label></div>
+                        <div class="option-item"><input type="radio" name="q9" id="q9_3" value="3-4次"><label for="q9_3">3–4次</label></div>
+                        <div class="option-item"><input type="radio" name="q9" id="q9_4" value="5-6次"><label for="q9_4">5–6次</label></div>
+                        <div class="option-item"><input type="radio" name="q9" id="q9_5" value="每天1次以上"><label for="q9_5">每天≥1次</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="10">
+                    <div class="question-number">問題 10</div>
+                    <div class="question-text">一週吃甜點、蛋糕、餅乾幾次？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q10" id="q10_1" value="少於1次"><label for="q10_1">＜1次</label></div>
+                        <div class="option-item"><input type="radio" name="q10" id="q10_2" value="1-2次"><label for="q10_2">1–2次</label></div>
+                        <div class="option-item"><input type="radio" name="q10" id="q10_3" value="3-4次"><label for="q10_3">3–4次</label></div>
+                        <div class="option-item"><input type="radio" name="q10" id="q10_4" value="5-6次"><label for="q10_4">5–6次</label></div>
+                        <div class="option-item"><input type="radio" name="q10" id="q10_5" value="每天"><label for="q10_5">每天</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="11">
+                    <div class="question-number">問題 11</div>
+                    <div class="question-text">一週吃炸物幾次？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q11" id="q11_1" value="少於1次"><label for="q11_1">＜1次</label></div>
+                        <div class="option-item"><input type="radio" name="q11" id="q11_2" value="1-2次"><label for="q11_2">1–2次</label></div>
+                        <div class="option-item"><input type="radio" name="q11" id="q11_3" value="3-4次"><label for="q11_3">3–4次</label></div>
+                        <div class="option-item"><input type="radio" name="q11" id="q11_4" value="5-6次"><label for="q11_4">5–6次</label></div>
+                        <div class="option-item"><input type="radio" name="q11" id="q11_5" value="每天"><label for="q11_5">每天</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="12">
+                    <div class="question-number">問題 12</div>
+                    <div class="question-text">一週吃加工肉品幾次？</div>
+                    <div class="question-hint">（香腸、火腿、培根、熱狗等）</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q12" id="q12_1" value="少於1次"><label for="q12_1">＜1次</label></div>
+                        <div class="option-item"><input type="radio" name="q12" id="q12_2" value="1-2次"><label for="q12_2">1–2次</label></div>
+                        <div class="option-item"><input type="radio" name="q12" id="q12_3" value="3-4次"><label for="q12_3">3–4次</label></div>
+                        <div class="option-item"><input type="radio" name="q12" id="q12_4" value="5次以上"><label for="q12_4">≥5次</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="13">
+                    <div class="question-number">問題 13</div>
+                    <div class="question-text">一週吃宵夜幾次？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q13" id="q13_1" value="0"><label for="q13_1">0</label></div>
+                        <div class="option-item"><input type="radio" name="q13" id="q13_2" value="1次"><label for="q13_2">1次</label></div>
+                        <div class="option-item"><input type="radio" name="q13" id="q13_3" value="2-3次"><label for="q13_3">2–3次</label></div>
+                        <div class="option-item"><input type="radio" name="q13" id="q13_4" value="4-5次"><label for="q13_4">4–5次</label></div>
+                        <div class="option-item"><input type="radio" name="q13" id="q13_5" value="6-7次"><label for="q13_5">6–7次</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="14">
+                    <div class="question-number">問題 14</div>
+                    <div class="question-text">晚餐到睡覺通常間隔多久？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q14" id="q14_1" value="4小時以上"><label for="q14_1">≥4小時</label></div>
+                        <div class="option-item"><input type="radio" name="q14" id="q14_2" value="3-4小時"><label for="q14_2">3–4小時</label></div>
+                        <div class="option-item"><input type="radio" name="q14" id="q14_3" value="2-3小時"><label for="q14_3">2–3小時</label></div>
+                        <div class="option-item"><input type="radio" name="q14" id="q14_4" value="少於2小時"><label for="q14_4">＜2小時</label></div>
+                        <div class="option-item"><input type="radio" name="q14" id="q14_5" value="不固定"><label for="q14_5">不固定</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="15">
+                    <div class="question-number">問題 15</div>
+                    <div class="question-text">平常吃飯速度如何？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q15" id="q15_1" value="很慢，30分鐘以上"><label for="q15_1">很慢，≥30分鐘</label></div>
+                        <div class="option-item"><input type="radio" name="q15" id="q15_2" value="約20-30分鐘"><label for="q15_2">約20–30分鐘</label></div>
+                        <div class="option-item"><input type="radio" name="q15" id="q15_3" value="約15-20分鐘"><label for="q15_3">約15–20分鐘</label></div>
+                        <div class="option-item"><input type="radio" name="q15" id="q15_4" value="少於15分鐘"><label for="q15_4">＜15分鐘</label></div>
+                    </div>
+                </div>
+
+                <div class="question-card" data-question="16">
+                    <div class="question-number">問題 16</div>
+                    <div class="question-text">通常吃到什麼程度才停止？</div>
+                    <div class="options-list">
+                        <div class="option-item"><input type="radio" name="q16" id="q16_1" value="還沒很飽就停"><label for="q16_1">還沒很飽就停</label></div>
+                        <div class="option-item"><input type="radio" name="q16" id="q16_2" value="約7-8分飽"><label for="q16_2">約7–8分飽</label></div>
+                        <div class="option-item"><input type="radio" name="q16" id="q16_3" value="吃飽"><label for="q16_3">吃飽</label></div>
+                        <div class="option-item"><input type="radio" name="q16" id="q16_4" value="常吃到很撐"><label for="q16_4">常吃到很撐</label></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="save-btn" id="saveBtn">儲存資料</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, doc, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { ensureUserOrgProfile, resolveUserContext, withOrgContext } from "./org-context.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCyK0sGYh_M-bJUE4NhZJxz5HkllW4jXxw",
+            authDomain: "akso-weightcontroll.firebaseapp.com",
+            projectId: "akso-weightcontroll",
+            storageBucket: "akso-weightcontroll.firebasestorage.app",
+            messagingSenderId: "523229071422",
+            appId: "1:523229071422:web:c36fd110cc5812fea2a96f",
+            measurementId: "G-DFEEKX4V0S"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let currentOrgContext = null;
+        let existingDocId = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.replace('login.html');
+                return;
+            }
+            currentUser = user;
+            currentOrgContext = await resolveUserContext(db, user, { savedUsername: localStorage.getItem('twkt_username') || '' });
+            await ensureUserOrgProfile(db, user, currentOrgContext);
+            if (currentOrgContext.role !== 'student') {
+                await signOut(auth);
+                window.location.replace('index.html');
+                return;
+            }
+            loadData(user.uid);
+        });
+
+        async function loadData(userId) {
+            try {
+                const q = query(
+                    collection(db, "飲食頻率與偏好"),
+                    where("userId", "==", userId)
+                );
+                const querySnapshot = await getDocs(q);
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('formCard').style.display = 'block';
+
+                if (!querySnapshot.empty) {
+                    const docData = querySnapshot.docs[0];
+                    existingDocId = docData.id;
+                    const data = docData.data();
+
+                    for (let i = 1; i <= 16; i++) {
+                        const key = `q${i}`;
+                        const value = data[key];
+                        if (value) {
+                            const radios = document.querySelectorAll(`input[name="${key}"]`);
+                            radios.forEach((radio) => {
+                                if (radio.value === value) {
+                                    radio.checked = true;
+                                    radio.closest('.option-item').classList.add('selected');
+                                }
+                            });
+                        }
+                    }
+                }
+
+                document.querySelectorAll('.option-item').forEach((item) => {
+                    item.addEventListener('click', (e) => {
+                        if (e.target.tagName !== 'INPUT') {
+                            const radio = item.querySelector('input[type="radio"]');
+                            if (radio) {
+                                radio.checked = true;
+                                document.querySelectorAll(`input[name="${radio.name}"]`).forEach((r) => {
+                                    r.closest('.option-item').classList.remove('selected');
+                                });
+                                item.classList.add('selected');
+                            }
+                        }
+                    });
+                });
+
+            } catch (error) {
+                console.error('載入資料失敗:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('formCard').style.display = 'block';
+            }
+        }
+
+        document.getElementById('dataForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.textContent = '儲存中...';
+
+            const formData = {};
+            for (let i = 1; i <= 16; i++) {
+                const key = `q${i}`;
+                const selected = document.querySelector(`input[name="${key}"]:checked`);
+                formData[key] = selected ? selected.value : '';
+            }
+
+            const data = withOrgContext({
+                userId: currentUser.uid,
+                ...formData,
+                填寫時間: new Date().toISOString()
+            }, currentOrgContext || { companyId: 'akso-company', primaryClassId: 'akso-default-class', classIds: ['akso-default-class'] });
+
+            try {
+                if (existingDocId) {
+                    await setDoc(doc(db, "飲食頻率與偏好", existingDocId), data, { merge: true });
+                } else {
+                    await addDoc(collection(db, "飲食頻率與偏好"), data);
+                    const q = query(collection(db, "飲食頻率與偏好"), where("userId", "==", currentUser.uid));
+                    const snapshot = await getDocs(q);
+                    if (!snapshot.empty) {
+                        existingDocId = snapshot.docs[0].id;
+                    }
+                }
+
+                const successMsg = document.getElementById('successMessage');
+                successMsg.classList.add('show');
+                setTimeout(() => {
+                    successMsg.classList.remove('show');
+                }, 1500);
+
+            } catch (error) {
+                console.error('儲存失敗:', error);
+                alert('儲存失敗: ' + error.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '儲存資料';
+            }
+        });
+    </script>
+</body>
+</html>
