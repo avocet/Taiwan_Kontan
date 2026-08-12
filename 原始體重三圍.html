@@ -298,17 +298,12 @@
         </div>
 
         <div class="form-card" id="formCard" style="display: none;">
-            <div class="form-title">📝 9圍紀錄</div>
-            
+            <div class="form-title">📝 新增9圍紀錄</div>
+
             <form id="dataForm">
                 <div class="form-group">
                     <label class="form-label">記錄日期</label>
                     <input type="date" class="form-input" id="紀錄日期" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">體重 (kg)</label>
-                    <input type="number" class="form-input" id="體重" step="0.1" placeholder="例如：70.5" required min="0" onkeydown="return event.key !== '-'">
                 </div>
 
                 <div class="section-title" style="margin-top:20px;">9圍測量</div>
@@ -337,6 +332,9 @@
                         <label class="form-label">右手臂圍 (cm)</label>
                         <input type="number" class="form-input" id="右手臂圍" step="0.1" placeholder="例如：30" min="0" onkeydown="return event.key !== '-'">
                     </div>
+                </div>
+
+                <div class="form-row-2">
                     <div class="form-group">
                         <label class="form-label">左大腿圍 (cm)</label>
                         <input type="number" class="form-input" id="左大腿圍" step="0.1" placeholder="例如：55" min="0" onkeydown="return event.key !== '-'">
@@ -358,19 +356,14 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">上傳照片</label>
-                    <div class="photo-upload" id="photoUpload">
-                        <input type="file" id="照片" name="照片" accept="image/*">
-                        <div class="upload-icon">📷</div>
-                        <div class="upload-text">點擊上傳照片</div>
-                        <img class="photo-preview" id="photoPreview">
-                    </div>
-                </div>
-
                 <button type="submit" class="save-btn" id="saveBtn">儲存資料</button>
+                <button type="button" class="save-btn" id="cancelBtn" style="background:#8E8E93;margin-top:10px;">取消</button>
             </form>
         </div>
+
+        <div id="recordsList"></div>
+
+        <button class="save-btn" id="addNewBtn" style="display:none;margin-top:16px;">+ 新增紀錄</button>
     </div>
 
     <script type="module">
@@ -437,118 +430,145 @@
                     where("userId", "==", userId)
                 );
                 const querySnapshot = await getDocs(q);
-                
+
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('formCard').style.display = 'block';
-                
-                if (!querySnapshot.empty) {
-                    const docData = querySnapshot.docs[0];
-                    existingDocId = docData.id;
-                    const data = docData.data();
-                    
-                    document.getElementById('紀錄日期').value = data.紀錄日期 || '';
-                    document.getElementById('體重').value = data.體重 || '';
-                    document.getElementById('胸圍').value = data.胸圍 || '';
-                    document.getElementById('腰圍').value = data.腰圍 || '';
-                    document.getElementById('臀圍').value = data.臀圍 || '';
-                    document.getElementById('大腿圍').value = data.大腿圍 || '';
-                    document.getElementById('手臂圍').value = data.手臂圍 || '';
-                    document.getElementById('左大腿圍').value = data.左大腿圍 || '';
-                    document.getElementById('右大腿圍').value = data.右大腿圍 || '';
-                    document.getElementById('左手臂圍').value = data.左手臂圍 || '';
-                    document.getElementById('右手臂圍').value = data.右手臂圍 || '';
-                    document.getElementById('左小腿圍').value = data.左小腿圍 || '';
-                    document.getElementById('右小腿圍').value = data.右小腿圍 || '';
-                    
-                    if (data.照片) {
-                        photoPreview.src = data.照片;
-                        photoPreview.classList.add('show');
-                    }
+
+                const records = [];
+                querySnapshot.forEach((doc) => {
+                    records.push({ id: doc.id, ...doc.data() });
+                });
+                records.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
+
+                const recordsList = document.getElementById('recordsList');
+                const addNewBtn = document.getElementById('addNewBtn');
+
+                if (records.length === 0) {
+                    recordsList.innerHTML = '<div style="text-align:center;color:#8E8E93;padding:40px;">尚無紀錄</div>';
+                    addNewBtn.style.display = 'block';
+                    showForm();
                 } else {
-                    const today = new Date().toISOString().split('T')[0];
-                    document.getElementById('紀錄日期').value = today;
+                    renderRecords(records);
+                    addNewBtn.style.display = 'block';
                 }
-                
+
             } catch (error) {
                 console.error('載入資料失敗:', error);
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('formCard').style.display = 'block';
             }
         }
 
-        // 照片上傳預覽
-        const photoUpload = document.getElementById('photoUpload');
-        const photoInput = document.getElementById('照片');
-        const photoPreview = document.getElementById('photoPreview');
+        function renderRecords(records) {
+            const recordsList = document.getElementById('recordsList');
+            const formCard = document.getElementById('formCard');
 
-        photoUpload.addEventListener('click', () => photoInput.click());
+            formCard.style.display = 'none';
 
-        photoInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    photoPreview.src = e.target.result;
-                    photoPreview.classList.add('show');
-                };
-                reader.readAsDataURL(file);
+            recordsList.innerHTML = records.map((r) => `
+                <div class="form-card" style="margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                        <div style="font-weight:600;">${r.紀錄日期 || '-'}</div>
+                        <div style="display:flex;gap:8px;">
+                            <button onclick="editRecord('${r.id}')" style="padding:6px 12px;background:#007AFF;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem;">編輯</button>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:0.85rem;">
+                        <div>胸圍：${r.胸圍 || '-'}</div>
+                        <div>腰圍：${r.腰圍 || '-'}</div>
+                        <div>臀圍：${r.臀圍 || '-'}</div>
+                        <div>左手臂：${r.左手臂圍 || '-'}</div>
+                        <div>右手臂：${r.右手臂圍 || '-'}</div>
+                        <div>左大腿：${r.左大腿圍 || '-'}</div>
+                        <div>右大腿：${r.右大腿圍 || '-'}</div>
+                        <div>左小腿：${r.左小腿圍 || '-'}</div>
+                        <div>右小腿：${r.右小腿圍 || '-'}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.editRecord = async function(docId) {
+            try {
+                const docSnap = await getDoc(doc(db, "原始體重三圍", docId));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    existingDocId = docId;
+                    document.getElementById('紀錄日期').value = data.紀錄日期 || '';
+                    document.getElementById('胸圍').value = data.胸圍 || '';
+                    document.getElementById('腰圍').value = data.腰圍 || '';
+                    document.getElementById('臀圍').value = data.臀圍 || '';
+                    document.getElementById('左手臂圍').value = data.左手臂圍 || '';
+                    document.getElementById('右手臂圍').value = data.右手臂圍 || '';
+                    document.getElementById('左大腿圍').value = data.左大腿圍 || '';
+                    document.getElementById('右大腿圍').value = data.右大腿圍 || '';
+                    document.getElementById('左小腿圍').value = data.左小腿圍 || '';
+                    document.getElementById('右小腿圍').value = data.右小腿圍 || '';
+                    document.getElementById('formCard').style.display = 'block';
+                    document.getElementById('recordsList').innerHTML = '';
+                    document.querySelector('.form-title').textContent = '📝 編輯9圍紀錄';
+                }
+            } catch (error) {
+                console.error('載入失敗:', error);
+            }
+        };
+
+        function showForm() {
+            const formCard = document.getElementById('formCard');
+            const recordsList = document.getElementById('recordsList');
+            formCard.style.display = 'block';
+            recordsList.innerHTML = '';
+            existingDocId = null;
+            document.getElementById('dataForm').reset();
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('紀錄日期').value = today;
+            document.querySelector('.form-title').textContent = '📝 新增9圍紀錄';
+        }
+
+        document.getElementById('addNewBtn').addEventListener('click', showForm);
+        document.getElementById('cancelBtn').addEventListener('click', () => {
+            if (existingDocId) {
+                loadData(currentUser.uid);
+            } else {
+                document.getElementById('formCard').style.display = 'none';
             }
         });
 
         document.getElementById('dataForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const saveBtn = document.getElementById('saveBtn');
             saveBtn.disabled = true;
             saveBtn.textContent = '儲存中...';
-            
-            let photoUrl = '';
-            const photoFile = photoInput.files[0];
-            if (photoFile) {
-                const photoRef = ref(storage, `photos/${currentUser.uid}/initial_${Date.now()}_${photoFile.name}`);
-                await uploadBytes(photoRef, photoFile);
-                photoUrl = await getDownloadURL(photoRef);
-            }
-            
+
             const data = withOrgContext({
                 userId: currentUser.uid,
                 紀錄日期: document.getElementById('紀錄日期').value,
-                體重: parseFloat(document.getElementById('體重').value) || 0,
                 胸圍: parseFloat(document.getElementById('胸圍').value) || 0,
                 腰圍: parseFloat(document.getElementById('腰圍').value) || 0,
                 臀圍: parseFloat(document.getElementById('臀圍').value) || 0,
-                大腿圍: parseFloat(document.getElementById('大腿圍').value) || 0,
-                手臂圍: parseFloat(document.getElementById('手臂圍').value) || 0,
                 左大腿圍: parseFloat(document.getElementById('左大腿圍').value) || 0,
                 右大腿圍: parseFloat(document.getElementById('右大腿圍').value) || 0,
                 左手臂圍: parseFloat(document.getElementById('左手臂圍').value) || 0,
                 右手臂圍: parseFloat(document.getElementById('右手臂圍').value) || 0,
                 左小腿圍: parseFloat(document.getElementById('左小腿圍').value) || 0,
                 右小腿圍: parseFloat(document.getElementById('右小腿圍').value) || 0,
-                照片: photoUrl || document.querySelector('.photo-preview').src || '',
                 更新時間: new Date().toISOString()
             }, currentOrgContext || { companyId: 'akso-company', primaryClassId: 'akso-default-class', classIds: ['akso-default-class'] });
-            
+
             try {
-                const isUpdating = Boolean(existingDocId);
                 if (existingDocId) {
                     await setDoc(doc(db, "原始體重三圍", existingDocId), data, { merge: true });
                 } else {
                     await setDoc(doc(collection(db, "原始體重三圍")), data);
                 }
-                
+
                 const successMsg = document.getElementById('successMessage');
-                successMsg.textContent = isUpdating ? '✓ 資料已更新！' : '✓ 資料已儲存！';
+                successMsg.textContent = '✓ 資料已儲存！';
                 successMsg.classList.add('show');
                 setTimeout(() => {
                     successMsg.classList.remove('show');
-                    if (window.history.length > 1) {
-                        window.history.back();
-                    } else {
-                        window.location.href = 'customer.html';
-                    }
-                }, 1200);
-                
+                    loadData(currentUser.uid);
+                }, 800);
+
             } catch (error) {
                 console.error('儲存失敗:', error);
                 alert('儲存失敗: ' + error.message);
