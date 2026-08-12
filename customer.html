@@ -890,28 +890,29 @@
             const studentListSubtitle = document.getElementById('studentListSubtitle');
             const addStudentBtn = document.getElementById('addStudentBtn');
             
-            if (userRole === 'admin' || userRole === 'super_admin' || userRole === 'coach') {
+            if (userRole === 'admin' || userRole === 'super_admin' || userRole === 'coach' || userRole === 'assistant') {
                 const titleMap = {
                     super_admin: '阿克索公司管理員',
                     admin: '體重管理班管理員',
-                    coach: '體重管理班資深營養師'
+                    coach: '體重管理班資深營養師',
+                    assistant: '體重管理班助教'
                 };
                 headerTitle.textContent = `${titleMap[userRole] || '體重管理班管理員'} ${userName}`;
                 menuGrid.style.display = 'none';
                 companyAdminPanel.style.display = (userRole === 'admin' || userRole === 'super_admin') ? 'block' : 'none';
-                studentList.style.display = userRole === 'coach' ? 'block' : 'none';
+                studentList.style.display = (userRole === 'coach' || userRole === 'assistant') ? 'block' : 'none';
                 if (companyToolsBar) companyToolsBar.style.display = (userRole === 'admin' || userRole === 'super_admin') ? 'flex' : 'none';
                 if (adminToolsBar) adminToolsBar.style.display = 'none';
                 if (studentListTitle) {
-                    studentListTitle.textContent = userRole === 'coach' ? '我的學員列表' : '學員列表';
+                    studentListTitle.textContent = (userRole === 'coach' || userRole === 'assistant') ? '我的學員列表' : '學員列表';
                 }
                 if (studentListSubtitle) {
-                    studentListSubtitle.textContent = userRole === 'coach'
+                    studentListSubtitle.textContent = (userRole === 'coach' || userRole === 'assistant')
                         ? '只顯示你目前負責班級的學員，可直接查看紀錄與調整狀態。'
                         : '可查看學員資料、課程狀態與每日飲食紀錄。';
                 }
                 if (addStudentBtn) {
-                    addStudentBtn.textContent = userRole === 'coach' ? '+ 新增本班學員' : '+ 新增學員';
+                    addStudentBtn.textContent = (userRole === 'coach' || userRole === 'assistant') ? '+ 新增本班學員' : '+ 新增學員';
                 }
                 if (reportIssueBtn) reportIssueBtn.style.display = 'inline-flex';
                 await refreshClassOptions();
