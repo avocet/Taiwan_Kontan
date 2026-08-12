@@ -1040,7 +1040,7 @@
                 return `
                     <button type="button" class="classOverviewCard" data-class-id="${classItem.id}" style="text-align:left;border:${isSelected ? '2px solid #2563eb' : '1px solid #dbeafe'};background:${isSelected ? '#eff6ff' : '#fff'};border-radius:12px;padding:12px;cursor:pointer;box-shadow:0 2px 8px rgba(37,99,235,0.08);">
                         <div style="font-weight:700;color:#1e3a8a;">${escapeHtml(classItem.name || classItem.id)}</div>
-                        <div style="font-size:0.8rem;color:#64748b;margin-top:4px;">資深營養師 ${coachCount} 人 ${coachNames ? '：' + escapeHtml(coachNames) : ''}</div>
+                        <div style="font-size:0.8rem;color:#64748b;margin-top:4px;">資深營養師${coachNames ? '：' + escapeHtml(coachNames) : ''}</div>
                         <div style="font-size:0.8rem;color:#475569;margin-top:8px;">學員 ${students.length} 人</div>
                         <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">課程中 ${activeCount} / 已完成 ${completedCount}</div>
                     </button>
@@ -1072,7 +1072,7 @@
                     <div style="border:1px solid #dbeafe;border-radius:14px;padding:14px;background:#fff;box-shadow:0 2px 8px rgba(37,99,235,0.08);">
                         <div style="font-weight:700;color:#1e3a8a;">${escapeHtml(classItem.name || classItem.id)}</div>
                         <div style="font-size:0.82rem;color:#64748b;margin-top:4px;">ID: ${escapeHtml(classItem.id)}</div>
-                        <div style="font-size:0.82rem;color:#475569;margin-top:10px;">資深營養師 ${coachCount} 人 ${coachNames ? '：' + escapeHtml(coachNames) : ''}</div>
+                        <div style="font-size:0.82rem;color:#475569;margin-top:10px;">資深營養師${coachNames ? '：' + escapeHtml(coachNames) : ''}</div>
                         <div style="font-size:0.82rem;color:#475569;margin-top:2px;">學員 ${studentCount} 人</div>
                     </div>
                 `;
