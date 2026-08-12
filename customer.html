@@ -1208,6 +1208,7 @@
                 })
                 .sort((a, b) => String(a.username || a.email || '').localeCompare(String(b.username || b.email || ''), 'zh-Hant'));
             renderAssistantList();
+            renderClassOverview();
             renderCompanyClassOverview();
         }
 
