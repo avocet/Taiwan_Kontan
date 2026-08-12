@@ -2579,7 +2579,11 @@
 
                 html += '</div>';
                 mobileRecordsContent.innerHTML = html;
-                
+
+                records.forEach((record) => {
+                    calcTotalKcal('m-' + record.id);
+                });
+
                 // 設定電腦版日期預設值
                 const today = new Date().toISOString().split('T')[0];
                 const weekAgo = new Date();
@@ -2761,7 +2765,11 @@
                 
                 leftDiv.innerHTML = leftHtml;
                 rightDiv.innerHTML = rightHtml;
-                
+
+                dietRecords.forEach((record) => {
+                    calcTotalKcal(record.id);
+                });
+
             } catch (error) {
                 console.error('載入失敗:', error);
                 leftDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗: ' + error.message + '</p>';
