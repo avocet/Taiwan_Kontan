@@ -2511,6 +2511,7 @@
                                 ${photosHtml}
                                 ${portionSectionHtml}
                                 ${adviceSectionHtml}
+                                <div id="debug-assistant-check" style="background:#ff0;padding:4px;font-size:10px;">DEBUG: role=${(currentOrgContext || window.currentOrgContext)?.role} isAssistant=${(currentOrgContext || window.currentOrgContext)?.role === 'assistant'}</div>
                                 ${(currentOrgContext || window.currentOrgContext)?.role === 'assistant' ? `
                                 <div style="margin-top:16px;padding:12px;background:#f8f8ff;border-radius:8px;border:1px solid #ddd;">
                                     <div style="font-weight:600;margin-bottom:10px;color:#333;">助教營養師 - 飲食份數記錄</div>
