@@ -2497,8 +2497,11 @@
                         `;
                         
                         html += `
-                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                                <div style="font-weight:600;margin-bottom:8px;">${date}</div>
+                            <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);position:relative;">
+                                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                                    <div style="font-weight:600;">${date}</div>
+                                    ${(currentOrgContext || window.currentOrgContext)?.role === 'assistant' ? `<div id="total-kcal-m-${record.id}" style="font-size:0.8rem;font-weight:600;color:#007AFF;">熱量: - kcal</div>` : ''}
+                                </div>
                                 <div style="display:flex;gap:16px;margin-bottom:8px;font-size:0.875rem;color:#666;">
                                     <span>體重: ${weight} kg</span>
                                     <span>體脂: ${bodyFat}%</span>
@@ -2511,19 +2514,19 @@
                                             <div style="display:flex;gap:4px;margin-top:4px;margin-left:12px;flex-wrap:wrap;">
                                                 <div style="display:flex;align-items:center;gap:2px;">
                                                     <span style="font-size:0.7rem;color:#666;">C:</span>
-                                                    <input type="number" id="cpfv-m-${record.id}-${meal}C" value="${record[`${meal}C`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="C">
+                                                    <input type="number" id="cpfv-m-${record.id}-${meal}C" value="${record[`${meal}C`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="C" oninput="calcTotalKcal('m-${record.id}')">
                                                 </div>
                                                 <div style="display:flex;align-items:center;gap:2px;">
                                                     <span style="font-size:0.7rem;color:#666;">P:</span>
-                                                    <input type="number" id="cpfv-m-${record.id}-${meal}P" value="${record[`${meal}P`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="P">
+                                                    <input type="number" id="cpfv-m-${record.id}-${meal}P" value="${record[`${meal}P`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="P" oninput="calcTotalKcal('m-${record.id}')">
                                                 </div>
                                                 <div style="display:flex;align-items:center;gap:2px;">
                                                     <span style="font-size:0.7rem;color:#666;">F:</span>
-                                                    <input type="number" id="cpfv-m-${record.id}-${meal}F" value="${record[`${meal}F`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="F">
+                                                    <input type="number" id="cpfv-m-${record.id}-${meal}F" value="${record[`${meal}F`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="F" oninput="calcTotalKcal('m-${record.id}')">
                                                 </div>
                                                 <div style="display:flex;align-items:center;gap:2px;">
                                                     <span style="font-size:0.7rem;color:#666;">V:</span>
-                                                    <input type="number" id="cpfv-m-${record.id}-${meal}V" value="${record[`${meal}V`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="V">
+                                                    <input type="number" id="cpfv-m-${record.id}-${meal}V" value="${record[`${meal}V`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="V" oninput="calcTotalKcal('m-${record.id}')">
                                                 </div>
                                             </div>
                                             ` : ''}
@@ -2660,8 +2663,11 @@
                         desktopPhotosHtml += '</div>';
                     }
                     leftHtml += `
-                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-                            <div style="font-weight:600;margin-bottom:8px;">${daily.紀錄日期}</div>
+                        <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);position:relative;">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                                <div style="font-weight:600;margin-bottom:8px;">${daily.紀錄日期}</div>
+                                ${currentUserRole === 'assistant' ? `<div id="total-kcal-${daily.id}" style="font-size:0.8rem;font-weight:600;color:#007AFF;">熱量: - kcal</div>` : ''}
+                            </div>
                             <div style="font-size:0.8rem;">
                                 <div>體重: ${daily.體重 || '-'} kg</div>
                                 <div>體脂: ${daily.體脂 || '-'}%</div>
@@ -2672,19 +2678,19 @@
                                         <div style="display:flex;gap:4px;margin-top:4px;margin-left:12px;">
                                             <div style="display:flex;align-items:center;gap:2px;">
                                                 <span style="font-size:0.7rem;color:#666;">C:</span>
-                                                <input type="number" id="cpfv-${daily.id}-${meal}C" value="${daily[`${meal}C`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="C">
+                                                <input type="number" id="cpfv-${daily.id}-${meal}C" value="${daily[`${meal}C`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="C" oninput="calcTotalKcal('${daily.id}')">
                                             </div>
                                             <div style="display:flex;align-items:center;gap:2px;">
                                                 <span style="font-size:0.7rem;color:#666;">P:</span>
-                                                <input type="number" id="cpfv-${daily.id}-${meal}P" value="${daily[`${meal}P`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="P">
+                                                <input type="number" id="cpfv-${daily.id}-${meal}P" value="${daily[`${meal}P`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="P" oninput="calcTotalKcal('${daily.id}')">
                                             </div>
                                             <div style="display:flex;align-items:center;gap:2px;">
                                                 <span style="font-size:0.7rem;color:#666;">F:</span>
-                                                <input type="number" id="cpfv-${daily.id}-${meal}F" value="${daily[`${meal}F`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="F">
+                                                <input type="number" id="cpfv-${daily.id}-${meal}F" value="${daily[`${meal}F`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="F" oninput="calcTotalKcal('${daily.id}')">
                                             </div>
                                             <div style="display:flex;align-items:center;gap:2px;">
                                                 <span style="font-size:0.7rem;color:#666;">V:</span>
-                                                <input type="number" id="cpfv-${daily.id}-${meal}V" value="${daily[`${meal}V`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="V">
+                                                <input type="number" id="cpfv-${daily.id}-${meal}V" value="${daily[`${meal}V`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="V" oninput="calcTotalKcal('${daily.id}')">
                                             </div>
                                         </div>
                                         ` : ''}
@@ -2835,6 +2841,24 @@
         window.showPhoto = function(url) {
             document.getElementById('modalImg').src = url;
             document.getElementById('photoModal').style.display = 'flex';
+        };
+
+        window.calcTotalKcal = function(recordId) {
+            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+            const rates = { C: 70, P: 75, F: 60, V: 25 };
+            let total = 0;
+            meals.forEach((meal) => {
+                ['C', 'P', 'F', 'V'].forEach((nutrient) => {
+                    const el = document.getElementById(`cpfv-${recordId}-${meal}${nutrient}`);
+                    if (el && el.value) {
+                        total += parseFloat(el.value) * rates[nutrient];
+                    }
+                });
+            });
+            const displayEl = document.getElementById(`total-kcal-${recordId}`);
+            if (displayEl) {
+                displayEl.textContent = '熱量: ' + Math.round(total) + ' kcal';
+            }
         };
 
         window.saveStudentCPFV = async function(docId) {
