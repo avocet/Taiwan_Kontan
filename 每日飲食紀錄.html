@@ -747,9 +747,22 @@
                 isCurrentUserAssistant = true;
             }
             const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists() && userDoc.data().role === 'assistant') {
-                isCurrentUserAssistant = true;
+            if (userDoc.exists()) {
+                const userRole = userDoc.data().role;
+                if (userRole === 'assistant') {
+                    isCurrentUserAssistant = true;
+                }
             }
+
+            // DEBUG
+            console.log('test1 role check:', {
+                adminDocExists: adminDoc.exists(),
+                adminRole: adminDoc.exists() ? adminDoc.data().role : null,
+                userDocExists: userDoc.exists(),
+                userRole: userDoc.exists() ? userDoc.data().role : null,
+                isAssistant: isCurrentUserAssistant
+            });
+            alert('DEBUG: adminDoc=' + adminDoc.exists() + ' adminRole=' + (adminDoc.exists() ? adminDoc.data().role : 'N/A') + ' userDoc=' + userDoc.exists() + ' userRole=' + (userDoc.exists() ? userDoc.data().role : 'N/A') + ' isAssistant=' + isCurrentUserAssistant);
 
             // 載入資料
             await loadAdminEmails();
