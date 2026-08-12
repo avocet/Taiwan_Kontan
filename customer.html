@@ -2581,7 +2581,7 @@
                 mobileRecordsContent.innerHTML = html;
 
                 records.forEach((record) => {
-                    calcTotalKcal('m-' + record.id);
+                    calcTotalKcal('m-' + record.id, record);
                 });
 
                 // 設定電腦版日期預設值
@@ -2767,7 +2767,7 @@
                 rightDiv.innerHTML = rightHtml;
 
                 dietRecords.forEach((record) => {
-                    calcTotalKcal(record.id);
+                    calcTotalKcal(record.id, record);
                 });
 
             } catch (error) {
@@ -2864,18 +2864,31 @@
             document.getElementById('photoModal').style.display = 'flex';
         };
 
-        window.calcTotalKcal = function(recordId) {
+        window.calcTotalKcal = function(recordId, data) {
             const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
             const rates = { C: 70, P: 75, F: 60, V: 25 };
             let total = 0;
-            meals.forEach((meal) => {
-                ['C', 'P', 'F', 'V'].forEach((nutrient) => {
-                    const el = document.getElementById(`cpfv-${recordId}-${meal}${nutrient}`);
-                    if (el && el.value) {
-                        total += parseFloat(el.value) * rates[nutrient];
-                    }
+
+            const userRole = (currentOrgContext || window.currentOrgContext)?.role;
+
+            if (userRole === 'assistant') {
+                meals.forEach((meal) => {
+                    ['C', 'P', 'F', 'V'].forEach((nutrient) => {
+                        const el = document.getElementById(`cpfv-${recordId}-${meal}${nutrient}`);
+                        if (el && el.value) {
+                            total += parseFloat(el.value) * rates[nutrient];
+                        }
+                    });
                 });
-            });
+            } else if (data) {
+                meals.forEach((meal) => {
+                    ['C', 'P', 'F', 'V'].forEach((nutrient) => {
+                        const val = parseFloat(data[`${meal}${nutrient}`]) || 0;
+                        total += val * rates[nutrient];
+                    });
+                });
+            }
+
             const displayEl = document.getElementById(`total-kcal-${recordId}`);
             if (displayEl) {
                 displayEl.textContent = '熱量: ' + Math.round(total) + ' kcal';
