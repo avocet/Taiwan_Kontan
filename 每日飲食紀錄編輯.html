@@ -693,6 +693,7 @@
                             <label>排便與否</label>
                             <div class="checkbox-group">
                                 <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementYes" value="有排便">有排便</label>
+                                <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementDifficult" value="有排便但困難">有排便但困難</label>
                                 <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementNo" value="無排便">無排便</label>
                             </div>
                         </div>
@@ -935,7 +936,8 @@
         }
 
         function updateStoolConditionVisibility() {
-            const hasBowelMovement = getRadioValue('bowelMovement') === '有排便';
+            const bowelValue = getRadioValue('bowelMovement');
+            const hasBowelMovement = bowelValue === '有排便' || bowelValue === '有排便但困難';
             const stoolGroup = document.getElementById('stoolConditionGroup');
             if (!stoolGroup) return;
             stoolGroup.style.display = hasBowelMovement ? 'block' : 'none';
