@@ -729,6 +729,7 @@
 
         // 檢查登入狀態
         let currentUser = null;
+        let isCurrentUserAssistant = false;
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
@@ -742,7 +743,10 @@
                 window.location.replace('index.html');
                 return;
             }
-            
+            if (adminDoc.exists() && adminDoc.data().role === 'assistant') {
+                isCurrentUserAssistant = true;
+            }
+
             // 載入資料
             await loadAdminEmails();
             loadData(user.uid);
@@ -872,7 +876,7 @@
                 recordCache = new Map();
                 docsArray.forEach((item) => {
                     recordCache.set(item.id, item.data);
-                    html += createDataCard(item.data, item.id, portionRecords);
+                    html += createDataCard(item.data, item.id, portionRecords, isCurrentUserAssistant);
                 });
                 document.getElementById('dataList').innerHTML = html;
                 
@@ -937,7 +941,7 @@
         }
 
         // 建立資料卡片
-        function createDataCard(data, docId, portionRecords = []) {
+        function createDataCard(data, docId, portionRecords = [], isAssistant = false) {
             const escapeHtml = (value) => String(value || '')
                 .replace(/&/g, '&amp;')
                 .replace(/</g, '&lt;')
@@ -1077,6 +1081,28 @@
                         </div>
                         ${portionHtml}
                     </div>
+                    ${isAssistant ? `
+                    <div class="assistant-cpfv-section" style="margin-top:16px;padding:12px;background:#f8f8ff;border-radius:8px;border:1px solid #ddd;">
+                        <div style="font-weight:600;margin-bottom:10px;color:#333;">助教營養師 - 飲食份數記錄</div>
+                        <div class="cpfv-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px;">
+                            <div style="font-size:0.8rem;color:#666;font-weight:500;">餐次</div>
+                            <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">C 碳水</div>
+                            <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">P 蛋白質</div>
+                            <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">F 水果</div>
+                            <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">V 蔬菜</div>
+                            <div></div>
+                            ${meals.map((meal) => `
+                                <div class="cpfv-meal-label" style="font-size:0.85rem;color:#333;padding:4px 0;">${meal}</div>
+                                <div><input type="number" id="cpfv-${docId}-${meal}C" value="${data[`${meal}C`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="C"></div>
+                                <div><input type="number" id="cpfv-${docId}-${meal}P" value="${data[`${meal}P`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="P"></div>
+                                <div><input type="number" id="cpfv-${docId}-${meal}F" value="${data[`${meal}F`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="F"></div>
+                                <div><input type="number" id="cpfv-${docId}-${meal}V" value="${data[`${meal}V`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="V"></div>
+                                <div></div>
+                            `).join('')}
+                        </div>
+                        <button onclick="saveAssistantCPFV('${docId}')" style="padding:8px 16px;background:#007AFF;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500;">儲存份數</button>
+                    </div>
+                    ` : ''}
                 </div>
             `;
         }
@@ -1136,6 +1162,25 @@
             } catch (error) {
                 console.error('刪除失敗:', error);
                 alert('刪除失敗: ' + error.message);
+            }
+        };
+
+        window.saveAssistantCPFV = async function(docId) {
+            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+            const updateData = {};
+            meals.forEach((meal) => {
+                updateData[`${meal}C`] = document.getElementById(`cpfv-${docId}-${meal}C`)?.value || '';
+                updateData[`${meal}P`] = document.getElementById(`cpfv-${docId}-${meal}P`)?.value || '';
+                updateData[`${meal}F`] = document.getElementById(`cpfv-${docId}-${meal}F`)?.value || '';
+                updateData[`${meal}V`] = document.getElementById(`cpfv-${docId}-${meal}V`)?.value || '';
+            });
+            try {
+                await updateDoc(doc(db, "每日體重三圍", docId), updateData);
+                alert('份數已儲存');
+                loadData(currentUser.uid);
+            } catch (error) {
+                console.error('儲存失敗:', error);
+                alert('儲存失敗: ' + error.message);
             }
         };
 
