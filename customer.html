@@ -1759,14 +1759,17 @@
             if (!messages.length) {
                 return `<div style="font-size:${compact ? '0.75rem' : '0.8rem'};color:#9ca3af;">尚無對話</div>`;
             }
+            const currentUserRole = (currentOrgContext || window.currentOrgContext)?.role;
             return messages.map((msg) => {
-                const isAdmin = msg.role === 'admin';
+                const isAdminOrAssistant = msg.role === 'admin' || msg.role === 'assistant';
+                const isAssistant = msg.role === 'assistant';
+                const senderLabel = isAssistant ? '助教營養師' : (isAdminOrAssistant ? '管理者營養師' : '學員');
                 const metaSize = compact ? '0.68rem' : '0.72rem';
                 const bubbleSize = compact ? '0.78rem' : '0.82rem';
                 return `
                     <div style="margin-bottom:6px;">
-                        <div style="font-size:${metaSize};color:#6b7280;margin-bottom:2px;">${isAdmin ? '管理者營養師' : '學員'} ${formatAdviceTime(msg.createdAt)}</div>
-                        <div style="font-size:${bubbleSize};line-height:1.5;white-space:pre-wrap;border:1px solid ${isAdmin ? '#a7f3d0' : '#bfdbfe'};background:${isAdmin ? '#ecfdf5' : '#eff6ff'};color:${isAdmin ? '#065f46' : '#1e3a8a'};border-radius:8px;padding:7px 8px;">${escapeHtml(msg.text)}</div>
+                        <div style="font-size:${metaSize};color:#6b7280;margin-bottom:2px;">${senderLabel} ${formatAdviceTime(msg.createdAt)}</div>
+                        <div style="font-size:${bubbleSize};line-height:1.5;white-space:pre-wrap;border:1px solid ${isAdminOrAssistant ? '#a7f3d0' : '#bfdbfe'};background:${isAdminOrAssistant ? '#ecfdf5' : '#eff6ff'};color:${isAdminOrAssistant ? '#065f46' : '#1e3a8a'};border-radius:8px;padding:7px 8px;">${escapeHtml(msg.text)}</div>
                     </div>
                 `;
             }).join('');
@@ -2846,6 +2849,8 @@
                 buttonEl.disabled = true;
                 buttonEl.textContent = '送出中...';
             }
+            const currentUserRole = (currentOrgContext || window.currentOrgContext)?.role;
+            const isAssistantMsg = currentUserRole === 'assistant';
             try {
                 const recordRef = doc(db, "每日體重三圍", recordId);
                 const recordSnap = await getDoc(recordRef);
@@ -2855,7 +2860,7 @@
                 const recordData = recordSnap.data();
                 const currentConversation = normalizeAdviceConversation(recordData);
                 const nextConversation = [...currentConversation, {
-                    role: 'admin',
+                    role: isAssistantMsg ? 'assistant' : 'admin',
                     text: messageText,
                     createdAt: new Date().toISOString()
                 }];
@@ -2869,9 +2874,9 @@
                     .filter(Boolean);
                 const uniqueEmails = Array.from(new Set(notifyEmails.map((email) => email.toLowerCase())));
                 if (uniqueEmails.length) {
-                    const subject = `【體重管理班】管理者有新訊息`;
+                    const subject = `【體重管理班】${isAssistantMsg ? '助教' : '管理者'}有新訊息`;
                     const recordDate = recordData?.紀錄日期 || '-';
-                    const senderName = '管理者營養師';
+                    const senderName = isAssistantMsg ? '助教營養師' : '管理者營養師';
                     const html = `
                         <div style="font-family:Arial,'PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.6;">
                             <h3 style="margin:0 0 8px;">你收到管理者新的建議訊息</h3>

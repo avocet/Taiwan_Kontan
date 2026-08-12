@@ -1155,7 +1155,7 @@
             const chat = Array.isArray(recordData.建議對話) ? recordData.建議對話 : [];
             const normalized = chat
                 .map((item) => ({
-                    role: item?.role === 'student' ? 'student' : 'admin',
+                    role: item?.role === 'student' ? 'student' : (item?.role === 'assistant' ? 'assistant' : 'admin'),
                     text: String(item?.text || '').trim(),
                     createdAt: item?.createdAt || ''
                 }))
@@ -1190,15 +1190,19 @@
                 container.innerHTML = '<div class="chat-empty">目前尚無建議內容</div>';
                 return;
             }
-            container.innerHTML = conversation.map((msg) => `
+            container.innerHTML = conversation.map((msg) => {
+                const isAssistant = msg.role === 'assistant';
+                const senderLabel = isAssistant ? '助教營養師' : (msg.role === 'admin' ? '管理者營養師' : '你');
+                const bubbleClass = isAssistant ? 'admin' : (msg.role === 'admin' ? 'admin' : 'student');
+                return `
                 <div class="chat-message">
-                    <div class="chat-meta">${msg.role === 'admin' ? '管理者營養師' : '你'} ${formatChatTime(msg.createdAt)}</div>
-                    <div class="chat-bubble ${msg.role === 'admin' ? 'admin' : 'student'}">${String(msg.text)
+                    <div class="chat-meta">${senderLabel} ${formatChatTime(msg.createdAt)}</div>
+                    <div class="chat-bubble ${bubbleClass}">${String(msg.text)
                         .replace(/&/g, '&amp;')
                         .replace(/</g, '&lt;')
                         .replace(/>/g, '&gt;')}</div>
                 </div>
-            `).join('');
+            `; }).join('');
             container.scrollTop = container.scrollHeight;
         }
 
