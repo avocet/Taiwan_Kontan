@@ -2870,7 +2870,7 @@
             let total = 0;
             meals.forEach((meal) => {
                 ['C', 'P', 'F', 'V'].forEach((nutrient) => {
-                    const el = document.getElementById(`cpfv-${recordId}-${meal}-${nutrient}`);
+                    const el = document.getElementById(`cpfv-${recordId}-${meal}${nutrient}`);
                     if (el && el.value) {
                         total += parseFloat(el.value) * rates[nutrient];
                     }
