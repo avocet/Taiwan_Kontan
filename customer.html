@@ -416,6 +416,7 @@
 
     <!-- 學員每日飲食紀錄（管理員用） -->
     <div id="studentRecords" style="display:none;padding:20px;max-width:1200px;margin:0 auto;">
+        <div id="assistant-debug-banner" style="background:#f0f;padding:8px;text-align:center;color:white;font-weight:bold;display:none;">這是助教視圖</div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
             <button id="backToListBtn" style="background:none;border:none;font-size:1rem;cursor:pointer;padding:8px;">← 返回</button>
             <h2 id="studentNameTitle" style="font-size:1.25rem;flex:1;text-align:center;margin-right:60px;">學員飲食紀錄</h2>
@@ -2354,6 +2355,12 @@
             
             studentList.style.display = 'none';
             studentRecords.style.display = 'block';
+            const debugBanner = document.getElementById('assistant-debug-banner');
+            const userRole = (currentOrgContext || window.currentOrgContext)?.role;
+            if (debugBanner) {
+                debugBanner.style.display = userRole === 'assistant' ? 'block' : 'none';
+                debugBanner.textContent = 'DEBUG: role=' + userRole;
+            }
             studentNameTitle.textContent = name + ' 的飲食紀錄';
             recordsContent.innerHTML = '<p>載入中...</p>';
             mobileRecordsContent.innerHTML = '<p>載入中...</p>';
