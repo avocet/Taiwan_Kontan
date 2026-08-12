@@ -1760,10 +1760,11 @@
                 return `<div style="font-size:${compact ? '0.75rem' : '0.8rem'};color:#9ca3af;">尚無對話</div>`;
             }
             const currentUserRole = (currentOrgContext || window.currentOrgContext)?.role;
+            const currentUserName = (currentOrgContext || window.currentOrgContext)?.displayName || '';
             return messages.map((msg) => {
                 const isAdminOrAssistant = msg.role === 'admin' || msg.role === 'assistant';
                 const isAssistant = msg.role === 'assistant';
-                const senderLabel = isAssistant ? '助教營養師' : (isAdminOrAssistant ? '管理者營養師' : '學員');
+                const senderLabel = isAssistant ? (currentUserName ? `助教營養師：${currentUserName}` : '助教營養師') : (isAdminOrAssistant ? '管理者營養師' : '學員');
                 const metaSize = compact ? '0.68rem' : '0.72rem';
                 const bubbleSize = compact ? '0.78rem' : '0.82rem';
                 return `
