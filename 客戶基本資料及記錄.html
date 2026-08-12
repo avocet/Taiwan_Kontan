@@ -677,6 +677,49 @@
                 </div>
 
                 <div class="form-section">
+                    <div class="section-title">減重歷史</div>
+                    <div style="margin-bottom:16px;">
+                        <div style="font-size:0.9rem;color:#666;margin-bottom:10px;">過去曾使用哪些減重方法？【可複選】</div>
+                        <div class="checkbox-grid">
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="熱量控制"> 熱量控制</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="低醣／生酮"> 低醣／生酮</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="168或其他斷食"> 168或其他斷食</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="代餐"> 代餐</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="運動"> 運動</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="營養師／醫師指導"> 營養師／醫師指導</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="減重藥物"> 減重藥物</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="減重針劑"> 減重針劑</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="保健食品"> 保健食品</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="極低熱量／斷食"> 極低熱量／斷食</label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="其他"> 其他 <input type="text" id="weightLossMethodOther" name="weightLossMethodOther" placeholder="請說明" style="width:100px;padding:4px 8px;font-size:0.85rem;"></label>
+                            <label class="checkbox-option"><input type="checkbox" name="weightLossMethod" value="不曾減重"> 不曾減重</label>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <div style="font-size:0.9rem;color:#666;margin-bottom:10px;">過去單次最多曾減多少？</div>
+                        <div class="radio-group">
+                            <label class="radio-option"><input type="radio" name="maxWeightLost" value="＜3kg"> <span>＜3 kg</span></label>
+                            <label class="radio-option"><input type="radio" name="maxWeightLost" value="3-5kg"> <span>3–5 kg</span></label>
+                            <label class="radio-option"><input type="radio" name="maxWeightLost" value="6-10kg"> <span>6–10 kg</span></label>
+                            <label class="radio-option"><input type="radio" name="maxWeightLost" value="11-20kg"> <span>11–20 kg</span></label>
+                            <label class="radio-option"><input type="radio" name="maxWeightLost" value="＞20kg"> <span>＞20 kg</span></label>
+                            <label class="radio-option"><input type="radio" name="maxWeightLost" value="從未成功減重"> <span>從未成功減重</span></label>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.9rem;color:#666;margin-bottom:10px;">最成功的一次減重維持多久？</div>
+                        <div class="radio-group">
+                            <label class="radio-option"><input type="radio" name="weightMaintainDuration" value="從未成功"> <span>從未成功</span></label>
+                            <label class="radio-option"><input type="radio" name="weightMaintainDuration" value="＜1個月"> <span>＜1個月</span></label>
+                            <label class="radio-option"><input type="radio" name="weightMaintainDuration" value="1-3個月"> <span>1–3個月</span></label>
+                            <label class="radio-option"><input type="radio" name="weightMaintainDuration" value="3-6個月"> <span>3–6個月</span></label>
+                            <label class="radio-option"><input type="radio" name="weightMaintainDuration" value="6-12個月"> <span>6–12個月</span></label>
+                            <label class="radio-option"><input type="radio" name="weightMaintainDuration" value="＞1年"> <span>＞1年</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
                     <div class="section-title">體重歷史（不再長高後）</div>
                     <div class="form-group half-width">
                         <label>最輕體重</label>
@@ -855,6 +898,21 @@
                             const cb = document.querySelector(`input[name="giIssue"][value="${val}"]`);
                             if (cb) cb.checked = true;
                         });
+                    }
+                    if (data.減重方法 && Array.isArray(data.減重方法)) {
+                        data.減重方法.forEach(val => {
+                            const cb = document.querySelector(`input[name="weightLossMethod"][value="${val}"]`);
+                            if (cb) cb.checked = true;
+                        });
+                    }
+                    if (data.減重方法其他) document.getElementById('weightLossMethodOther').value = data.減重方法其他;
+                    if (data.過去最多減重) {
+                        const r = document.querySelector(`input[name="maxWeightLost"][value="${data.過去最多減重}"]`);
+                        if (r) { r.checked = true; r.closest('.radio-option').classList.add('selected'); }
+                    }
+                    if (data.最長維持時間) {
+                        const r = document.querySelector(`input[name="weightMaintainDuration"][value="${data.最長維持時間}"]`);
+                        if (r) { r.checked = true; r.closest('.radio-option').classList.add('selected'); }
                     }
 
                     document.getElementById('submitBtn').textContent = '更新資料';
@@ -1201,6 +1259,10 @@
                 保健食品: document.querySelector('input[name="supplement"]:checked')?.value || '',
                 保健食品內容: document.getElementById('supplementText').value,
                 腸胃問題: Array.from(document.querySelectorAll('input[name="giIssue"]:checked')).map(cb => cb.value),
+                減重方法: Array.from(document.querySelectorAll('input[name="weightLossMethod"]:checked')).map(cb => cb.value),
+                減重方法其他: document.getElementById('weightLossMethodOther').value,
+                過去最多減重: document.querySelector('input[name="maxWeightLost"]:checked')?.value || '',
+                最長維持時間: document.querySelector('input[name="weightMaintainDuration"]:checked')?.value || '',
                 建立時間: serverTimestamp()
             }, currentOrgContext || { companyId: 'akso-company', primaryClassId: 'akso-default-class', classIds: ['akso-default-class'] });
 
