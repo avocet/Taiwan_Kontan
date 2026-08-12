@@ -2500,38 +2500,45 @@
                             <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);position:relative;">
                                 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
                                     <div style="font-weight:600;">${date}</div>
-                                    ${(currentOrgContext || window.currentOrgContext)?.role === 'assistant' ? `<div id="total-kcal-m-${record.id}" style="font-size:0.8rem;font-weight:600;color:#007AFF;">熱量: - kcal</div>` : ''}
+                                    ${(currentOrgContext || window.currentOrgContext)?.role === 'assistant' || (currentOrgContext || window.currentOrgContext)?.role === 'coach' ? `<div id="total-kcal-m-${record.id}" style="font-size:0.8rem;font-weight:600;color:#007AFF;">熱量: - kcal</div>` : ''}
                                 </div>
                                 <div style="display:flex;gap:16px;margin-bottom:8px;font-size:0.875rem;color:#666;">
                                     <span>體重: ${weight} kg</span>
                                     <span>體脂: ${bodyFat}%</span>
                                 </div>
                                 <div style="font-size:0.875rem;color:#666;">
-                                    ${meals.map((meal) => `
+                                    ${meals.map((meal) => {
+                                        const c = record[`${meal}C`] || '';
+                                        const p = record[`${meal}P`] || '';
+                                        const f = record[`${meal}F`] || '';
+                                        const v = record[`${meal}V`] || '';
+                                        const hasCPFV = c || p || f || v;
+                                        const userRole = (currentOrgContext || window.currentOrgContext)?.role;
+                                        return `
                                         <div style="margin-top:6px;">
                                             <div>${meal}: ${record[meal] || '-'}</div>
-                                            ${(currentOrgContext || window.currentOrgContext)?.role === 'assistant' ? `
+                                            ${userRole === 'assistant' ? `
                                             <div style="display:flex;gap:4px;margin-top:4px;margin-left:12px;flex-wrap:wrap;">
                                                 <div style="display:flex;align-items:center;gap:2px;">
                                                     <span style="font-size:0.7rem;color:#666;">C:</span>
-                                                    <input type="number" id="cpfv-m-${record.id}-${meal}C" value="${record[`${meal}C`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="C" oninput="calcTotalKcal('m-${record.id}')">
+                                                    <input type="number" id="cpfv-m-${record.id}-${meal}C" value="${c}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="C" oninput="calcTotalKcal('m-${record.id}')">
                                                 </div>
                                                 <div style="display:flex;align-items:center;gap:2px;">
                                                     <span style="font-size:0.7rem;color:#666;">P:</span>
-                                                    <input type="number" id="cpfv-m-${record.id}-${meal}P" value="${record[`${meal}P`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="P" oninput="calcTotalKcal('m-${record.id}')">
+                                                    <input type="number" id="cpfv-m-${record.id}-${meal}P" value="${p}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="P" oninput="calcTotalKcal('m-${record.id}')">
                                                 </div>
                                                 <div style="display:flex;align-items:center;gap:2px;">
                                                     <span style="font-size:0.7rem;color:#666;">F:</span>
-                                                    <input type="number" id="cpfv-m-${record.id}-${meal}F" value="${record[`${meal}F`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="F" oninput="calcTotalKcal('m-${record.id}')">
+                                                    <input type="number" id="cpfv-m-${record.id}-${meal}F" value="${f}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="F" oninput="calcTotalKcal('m-${record.id}')">
                                                 </div>
                                                 <div style="display:flex;align-items:center;gap:2px;">
                                                     <span style="font-size:0.7rem;color:#666;">V:</span>
-                                                    <input type="number" id="cpfv-m-${record.id}-${meal}V" value="${record[`${meal}V`] || ''}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="V" oninput="calcTotalKcal('m-${record.id}')">
+                                                    <input type="number" id="cpfv-m-${record.id}-${meal}V" value="${v}" min="0" style="width:45px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="V" oninput="calcTotalKcal('m-${record.id}')">
                                                 </div>
                                             </div>
-                                            ` : ''}
+                                            ` : (hasCPFV ? `<div style="font-size:0.75rem;color:#007AFF;margin-top:2px;margin-left:12px;">C:${c} P:${p} F:${f} V:${v}</div>` : '')}
                                         </div>
-                                    `).join('')}
+                                    `;}).join('')}
                                 </div>
                                 ${(currentOrgContext || window.currentOrgContext)?.role === 'assistant' ? `
                                 <div style="margin-top:10px;text-align:right;">
@@ -2666,34 +2673,40 @@
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);position:relative;">
                             <div style="display:flex;justify-content:space-between;align-items:flex-start;">
                                 <div style="font-weight:600;margin-bottom:8px;">${daily.紀錄日期}</div>
-                                ${currentUserRole === 'assistant' ? `<div id="total-kcal-${daily.id}" style="font-size:0.8rem;font-weight:600;color:#007AFF;">熱量: - kcal</div>` : ''}
+                                ${(currentUserRole === 'assistant' || currentUserRole === 'coach') ? `<div id="total-kcal-${daily.id}" style="font-size:0.8rem;font-weight:600;color:#007AFF;">熱量: - kcal</div>` : ''}
                             </div>
                             <div style="font-size:0.8rem;">
                                 <div>體重: ${daily.體重 || '-'} kg</div>
                                 <div>體脂: ${daily.體脂 || '-'}%</div>
-                                ${meals.map((meal) => `
+                                ${meals.map((meal) => {
+                                    const c = daily[`${meal}C`] || '';
+                                    const p = daily[`${meal}P`] || '';
+                                    const f = daily[`${meal}F`] || '';
+                                    const v = daily[`${meal}V`] || '';
+                                    const hasCPFV = c || p || f || v;
+                                    return `
                                     <div style="margin-top:6px;">
                                         <div>${meal}: ${daily[meal] || '-'}</div>
                                         ${currentUserRole === 'assistant' ? `
                                         <div style="display:flex;gap:4px;margin-top:4px;margin-left:12px;">
                                             <div style="display:flex;align-items:center;gap:2px;">
                                                 <span style="font-size:0.7rem;color:#666;">C:</span>
-                                                <input type="number" id="cpfv-${daily.id}-${meal}C" value="${daily[`${meal}C`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="C" oninput="calcTotalKcal('${daily.id}')">
+                                                <input type="number" id="cpfv-${daily.id}-${meal}C" value="${c}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="C" oninput="calcTotalKcal('${daily.id}')">
                                             </div>
                                             <div style="display:flex;align-items:center;gap:2px;">
                                                 <span style="font-size:0.7rem;color:#666;">P:</span>
-                                                <input type="number" id="cpfv-${daily.id}-${meal}P" value="${daily[`${meal}P`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="P" oninput="calcTotalKcal('${daily.id}')">
+                                                <input type="number" id="cpfv-${daily.id}-${meal}P" value="${p}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="P" oninput="calcTotalKcal('${daily.id}')">
                                             </div>
                                             <div style="display:flex;align-items:center;gap:2px;">
                                                 <span style="font-size:0.7rem;color:#666;">F:</span>
-                                                <input type="number" id="cpfv-${daily.id}-${meal}F" value="${daily[`${meal}F`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="F" oninput="calcTotalKcal('${daily.id}')">
+                                                <input type="number" id="cpfv-${daily.id}-${meal}F" value="${f}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="F" oninput="calcTotalKcal('${daily.id}')">
                                             </div>
                                             <div style="display:flex;align-items:center;gap:2px;">
                                                 <span style="font-size:0.7rem;color:#666;">V:</span>
                                                 <input type="number" id="cpfv-${daily.id}-${meal}V" value="${daily[`${meal}V`] || ''}" min="0" style="width:50px;padding:3px;font-size:0.75rem;border:1px solid #ccc;border-radius:4px;" placeholder="V" oninput="calcTotalKcal('${daily.id}')">
                                             </div>
                                         </div>
-                                        ` : ''}
+                                        ` : (hasCPFV ? `<div style="font-size:0.75rem;color:#007AFF;margin-top:2px;margin-left:12px;">C:${c} P:${p} F:${f} V:${v}</div>` : '')}
                                     </div>
                                 `).join('')}
                             </div>
