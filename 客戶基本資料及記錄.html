@@ -501,6 +501,28 @@
                         <label>年齡</label>
                         <input type="number" id="age" name="age" placeholder="由生日自動計算" min="1" max="150" readonly>
                     </div>
+
+                    <div class="form-group half-width">
+                        <label>填寫日期</label>
+                        <input type="date" id="fillDate" name="fillDate">
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>身高 (cm)</label>
+                        <input type="number" id="height" name="height" placeholder="例如：170" step="0.1" min="0" oninput="calculateBMI()">
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>體重 (kg)</label>
+                        <div class="weight-group">
+                            <input type="number" id="weight" name="weight" placeholder="例如：60" step="0.1" min="0" oninput="calculateBMI()">
+                        </div>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>BMI</label>
+                        <input type="number" id="bmi" name="bmi" placeholder="自動計算" step="0.1" readonly>
+                    </div>
                     
                     <div class="form-group half-width">
                         <label class="required">手機</label>
@@ -675,6 +697,10 @@
                     if (data.產後體重) document.getElementById('postPregnancyWeight').value = data.產後體重;
                     if (data.上月mc週期) document.getElementById('mcCycle').value = data.上月mc週期;
                     if (data.email) document.getElementById('email').value = data.email;
+                    if (data.填寫日期) document.getElementById('fillDate').value = data.填寫日期;
+                    if (data.身高) document.getElementById('height').value = data.身高;
+                    if (data.體重) document.getElementById('weight').value = data.體重;
+                    if (data.BMI) document.getElementById('bmi').value = data.BMI;
                     
                     document.getElementById('submitBtn').textContent = '更新資料';
                     document.getElementById('formTitle').textContent = '體重管理班學員基本資料';
@@ -731,6 +757,19 @@
                 document.getElementById('prePregnancyWeight').value = '';
                 document.getElementById('postPregnancyWeight').value = '';
                 document.getElementById('mcCycle').value = '';
+            }
+        }
+
+        function calculateBMI() {
+            const height = parseFloat(document.getElementById('height').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+            const bmiField = document.getElementById('bmi');
+            if (height > 0 && weight > 0) {
+                const heightM = height / 100;
+                const bmi = (weight / (heightM * heightM)).toFixed(1);
+                bmiField.value = bmi;
+            } else {
+                bmiField.value = '';
             }
         }
 
@@ -889,6 +928,7 @@
         }
 
         populateBirthdaySelectors();
+        document.getElementById('fillDate').valueAsDate = new Date();
         document.getElementById('birthdayYear').addEventListener('change', syncBirthdayFromSelectors);
         document.getElementById('birthdayMonth').addEventListener('change', syncBirthdayFromSelectors);
         document.getElementById('birthdayDay').addEventListener('change', syncBirthdayFromSelectors);
@@ -967,6 +1007,10 @@
                 產後體重: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('postPregnancyWeight').value.trim() : '',
                 上月mc週期: (document.querySelector('input[name="gender"]:checked')?.value === 'female') ? document.getElementById('mcCycle').value : '',
                 email: document.getElementById('email').value.trim(),
+                填寫日期: document.getElementById('fillDate').value,
+                身高: document.getElementById('height').value,
+                體重: document.getElementById('weight').value,
+                BMI: document.getElementById('bmi').value,
                 建立時間: serverTimestamp()
             }, currentOrgContext || { companyId: 'akso-company', primaryClassId: 'akso-default-class', classIds: ['akso-default-class'] });
 
