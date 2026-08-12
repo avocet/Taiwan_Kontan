@@ -665,7 +665,6 @@
                 <a href="customer.html" class="back-btn">← 返回</a>
                 <h1>每日飲食紀錄</h1>
             </div>
-            <div id="debugRole" style="background:#ff0;padding:8px;font-size:12px;display:none;">DEBUG: 載入中...</div>
             <div class="header-meta" id="headerMeta">
                 目標體重：-｜距離目標：-｜已進行：- 週｜剩餘：- 週
             </div>
@@ -753,20 +752,6 @@
                 if (userRole === 'assistant') {
                     isCurrentUserAssistant = true;
                 }
-            }
-
-            // DEBUG
-            console.log('test1 role check:', {
-                adminDocExists: adminDoc.exists(),
-                adminRole: adminDoc.exists() ? adminDoc.data().role : null,
-                userDocExists: userDoc.exists(),
-                userRole: userDoc.exists() ? userDoc.data().role : null,
-                isAssistant: isCurrentUserAssistant
-            });
-            const debugEl = document.getElementById('debugRole');
-            if (debugEl) {
-                debugEl.style.display = 'block';
-                debugEl.textContent = 'DEBUG: adminDoc=' + adminDoc.exists() + ' adminRole=' + (adminDoc.exists() ? adminDoc.data().role : 'N/A') + ' | userDoc=' + userDoc.exists() + ' userRole=' + (userDoc.exists() ? userDoc.data().role : 'N/A') + ' | isAssistant=' + isCurrentUserAssistant;
             }
 
             // 載入資料
@@ -1104,7 +1089,6 @@
                         ${portionHtml}
                     </div>
                     ${isAssistant ? `
-                    <div id="debug-cpfv-${docId}" style="background:#0f0;padding:4px;font-size:10px;">DEBUG_CPFV_VISIBLE docId=${docId} isAssistant=${isAssistant}</div>
                     <div class="assistant-cpfv-section" style="margin-top:16px;padding:12px;background:#f8f8ff;border-radius:8px;border:1px solid #ddd;">
                         <div style="font-weight:600;margin-bottom:10px;color:#333;">助教營養師 - 飲食份數記錄</div>
                         <div class="cpfv-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px;">
