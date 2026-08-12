@@ -2545,6 +2545,7 @@
             rightDiv.innerHTML = '<p style="text-align:center;">載入中...</p>';
             
             try {
+                const currentUserRole = (currentOrgContext || window.currentOrgContext)?.role;
                 // 取得每日飲食紀錄
                 const dietQuery = query(collection(db, "每日體重三圍"), where("userId", "==", currentStudentUid));
                 const dietSnapshot = await getDocs(dietQuery);
@@ -2658,37 +2659,6 @@
                 leftDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗: ' + error.message + '</p>';
                 rightDiv.innerHTML = '<p style="text-align:center;color:red;">載入失敗</p>';
             }
-        }
-
-        function editPortionRecordById(portionId) {
-            const portionRecords = window.portionRecordsData || [];
-            const matchedPortion = portionRecords.find(p => p.id === portionId);
-
-            if (!matchedPortion) {
-                alert('找不到資料');
-                return;
-            }
-
-            editingPortionDocId = portionId;
-            document.getElementById('portionStartDate').value = matchedPortion.紀錄日期 || '';
-            document.getElementById('portionEndDate').value = matchedPortion.結束日期 || matchedPortion.紀錄日期 || '';
-
-            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
-            const nutrients = ['C', 'P', 'F', 'V'];
-
-            meals.forEach(meal => {
-                nutrients.forEach(nutrient => {
-                    const selectEl = document.querySelector(`[name="${meal}${nutrient}"]`);
-                    if (selectEl) selectEl.value = matchedPortion[`${meal}${nutrient}`] || 0;
-                });
-
-                const timeEl = document.querySelector(`[name="${meal}時間"]`);
-                if (timeEl) timeEl.value = matchedPortion[`${meal}時間`] || '';
-            });
-
-            updatePortionSummary();
-
-            document.getElementById('portionTableModal').style.display = 'flex';
         }
         
         // 自動載入飲食份數表
