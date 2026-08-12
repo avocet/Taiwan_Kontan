@@ -2683,6 +2683,28 @@
                                     <button class="sendAdviceMsgBtn" data-record-id="${daily.id}" style="background:#007AFF;color:white;border:none;padding:6px 10px;border-radius:8px;font-size:0.75rem;cursor:pointer;">送出訊息</button>
                                 </div>
                             </div>
+                            ${currentUserRole === 'assistant' ? `
+                            <div style="margin-top:16px;padding:12px;background:#00FF00;border-radius:8px;border:5px solid red;">
+                                <div style="font-weight:600;margin-bottom:10px;color:#333;">★★助教營養師 - 飲食份數記錄★★</div>
+                                <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px;">
+                                    <div style="font-size:0.8rem;color:#666;font-weight:500;">餐次</div>
+                                    <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">C 碳水</div>
+                                    <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">P 蛋白質</div>
+                                    <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">F 水果</div>
+                                    <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">V 蔬菜</div>
+                                    <div></div>
+                                    ${meals.map((meal) => `
+                                        <div style="font-size:0.85rem;color:#333;padding:4px 0;">${meal}</div>
+                                        <div><input type="number" id="cpfv-${daily.id}-${meal}C" value="${daily[`${meal}C`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="C"></div>
+                                        <div><input type="number" id="cpfv-${daily.id}-${meal}P" value="${daily[`${meal}P`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="P"></div>
+                                        <div><input type="number" id="cpfv-${daily.id}-${meal}F" value="${daily[`${meal}F`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="F"></div>
+                                        <div><input type="number" id="cpfv-${daily.id}-${meal}V" value="${daily[`${meal}V`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="V"></div>
+                                        <div></div>
+                                    `).join('')}
+                                </div>
+                                <button onclick="saveStudentCPFV('${daily.id}')" style="padding:8px 16px;background:#007AFF;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500;">儲存份數</button>
+                            </div>
+                            ` : ''}
                         </div>
                     `;
                 }
