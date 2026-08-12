@@ -1724,7 +1724,7 @@
             const chat = Array.isArray(record.建議對話) ? record.建議對話 : [];
             const normalized = chat
                 .map((item) => ({
-                    role: item?.role === 'student' ? 'student' : 'admin',
+                    role: item?.role === 'student' ? 'student' : (item?.role === 'assistant' ? 'assistant' : 'admin'),
                     text: String(item?.text || '').trim(),
                     createdAt: item?.createdAt || ''
                 }))
