@@ -746,6 +746,10 @@
             if (adminDoc.exists() && adminDoc.data().role === 'assistant') {
                 isCurrentUserAssistant = true;
             }
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists() && userDoc.data().role === 'assistant') {
+                isCurrentUserAssistant = true;
+            }
 
             // 載入資料
             await loadAdminEmails();
