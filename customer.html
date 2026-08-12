@@ -2877,6 +2877,7 @@
                 });
             });
             const displayEl = document.getElementById(`total-kcal-${recordId}`);
+            console.log('calcTotalKcal', recordId, 'total:', total, 'displayEl:', displayEl);
             if (displayEl) {
                 displayEl.textContent = '熱量: ' + Math.round(total) + ' kcal';
             }
