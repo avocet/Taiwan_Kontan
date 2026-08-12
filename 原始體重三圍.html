@@ -362,8 +362,6 @@
         </div>
 
         <div id="recordsList"></div>
-
-        <button class="save-btn" id="addNewBtn" style="display:none;margin-top:16px;">+ 新增紀錄</button>
     </div>
 
     <script type="module">
@@ -440,15 +438,18 @@
                 records.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
 
                 const recordsList = document.getElementById('recordsList');
-                const addNewBtn = document.getElementById('addNewBtn');
 
                 if (records.length === 0) {
-                    recordsList.innerHTML = '<div style="text-align:center;color:#8E8E93;padding:40px;">尚無紀錄</div>';
-                    addNewBtn.style.display = 'block';
+                    recordsList.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div style="font-weight:600;color:#333;">紀錄列表</div>
+                            <button onclick="showForm()" style="padding:6px 14px;background:#34C759;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500;">+ 新增</button>
+                        </div>
+                        <div style="text-align:center;color:#8E8E93;padding:40px;">尚無紀錄</div>
+                    `;
                     showForm();
                 } else {
                     renderRecords(records);
-                    addNewBtn.style.display = 'block';
                 }
 
             } catch (error) {
@@ -463,7 +464,12 @@
 
             formCard.style.display = 'none';
 
-            recordsList.innerHTML = records.map((r) => `
+            recordsList.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <div style="font-weight:600;color:#333;">紀錄列表</div>
+                    <button onclick="showForm()" style="padding:6px 14px;background:#34C759;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500;">+ 新增</button>
+                </div>
+                ${records.map((r) => `
                 <div class="form-card" style="margin-bottom:12px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                         <div style="font-weight:600;">${r.紀錄日期 || '-'}</div>
@@ -483,7 +489,8 @@
                         <div>右小腿：${r.右小腿圍 || '-'}</div>
                     </div>
                 </div>
-            `).join('');
+            `).join('')}
+            `;
         }
 
         window.editRecord = async function(docId) {
@@ -523,7 +530,6 @@
             document.querySelector('.form-title').textContent = '📝 新增9圍紀錄';
         }
 
-        document.getElementById('addNewBtn').addEventListener('click', showForm);
         document.getElementById('cancelBtn').addEventListener('click', () => {
             if (existingDocId) {
                 loadData(currentUser.uid);
