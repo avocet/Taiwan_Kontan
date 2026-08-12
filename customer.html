@@ -975,7 +975,7 @@
             const options = availableClasses.length
                 ? availableClasses
                 : [{ id: DEFAULT_CLASS_ID, name: DEFAULT_CLASS_NAME }];
-            const isCoachView = currentOrgContext?.role === 'coach';
+            const isCoachView = currentOrgContext?.role === 'coach' || currentOrgContext?.role === 'assistant';
             const currentClassId = currentOrgContext?.primaryClassId || currentOrgContext?.classId || options[0].id;
             const currentClass = options.find((item) => item.id === currentClassId) || options[0];
 
@@ -1429,8 +1429,8 @@
                 const status = getDisplayCourseStatus(student.課程狀態);
                 const badgeBg = status === '已完成' ? '#EAF8EF' : '#E8F3FF';
                 const badgeColor = status === '已完成' ? '#1E7E34' : '#0A58CA';
-                const isCoachView = currentOrgContext?.role === 'coach';
-                const classDisplayHtml = currentOrgContext?.role === 'coach'
+                const isCoachView = currentOrgContext?.role === 'coach' || currentOrgContext?.role === 'assistant';
+                const classDisplayHtml = currentOrgContext?.role === 'coach' || currentOrgContext?.role === 'assistant'
                     ? `<div style="padding:6px 10px;border:1px solid #dbeafe;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:0.8125rem;font-weight:600;white-space:nowrap;">${escapeHtml(student.className || DEFAULT_CLASS_NAME)}</div>`
                     : `<select data-uid="${student.uid || ''}" data-username="${student.username}" onchange="updateStudentClassAssignment(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
                                 ${availableClasses.map((classItem) => `<option value="${classItem.id}" ${((student.classId || DEFAULT_CLASS_ID) === classItem.id) ? 'selected' : ''}>${classItem.name || classItem.id}</option>`).join('')}
@@ -1445,11 +1445,11 @@
                         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;" onclick="event.stopPropagation()">
                             ${isCoachView ? '' : `<span style="padding:4px 8px;border-radius:999px;font-size:0.75rem;font-weight:600;background:${badgeBg};color:${badgeColor};">${status}</span>`}
                             ${isCoachView ? '' : classDisplayHtml}
-                            <select data-customer-doc-id="${student.customerDocId || ''}" data-uid="${student.uid || ''}" data-username="${student.username}" data-student-name="${student.studentName || ''}" data-email-prefix="${student.emailPrefix || ''}" onchange="updateStudentCourseStatus(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
+                            ${isCoachView ? '' : `<select data-customer-doc-id="${student.customerDocId || ''}" data-uid="${student.uid || ''}" data-username="${student.username}" data-student-name="${student.studentName || ''}" data-email-prefix="${student.emailPrefix || ''}" onchange="updateStudentCourseStatus(event)" style="border:1px solid #ddd;border-radius:8px;padding:6px 8px;font-size:0.8125rem;background:#fff;color:#333;">
                                 <option value="課程中" ${status === '課程中' ? 'selected' : ''}>課程中</option>
                                 <option value="已完成" ${status === '已完成' ? 'selected' : ''}>已完成</option>
-                            </select>
-                            <button type="button" class="deleteStudentBtn" data-uid="${student.uid || ''}" data-username="${student.username || ''}" data-email="${student.email || ''}" data-student-name="${student.studentName || ''}" style="border:none;border-radius:8px;padding:6px 8px;font-size:0.75rem;background:#FF3B30;color:#fff;cursor:pointer;white-space:nowrap;">刪除帳號</button>
+                            </select>`}
+                            ${isCoachView ? '' : `<button type="button" class="deleteStudentBtn" data-uid="${student.uid || ''}" data-username="${student.username || ''}" data-email="${student.email || ''}" data-student-name="${student.studentName || ''}" style="border:none;border-radius:8px;padding:6px 8px;font-size:0.75rem;background:#FF3B30;color:#fff;cursor:pointer;white-space:nowrap;">刪除帳號</button>`}
                         </div>
                     </div>
                 `;
