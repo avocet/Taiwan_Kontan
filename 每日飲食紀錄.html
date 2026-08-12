@@ -1157,6 +1157,7 @@
                 .map((item) => ({
                     role: item?.role === 'student' ? 'student' : (item?.role === 'assistant' ? 'assistant' : 'admin'),
                     senderName: item?.senderName || '',
+                    senderRole: item?.senderRole || '',
                     text: String(item?.text || '').trim(),
                     createdAt: item?.createdAt || ''
                 }))
@@ -1193,8 +1194,16 @@
             }
             container.innerHTML = conversation.map((msg) => {
                 const isAssistant = msg.role === 'assistant';
-                const senderLabel = isAssistant ? (msg.senderName ? `助教營養師：${msg.senderName}` : '助教營養師') : (msg.role === 'admin' ? '資深營養師' : '你');
-                const bubbleClass = isAssistant ? 'admin' : (msg.role === 'admin' ? 'admin' : 'student');
+                const isAdmin = msg.role === 'admin';
+                let senderLabel;
+                if (isAssistant) {
+                    senderLabel = msg.senderName ? `助教營養師：${msg.senderName}` : '助教營養師';
+                } else if (isAdmin) {
+                    senderLabel = msg.senderName ? `資深營養師：${msg.senderName}` : '資深營養師';
+                } else {
+                    senderLabel = '你';
+                }
+                const bubbleClass = isAssistant || isAdmin ? 'admin' : 'student';
                 return `
                 <div class="chat-message">
                     <div class="chat-meta">${senderLabel} ${formatChatTime(msg.createdAt)}</div>
