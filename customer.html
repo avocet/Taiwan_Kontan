@@ -1725,6 +1725,7 @@
             const normalized = chat
                 .map((item) => ({
                     role: item?.role === 'student' ? 'student' : (item?.role === 'assistant' ? 'assistant' : 'admin'),
+                    senderName: item?.senderName || '',
                     text: String(item?.text || '').trim(),
                     createdAt: item?.createdAt || ''
                 }))
@@ -1760,11 +1761,10 @@
                 return `<div style="font-size:${compact ? '0.75rem' : '0.8rem'};color:#9ca3af;">尚無對話</div>`;
             }
             const currentUserRole = (currentOrgContext || window.currentOrgContext)?.role;
-            const currentUserName = (currentOrgContext || window.currentOrgContext)?.displayName || '';
             return messages.map((msg) => {
                 const isAdminOrAssistant = msg.role === 'admin' || msg.role === 'assistant';
                 const isAssistant = msg.role === 'assistant';
-                const senderLabel = isAssistant ? (currentUserName ? `助教營養師：${currentUserName}` : '助教營養師') : (isAdminOrAssistant ? '管理者營養師' : '學員');
+                const senderLabel = isAssistant ? (msg.senderName ? `助教營養師：${msg.senderName}` : '助教營養師') : (isAdminOrAssistant ? '管理者營養師' : '學員');
                 const metaSize = compact ? '0.68rem' : '0.72rem';
                 const bubbleSize = compact ? '0.78rem' : '0.82rem';
                 return `
@@ -2851,6 +2851,7 @@
                 buttonEl.textContent = '送出中...';
             }
             const currentUserRole = (currentOrgContext || window.currentOrgContext)?.role;
+            const currentUserName = (currentOrgContext || window.currentOrgContext)?.displayName || '';
             const isAssistantMsg = currentUserRole === 'assistant';
             try {
                 const recordRef = doc(db, "每日體重三圍", recordId);
@@ -2862,6 +2863,7 @@
                 const currentConversation = normalizeAdviceConversation(recordData);
                 const nextConversation = [...currentConversation, {
                     role: isAssistantMsg ? 'assistant' : 'admin',
+                    senderName: currentUserName,
                     text: messageText,
                     createdAt: new Date().toISOString()
                 }];
@@ -2877,7 +2879,7 @@
                 if (uniqueEmails.length) {
                     const subject = `【體重管理班】${isAssistantMsg ? '助教' : '管理者'}有新訊息`;
                     const recordDate = recordData?.紀錄日期 || '-';
-                    const senderName = isAssistantMsg ? '助教營養師' : '管理者營養師';
+                    const senderName = isAssistantMsg ? (currentUserName ? `助教營養師：${currentUserName}` : '助教營養師') : '管理者營養師';
                     const html = `
                         <div style="font-family:Arial,'PingFang TC','Microsoft JhengHei',sans-serif;line-height:1.6;">
                             <h3 style="margin:0 0 8px;">你收到管理者新的建議訊息</h3>

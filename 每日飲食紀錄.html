@@ -1156,6 +1156,7 @@
             const normalized = chat
                 .map((item) => ({
                     role: item?.role === 'student' ? 'student' : (item?.role === 'assistant' ? 'assistant' : 'admin'),
+                    senderName: item?.senderName || '',
                     text: String(item?.text || '').trim(),
                     createdAt: item?.createdAt || ''
                 }))
@@ -1192,7 +1193,7 @@
             }
             container.innerHTML = conversation.map((msg) => {
                 const isAssistant = msg.role === 'assistant';
-                const senderLabel = isAssistant ? '助教營養師' : (msg.role === 'admin' ? '管理者營養師' : '你');
+                const senderLabel = isAssistant ? (msg.senderName ? `助教營養師：${msg.senderName}` : '助教營養師') : (msg.role === 'admin' ? '管理者營養師' : '你');
                 const bubbleClass = isAssistant ? 'admin' : (msg.role === 'admin' ? 'admin' : 'student');
                 return `
                 <div class="chat-message">
