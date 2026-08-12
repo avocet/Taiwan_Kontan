@@ -689,7 +689,7 @@
 
     <div class="dialog-modal" id="replyModal">
         <div class="dialog-content">
-            <div class="dialog-title">回覆管理者營養師建議</div>
+            <div class="dialog-title">回覆資深營養師建議</div>
             <div class="chat-list" id="replyModalChatList"></div>
             <textarea class="reply-textarea" id="replyInput" placeholder="請輸入你的回覆..."></textarea>
             <div class="dialog-actions">
@@ -1022,7 +1022,7 @@
             const adviceHtml = hasAdminAdvice
                 ? `
                     <div class="advice-section">
-                        <div class="advice-title">管理者營養師建議對話</div>
+                        <div class="advice-title">資深營養師建議對話</div>
                         <div class="advice-content">共 ${conversation.length} 則訊息，可持續回覆</div>
                         ${latestStudentReply ? `<div class="student-reply"><div class="student-reply-title">你最近的回覆</div><div class="student-reply-content">${escapeHtml(latestStudentReply.text)}</div></div>` : ''}
                         <div class="advice-actions">
@@ -1193,7 +1193,7 @@
             }
             container.innerHTML = conversation.map((msg) => {
                 const isAssistant = msg.role === 'assistant';
-                const senderLabel = isAssistant ? (msg.senderName ? `助教營養師：${msg.senderName}` : '助教營養師') : (msg.role === 'admin' ? '管理者營養師' : '你');
+                const senderLabel = isAssistant ? (msg.senderName ? `助教營養師：${msg.senderName}` : '助教營養師') : (msg.role === 'admin' ? '資深營養師' : '你');
                 const bubbleClass = isAssistant ? 'admin' : (msg.role === 'admin' ? 'admin' : 'student');
                 return `
                 <div class="chat-message">
