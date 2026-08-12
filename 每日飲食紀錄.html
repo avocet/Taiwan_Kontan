@@ -998,6 +998,15 @@
                 time: data[`${meal}時間`] || '',
                 value: data[meal] || ''
             }));
+            const rates = { C: 70, P: 75, F: 60, V: 25 };
+            let totalKcal = 0;
+            meals.forEach((meal) => {
+                ['C', 'P', 'F', 'V'].forEach((n) => {
+                    const val = parseFloat(data[`${meal}${n}`]) || 0;
+                    totalKcal += val * rates[n];
+                });
+            });
+            const totalKcalText = totalKcal > 0 ? Math.round(totalKcal) + ' kcal' : '- kcal';
             const formatDate = (dateStr) => {
                 if (!dateStr) return '-';
                 const d = new Date(dateStr);
@@ -1051,6 +1060,7 @@
                             <button class="edit-btn" onclick="editData('${docId}')">編輯</button>
                             <button class="delete-btn" onclick="deleteData('${docId}')">刪除</button>
                         </div>
+                        <div style="font-size:0.85rem;font-weight:600;color:#007AFF;">熱量: ${totalKcalText}</div>
                         ${photoHtml}
                     </div>
                     <div class="data-info">
@@ -1077,12 +1087,19 @@
                     </div>
                     <div class="records-row">
                         <div class="diet-records">
-                            ${mealEntries.map((meal) => `
+                            ${mealEntries.map((meal) => {
+                const c = data[`${meal.label}C`] || '';
+                const p = data[`${meal.label}P`] || '';
+                const f = data[`${meal.label}F`] || '';
+                const v = data[`${meal.label}V`] || '';
+                const hasCPFV = c || p || f || v;
+                return `
                                 <div class="data-item" style="margin-bottom:8px;">
                                     <span class="data-label">${meal.label}${meal.time ? ` ${meal.time}` : ''}</span>
                                     <span class="data-value">${meal.value || '-'}</span>
+                                    ${hasCPFV ? `<div style="font-size:0.75rem;color:#666;margin-top:2px;">C:${c} P:${p} F:${f} V:${v}</div>` : ''}
                                 </div>
-                            `).join('')}
+                            `;}).join('')}
                             ${data.備註 ? `<div class="data-item"><span class="data-label">備註</span><span class="data-value">${data.備註}</span></div>` : ''}
                             ${adviceHtml}
                         </div>
