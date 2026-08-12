@@ -1186,10 +1186,14 @@
                             assistantClassIds.push(cls.id);
                         }
                     });
+                    const userStoredClassIds = Array.isArray(row.classIds) && row.classIds.length
+                        ? row.classIds
+                        : (row.primaryClassId || row.classId ? [row.primaryClassId || row.classId] : []);
+                    const mergedClassIds = assistantClassIds.length ? assistantClassIds : userStoredClassIds;
                     return {
                         ...row,
-                        classIds: assistantClassIds,
-                        classId: assistantClassIds[0] || DEFAULT_CLASS_ID
+                        classIds: mergedClassIds,
+                        classId: mergedClassIds[0] || DEFAULT_CLASS_ID
                     };
                 })
                 .sort((a, b) => String(a.username || a.email || '').localeCompare(String(b.username || b.email || ''), 'zh-Hant'));
