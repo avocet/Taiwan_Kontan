@@ -1474,10 +1474,10 @@
         // 載入學員列表
         async function loadStudentList() {
             const content = document.getElementById('studentListContent');
-            if (content && currentOrgContext?.role === 'coach') {
+            if (content && (currentOrgContext?.role === 'coach' || currentOrgContext?.role === 'assistant')) {
                 content.innerHTML = '<p>載入中...</p>';
             }
-            
+
             try {
                 console.log('Loading student list...');
                 const usersSnapshot = await getDocs(collection(db, "users"));
@@ -1485,7 +1485,7 @@
                 const userDocs = usersSnapshot.docs.filter((docSnap) => {
                     const role = String(docSnap.data()?.role || '').toLowerCase();
                     if (!(role === 'customer' || role === 'student')) return false;
-                    if (currentOrgContext?.role === 'coach') {
+                    if (currentOrgContext?.role === 'coach' || currentOrgContext?.role === 'assistant') {
                         const row = docSnap.data() || {};
                         const studentClassId = row.primaryClassId || row.classId || DEFAULT_CLASS_ID;
                         return allowedClassIds.has(studentClassId);
@@ -1496,7 +1496,7 @@
                 
                 if (userDocs.length === 0) {
                     allStudents = [];
-                    if (content && currentOrgContext?.role === 'coach') {
+                    if (content && (currentOrgContext?.role === 'coach' || currentOrgContext?.role === 'assistant')) {
                         content.innerHTML = '<p>目前沒有學員</p>';
                     }
                     renderCompanyClassOverview();
@@ -1543,14 +1543,14 @@
                     });
                 }
                 
-                if (currentOrgContext?.role === 'coach') {
+                if (currentOrgContext?.role === 'coach' || currentOrgContext?.role === 'assistant') {
                     applyStudentListFilter();
                 } else {
                     renderCompanyClassOverview();
                 }
             } catch (error) {
                 console.error('載入學員列表失敗:', error);
-                if (content && currentOrgContext?.role === 'coach') {
+                if (content && (currentOrgContext?.role === 'coach' || currentOrgContext?.role === 'assistant')) {
                     content.innerHTML = '<p>載入失敗</p>';
                 }
             }
