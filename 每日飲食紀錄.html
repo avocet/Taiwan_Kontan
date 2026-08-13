@@ -954,8 +954,8 @@
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
             const buildPortionSummaryHtml = (portion) => {
-                const totals = { C: 0, P: 0, F: 0, V: 0 };
-                const kcalRates = { C: 70, P: 75, F: 60, V: 25 };
+                const totals = { C: 0, P: 0, O: 0, F: 0, V: 0 };
+                const kcalRates = { C: 70, P: 75, O: 45, F: 60, V: 25 };
                 meals.forEach((meal) => {
                     Object.keys(totals).forEach((nutrient) => {
                         totals[nutrient] += Number(portion[`${meal}${nutrient}`] || 0);
@@ -968,9 +968,9 @@
                     return `<span class="portion-kcal-item">${nutrient}:${kcal} (${percent}%)</span>`;
                 }).join(' ');
                 return `
-                    <div class="portion-row portion-summary-row"><span class="portion-meal">Total</span><span class="portion-values">C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</span></div>
+                    <div class="portion-row portion-summary-row"><span class="portion-meal">Total</span><span class="portion-values">C:${totals.C} P:${totals.P} O:${totals.O} F:${totals.F} V:${totals.V}</span></div>
                     <div class="portion-row"><span class="portion-meal">Kcal</span><span class="portion-values portion-summary-value"><span class="portion-kcal-total">總熱量 ${totalKcal}</span><span class="portion-kcal-breakdown">${kcalText}</span></span></div>
-                    <div class="portion-legend">C 碳水　P 蛋白質　F 水果　V 蔬菜</div>
+                    <div class="portion-legend">C 碳水　P 蛋白質　O 油脂/堅果　F 水果　V 蔬菜</div>
                 `;
             };
             const conversation = normalizeConversation(data);
@@ -998,10 +998,10 @@
                 time: data[`${meal}時間`] || '',
                 value: data[meal] || ''
             }));
-            const rates = { C: 70, P: 75, F: 60, V: 25 };
+            const rates = { C: 70, P: 75, O: 45, F: 60, V: 25 };
             let totalKcal = 0;
             meals.forEach((meal) => {
-                ['C', 'P', 'F', 'V'].forEach((n) => {
+                ['C', 'P', 'O', 'F', 'V'].forEach((n) => {
                     const val = parseFloat(data[`${meal}${n}`]) || 0;
                     totalKcal += val * rates[n];
                 });
@@ -1027,9 +1027,10 @@
                         const time = portion[`${meal}時間`] || '';
                         const c = portion[`${meal}C`] || 0;
                         const p = portion[`${meal}P`] || 0;
+                        const o = portion[`${meal}O`] || 0;
                         const f = portion[`${meal}F`] || 0;
                         const v = portion[`${meal}V`] || 0;
-                        portionHtml += `<div class="portion-row"><span class="portion-meal">${meal}${time ? ' ' + time : ''}</span><span class="portion-values">C:${c} P:${p} F:${f} V:${v}</span></div>`;
+                        portionHtml += `<div class="portion-row"><span class="portion-meal">${meal}${time ? ' ' + time : ''}</span><span class="portion-values">C:${c} P:${p} O:${o} F:${f} V:${v}</span></div>`;
                     });
                     portionHtml += buildPortionSummaryHtml(portion);
                     portionHtml += '</div>';
@@ -1090,14 +1091,15 @@
                             ${mealEntries.map((meal) => {
                 const c = data[`${meal.label}C`] || '';
                 const p = data[`${meal.label}P`] || '';
+                const o = data[`${meal.label}O`] || '';
                 const f = data[`${meal.label}F`] || '';
                 const v = data[`${meal.label}V`] || '';
-                const hasCPFV = c || p || f || v;
+                const hasCPFV = c || p || o || f || v;
                 return `
                                 <div class="data-item" style="margin-bottom:8px;">
                                     <span class="data-label">${meal.label}${meal.time ? ` ${meal.time}` : ''}</span>
                                     <span class="data-value">${meal.value || '-'}</span>
-                                    ${hasCPFV ? `<div style="font-size:0.75rem;color:#666;margin-top:2px;">C:${c} P:${p} F:${f} V:${v}</div>` : ''}
+                                    ${hasCPFV ? `<div style="font-size:0.75rem;color:#666;margin-top:2px;">C:${c} P:${p} O:${o} F:${f} V:${v}</div>` : ''}
                                 </div>
                             `;}).join('')}
                             ${data.備註 ? `<div class="data-item"><span class="data-label">備註</span><span class="data-value">${data.備註}</span></div>` : ''}
@@ -1108,10 +1110,11 @@
                     ${isAssistant ? `
                     <div class="assistant-cpfv-section" style="margin-top:16px;padding:12px;background:#f8f8ff;border-radius:8px;border:1px solid #ddd;">
                         <div style="font-weight:600;margin-bottom:10px;color:#333;">助教營養師 - 飲食份數記錄</div>
-                        <div class="cpfv-grid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px;">
+                        <div class="cpfv-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:10px;">
                             <div style="font-size:0.8rem;color:#666;font-weight:500;">餐次</div>
                             <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">C 碳水</div>
                             <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">P 蛋白質</div>
+                            <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">O 油脂/堅果</div>
                             <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">F 水果</div>
                             <div style="font-size:0.8rem;color:#666;font-weight:500;text-align:center;">V 蔬菜</div>
                             <div></div>
@@ -1119,6 +1122,7 @@
                                 <div class="cpfv-meal-label" style="font-size:0.85rem;color:#333;padding:4px 0;">${meal}</div>
                                 <div><input type="number" id="cpfv-${docId}-${meal}C" value="${data[`${meal}C`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="C"></div>
                                 <div><input type="number" id="cpfv-${docId}-${meal}P" value="${data[`${meal}P`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="P"></div>
+                                <div><input type="number" id="cpfv-${docId}-${meal}O" value="${data[`${meal}O`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="O"></div>
                                 <div><input type="number" id="cpfv-${docId}-${meal}F" value="${data[`${meal}F`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="F"></div>
                                 <div><input type="number" id="cpfv-${docId}-${meal}V" value="${data[`${meal}V`] || ''}" min="0" style="width:100%;padding:6px;text-align:center;font-size:0.85rem;border:1px solid #ccc;border-radius:4px;" placeholder="V"></div>
                                 <div></div>
@@ -1195,6 +1199,7 @@
             meals.forEach((meal) => {
                 updateData[`${meal}C`] = document.getElementById(`cpfv-${docId}-${meal}C`)?.value || '';
                 updateData[`${meal}P`] = document.getElementById(`cpfv-${docId}-${meal}P`)?.value || '';
+                updateData[`${meal}O`] = document.getElementById(`cpfv-${docId}-${meal}O`)?.value || '';
                 updateData[`${meal}F`] = document.getElementById(`cpfv-${docId}-${meal}F`)?.value || '';
                 updateData[`${meal}V`] = document.getElementById(`cpfv-${docId}-${meal}V`)?.value || '';
             });

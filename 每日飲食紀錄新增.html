@@ -1067,8 +1067,8 @@
 
             let html = '';
             const buildPortionSummaryHtml = (portion) => {
-                const totals = { C: 0, P: 0, F: 0, V: 0 };
-                const kcalRates = { C: 70, P: 75, F: 60, V: 25 };
+                const totals = { C: 0, P: 0, O: 0, F: 0, V: 0 };
+                const kcalRates = { C: 70, P: 75, O: 45, F: 60, V: 25 };
                 meals.forEach((meal) => {
                     Object.keys(totals).forEach((nutrient) => {
                         totals[nutrient] += Number(portion[`${meal}${nutrient}`] || 0);
@@ -1080,9 +1080,9 @@
                     const percent = totalKcal > 0 ? Math.round((kcal / totalKcal) * 100) : 0;
                     return `<span class="portion-kcal-item">${nutrient}:${kcal} (${percent}%)</span>`;
                 }).join(' ');
-                return `<div class="portion-row portion-summary-row"><span class="portion-row-label">Total</span><span class="portion-row-value">C:${totals.C} P:${totals.P} F:${totals.F} V:${totals.V}</span></div>
+                return `<div class="portion-row portion-summary-row"><span class="portion-row-label">Total</span><span class="portion-row-value">C:${totals.C} P:${totals.P} O:${totals.O} F:${totals.F} V:${totals.V}</span></div>
                     <div class="portion-row"><span class="portion-row-label">Kcal</span><span class="portion-row-value portion-summary-value"><span class="portion-kcal-total">總熱量 ${totalKcal}</span><span class="portion-kcal-breakdown">${kcalText}</span></span></div>
-                    <div class="portion-legend">C 碳水　P 蛋白質　F 水果　V 蔬菜</div>`;
+                    <div class="portion-legend">C 碳水　P 蛋白質　O 油脂/堅果　F 水果　V 蔬菜</div>`;
             };
             matched.forEach(portion => {
                 const startDate = portion.紀錄日期 || '-';
@@ -1092,9 +1092,10 @@
                     const time = portion[`${meal}時間`] || '';
                     const c = portion[`${meal}C`] || 0;
                     const p = portion[`${meal}P`] || 0;
+                    const o = portion[`${meal}O`] || 0;
                     const f = portion[`${meal}F`] || 0;
                     const v = portion[`${meal}V`] || 0;
-                    html += `<div class="portion-row"><span class="portion-row-label">${meal}${time ? ' ' + time : ''}</span><span class="portion-row-value">C:${c} P:${p} F:${f} V:${v}</span></div>`;
+                    html += `<div class="portion-row"><span class="portion-row-label">${meal}${time ? ' ' + time : ''}</span><span class="portion-row-value">C:${c} P:${p} O:${o} F:${f} V:${v}</span></div>`;
                 });
                 html += buildPortionSummaryHtml(portion);
                 html += '</div>';
