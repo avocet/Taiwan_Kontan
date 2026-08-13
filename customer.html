@@ -447,6 +447,10 @@
                         <div style="font-weight:600;margin-bottom:6px;">中醫體質檢測</div>
                         <div style="font-size:0.8125rem;color:#6b7280;">載入中...</div>
                     </div>
+                    <div id="studentDietPreferenceCard" style="background:white;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                        <div style="font-weight:600;margin-bottom:6px;">飲食頻率與偏好</div>
+                        <div style="font-size:0.8125rem;color:#6b7280;">載入中...</div>
+                    </div>
                     <div id="studentTrendCard" style="background:white;padding:12px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                         <div style="font-weight:600;margin-bottom:6px;">體重紀錄曲線圖</div>
                         <div style="font-size:0.8125rem;color:#6b7280;">載入中...</div>
@@ -2049,6 +2053,40 @@
             `;
         }
 
+        function renderStudentDietPreferenceCard(data) {
+            const card = document.getElementById('studentDietPreferenceCard');
+            if (!card) return;
+            if (!data) {
+                card.innerHTML = `
+                    <div style="font-weight:600;margin-bottom:6px;">飲食頻率與偏好</div>
+                    <div style="font-size:0.8125rem;color:#9ca3af;">尚無資料</div>
+                `;
+                return;
+            }
+            const formatAnswer = (key) => {
+                const val = data[key];
+                if (Array.isArray(val)) return val.join('、');
+                if (val === undefined || val === null || val === '') return '-';
+                return String(val);
+            };
+            const bodyHtml = `
+                <div>一天通常吃幾餐：${formatAnswer('q1')}</div>
+                <div>兩餐間是否吃東西：${formatAnswer('q2')}</div>
+                <div>常喝的飲料：${formatAnswer('q3')}</div>
+                <div>吃水果頻率：${formatAnswer('q4')}</div>
+                <div>吃蔬菜頻率：${formatAnswer('q5')}</div>
+                <div>常吃的主食：${formatAnswer('q6')}</div>
+                <div>常吃的小吃：${formatAnswer('q7')}</div>
+                <div>烹飪方式：${formatAnswer('q8')}</div>
+                <div>口味偏好：${formatAnswer('q9')}</div>
+                <div>減重動機：${formatAnswer('q10')}</div>
+            `;
+            card.innerHTML = `
+                <div style="font-weight:600;margin-bottom:6px;">飲食頻率與偏好</div>
+                <div style="font-size:0.75rem;line-height:1.5;">${bodyHtml}</div>
+            `;
+        }
+
         function buildTrendPoints(records = []) {
             return records
                 .filter((row) => row && row.紀錄日期)
@@ -2318,23 +2356,27 @@
                 renderStudentBasicInfoCard(null);
                 renderStudentInitialBodyCard(null);
                 renderStudentConstitutionCard(null);
+                renderStudentDietPreferenceCard(null);
                 renderStudentTrendCard([]);
                 return;
             }
-            const [basicInfo, initialBody, constitutionData] = await Promise.all([
+            const [basicInfo, initialBody, constitutionData, dietPreferenceData] = await Promise.all([
                 findLatestDocByUserKeys("客戶資料", uniqueKeys),
                 findLatestDocByUserKeys("原始體重三圍", uniqueKeys),
-                findLatestDocByUserKeys("中醫體質四象限", uniqueKeys)
+                findLatestDocByUserKeys("中醫體質四象限", uniqueKeys),
+                findLatestDocByUserKeys("飲食頻率與偏好", uniqueKeys)
             ]);
             currentStudentSideData = {
                 basicInfo,
                 initialBody,
-                constitution: constitutionData
+                constitution: constitutionData,
+                dietPreference: dietPreferenceData
             };
             currentStudentProfileEmail = String(basicInfo?.email || '').trim();
             renderStudentBasicInfoCard(basicInfo);
             renderStudentInitialBodyCard(initialBody);
             renderStudentConstitutionCard(constitutionData);
+            renderStudentDietPreferenceCard(dietPreferenceData);
             renderStudentTrendCard(currentStudentSideData.trendRecords || []);
         }
 
@@ -2921,7 +2963,7 @@
         document.getElementById('backToListBtn').addEventListener('click', () => {
             document.getElementById('studentRecords').style.display = 'none';
             document.getElementById('studentList').style.display = 'block';
-            currentStudentSideData = { basicInfo: null, initialBody: null, constitution: null, trendRecords: [] };
+            currentStudentSideData = { basicInfo: null, initialBody: null, constitution: null, dietPreference: null, trendRecords: [] };
             renderStudentBasicInfoCard(null);
             renderStudentInitialBodyCard(null);
             renderStudentConstitutionCard(null);
