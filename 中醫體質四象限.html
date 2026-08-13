@@ -622,10 +622,10 @@
             const counts = getAxisCounts();
             const coldHotAvg = coldHotScore / Math.max(1, counts.coldHot);
             const wetDryAvg = wetDryScore / Math.max(1, counts.wetDry);
-            if (coldHotAvg < 0 && wetDryAvg < 0) return { quadrant: 'q1', resultText: '陽虛體質' };
-            if (coldHotAvg < 0 && wetDryAvg >= 0) return { quadrant: 'q2', resultText: '痰濕體質' };
-            if (coldHotAvg >= 0 && wetDryAvg < 0) return { quadrant: 'q3', resultText: '陰虛體質' };
-            return { quadrant: 'q4', resultText: '陽盛體質' };
+            if (coldHotAvg < 0 && wetDryAvg < 0) return { quadrant: 'q1', resultText: '乾冷體質' };
+            if (coldHotAvg < 0 && wetDryAvg >= 0) return { quadrant: 'q2', resultText: '濕冷體質' };
+            if (coldHotAvg >= 0 && wetDryAvg < 0) return { quadrant: 'q3', resultText: '燥熱體質' };
+            return { quadrant: 'q4', resultText: '濕熱體質' };
         }
 
         function getStoredOptionIndex(item, storedValue, version) {
@@ -679,19 +679,19 @@
                     <div style="font-size:1rem;font-weight:600;margin-bottom:16px;">體質分類結果</div>
                     <div class="quadrant-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:280px;margin:0 auto;">
                         <div class="quadrant" id="q1" style="padding:16px;background:#FFE5B4;border-radius:8px;">
-                            <div style="font-weight:600;">陽虛</div>
+                            <div style="font-weight:600;">乾冷</div>
                             <div style="font-size:0.75rem;">怕冷+偏乾</div>
                         </div>
                         <div class="quadrant" id="q2" style="padding:16px;background:#E5B4FF;border-radius:8px;">
-                            <div style="font-weight:600;">痰濕</div>
+                            <div style="font-weight:600;">濕冷</div>
                             <div style="font-size:0.75rem;">怕冷+偏濕</div>
                         </div>
                         <div class="quadrant" id="q3" style="padding:16px;background:#B4E5FF;border-radius:8px;">
-                            <div style="font-weight:600;">陰虛</div>
+                            <div style="font-weight:600;">燥熱</div>
                             <div style="font-size:0.75rem;">怕熱+偏乾</div>
                         </div>
                         <div class="quadrant" id="q4" style="padding:16px;background:#B4FFB4;border-radius:8px;">
-                            <div style="font-weight:600;">陽盛</div>
+                            <div style="font-weight:600;">濕熱</div>
                             <div style="font-size:0.75rem;">怕熱+偏濕</div>
                         </div>
                     </div>
