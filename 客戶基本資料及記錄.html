@@ -987,7 +987,7 @@
             }
         }
 
-        function toggleMedicationInput(radio) {
+        window.toggleMedicationInput = function(radio) {
             const textInput = document.getElementById('medicationText');
             if (radio.value === '有' && radio.checked) {
                 textInput.style.display = 'block';
@@ -995,9 +995,9 @@
                 textInput.style.display = 'none';
                 textInput.value = '';
             }
-        }
+        };
 
-        function toggleSupplementInput(radio) {
+        window.toggleSupplementInput = function(radio) {
             const textInput = document.getElementById('supplementText');
             if (radio.value === '有' && radio.checked) {
                 textInput.style.display = 'block';
@@ -1005,7 +1005,7 @@
                 textInput.style.display = 'none';
                 textInput.value = '';
             }
-        }
+        };
 
         function daysInMonth(year, month) {
             return new Date(year, month, 0).getDate();
