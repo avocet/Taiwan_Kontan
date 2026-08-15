@@ -2599,7 +2599,7 @@
                                 </div>
                                 ${(currentOrgContext || window.currentOrgContext)?.role === 'assistant' ? `
                                 <div style="margin-top:10px;text-align:right;">
-                                    <button onclick="saveMobileCPFV('${record.id}')" style="padding:6px 12px;background:#007AFF;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:500;">儲存份數</button>
+                                    <button type="button" onclick="saveStudentCPFV('${record.id}')" style="padding:6px 12px;background:#007AFF;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem;font-weight:500;">儲存份數</button>
                                 </div>
                                 ` : ''}
                                 ${photosHtml}
