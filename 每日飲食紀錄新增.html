@@ -672,7 +672,6 @@
                             <label>排便與否</label>
                             <div class="checkbox-group">
                                 <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementYes" value="有排便">有排便</label>
-                                <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementDifficult" value="有排便但困難">有排便但困難</label>
                                 <label class="checkbox-item"><input type="radio" name="bowelMovement" id="bowelMovementNo" value="無排便">無排便</label>
                             </div>
                         </div>
@@ -682,6 +681,7 @@
                             <div class="checkbox-group">
                                 <label class="checkbox-item"><input type="checkbox" id="stoolDiarrhea" value="拉肚子">拉肚子</label>
                                 <label class="checkbox-item"><input type="checkbox" id="stoolNormal" value="正常便">正常便</label>
+                                <label class="checkbox-item"><input type="checkbox" id="stoolDifficult" value="有排便但困難">有排便但困難</label>
                             </div>
                         </div>
                     </div>
@@ -906,12 +906,12 @@
 
         function updateStoolConditionVisibility() {
             const bowelValue = getRadioValue('bowelMovement');
-            const hasBowelMovement = bowelValue === '有排便' || bowelValue === '有排便但困難';
+            const hasBowelMovement = bowelValue === '有排便';
             const stoolGroup = document.getElementById('stoolConditionGroup');
             if (!stoolGroup) return;
             stoolGroup.style.display = hasBowelMovement ? 'block' : 'none';
             if (!hasBowelMovement) {
-                ['stoolDiarrhea', 'stoolNormal'].forEach((id) => {
+                ['stoolDiarrhea', 'stoolNormal', 'stoolDifficult'].forEach((id) => {
                     const el = document.getElementById(id);
                     if (el) el.checked = false;
                 });
@@ -1207,7 +1207,7 @@
                     體脂: document.getElementById('bodyFat').value ? parseFloat(document.getElementById('bodyFat').value) : null,
                     喝水量: document.getElementById('waterIntake').value ? parseFloat(document.getElementById('waterIntake').value) : null,
                     排便與否: getRadioValue('bowelMovement'),
-                    排便狀況: getCheckedValues(['stoolDiarrhea', 'stoolNormal']),
+                    排便狀況: getCheckedValues(['stoolDiarrhea', 'stoolNormal', 'stoolDifficult']),
                     早餐時間: getMealTimeValue('breakfast'),
                     早餐: document.getElementById('breakfast').value.trim(),
                     早點時間: getMealTimeValue('morningSnack'),
