@@ -660,13 +660,13 @@
                             const score = getOptionScore(optionCount, optIndex, false);
                             const sideText = isColdHot
                                 ? (score < 0 ? '冷' : (score > 0 ? '熱' : '中性'))
-                                : (score < 0 ? '乾' : (score > 0 ? '濕' : '中性'));
+                                : (score < 0 ? '濕' : (score > 0 ? '乾' : '中性'));
                             const sideColor = isColdHot
                                 ? (score < 0 ? '#0ea5e9' : (score > 0 ? '#f97316' : '#94a3b8'))
-                                : (score < 0 ? '#a16207' : (score > 0 ? '#16a34a' : '#94a3b8'));
+                                : (score < 0 ? '#16a34a' : (score > 0 ? '#a16207' : '#94a3b8'));
                             const sideBg = isColdHot
                                 ? (score < 0 ? '#e0f2fe' : (score > 0 ? '#ffedd5' : '#f1f5f9'))
-                                : (score < 0 ? '#fef3c7' : (score > 0 ? '#dcfce7' : '#f1f5f9'));
+                                : (score < 0 ? '#dcfce7' : (score > 0 ? '#fef3c7' : '#f1f5f9'));
                             return `
                             <label class="option-item" data-value="${optIndex}">
                                 <input type="radio" name="q${item.id}" value="${optIndex}">
@@ -738,9 +738,9 @@
                             if (isColdHot) {
                                 sideText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
                             } else {
-                                sideText = score < 0 ? '乾' : (score > 0 ? '濕' : '中性');
+                                sideText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
                             }
-                            feedbackEl.innerHTML = `你的選擇偏向：<span style="font-weight:700;color:${isColdHot ? (score < 0 ? '#0284c7' : '#ea580c') : (score < 0 ? '#a16207' : '#16a34a')};font-size:1rem;">${sideText}</span>`;
+                            feedbackEl.innerHTML = `你的選擇偏向：<span style="font-weight:700;color:${isColdHot ? (score < 0 ? '#0284c7' : '#ea580c') : (score < 0 ? '#16a34a' : '#a16207')};font-size:1rem;">${sideText}</span>`;
                         }
                     }
                     updateProgress();

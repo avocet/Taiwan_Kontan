@@ -1442,10 +1442,10 @@
             const counts = getQuestionAxisCounts();
             const coldHotAvg = coldHot / Math.max(1, counts.coldHot);
             const wetDryAvg = wetDry / Math.max(1, counts.wetDry);
-            if (coldHotAvg < 0 && wetDryAvg < 0) return '陽虛';
-            if (coldHotAvg < 0 && wetDryAvg >= 0) return '痰濕';
-            if (coldHotAvg >= 0 && wetDryAvg < 0) return '陰虛';
-            return '陽盛';
+            if (coldHotAvg < 0 && wetDryAvg < 0) return '乾冷';
+            if (coldHotAvg < 0 && wetDryAvg >= 0) return '濕冷';
+            if (coldHotAvg >= 0 && wetDryAvg < 0) return '乾熱';
+            return '濕熱';
         }
 
         function getCalibrationQuestionConfig(questionId) {
