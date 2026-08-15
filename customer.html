@@ -2568,9 +2568,16 @@
                                     <div style="font-weight:600;">${date}</div>
                                     ${(currentOrgContext || window.currentOrgContext)?.role === 'assistant' || (currentOrgContext || window.currentOrgContext)?.role === 'coach' ? `<div id="total-kcal-m-${record.id}" style="font-size:0.8rem;font-weight:600;color:#007AFF;">熱量: - kcal</div>` : ''}
                                 </div>
-                                <div style="display:flex;gap:16px;margin-bottom:8px;font-size:0.875rem;color:#666;">
+                                <div style="display:flex;gap:16px;margin-bottom:8px;font-size:0.875rem;color:#666;flex-wrap:wrap;">
                                     <span>體重: ${weight} kg</span>
                                     <span>體脂: ${bodyFat}%</span>
+                                    ${record.喝水量 ? `<span>水: ${record.喝水量} cc</span>` : ''}
+                                </div>
+                                <div style="font-size:0.8rem;color:#475569;margin-bottom:6px;">
+                                    <span>排便: ${record.排便與否 || '-'}${record.排便狀況 && record.排便狀況.length ? '（' + record.排便狀況.join('、') + '）' : ''}</span>
+                                </div>
+                                <div style="font-size:0.8rem;color:#475569;margin-bottom:6px;">
+                                    <span>睡眠: ${record.前一晚入睡時間 || '-'}${record.睡眠時間 ? ' / ' + record.睡眠時間 + '小時' : ''}${record.睡眠狀況 && record.睡眠狀況.length ? '（' + record.睡眠狀況.join('、') + '）' : ''}</span>
                                 </div>
                                 <div style="font-size:0.875rem;color:#666;">
                                     ${meals.map((meal) => {
@@ -2580,10 +2587,11 @@
                                         const f = record[`${meal}F`] || '';
                                         const v = record[`${meal}V`] || '';
                                         const hasCPFV = c || p || o || f || v;
+                                        const mealTime = record[`${meal}時間`] || '';
                                         const userRole = (currentOrgContext || window.currentOrgContext)?.role;
                                         return `
                                         <div style="margin-top:6px;">
-                                            <div>${meal}: ${record[meal] || '-'}</div>
+                                            <div>${meal}${mealTime ? ' <span style="color:#94a3b8;font-size:0.75rem;">(' + mealTime + ')</span>' : ''}: ${record[meal] || '-'}</div>
                                             ${userRole === 'assistant' ? `
                                             <div style="display:flex;gap:4px;margin-top:4px;margin-left:12px;flex-wrap:wrap;">
                                                 <div style="display:flex;align-items:center;gap:2px;">
@@ -2754,6 +2762,9 @@
                             <div style="font-size:0.8rem;">
                                 <div>體重: ${daily.體重 || '-'} kg</div>
                                 <div>體脂: ${daily.體脂 || '-'}%</div>
+                                ${daily.喝水量 ? `<div>水: ${daily.喝水量} cc</div>` : ''}
+                                <div>排便: ${daily.排便與否 || '-'}${daily.排便狀況 && daily.排便狀況.length ? '（' + daily.排便狀況.join('、') + '）' : ''}</div>
+                                <div>睡眠: ${daily.前一晚入睡時間 || '-'}${daily.睡眠時間 ? ' / ' + daily.睡眠時間 + '小時' : ''}${daily.睡眠狀況 && daily.睡眠狀況.length ? '（' + daily.睡眠狀況.join('、') + '）' : ''}</div>
                                 ${meals.map((meal) => {
                                     const c = daily[`${meal}C`] || '';
                                     const p = daily[`${meal}P`] || '';
@@ -2761,9 +2772,10 @@
                                     const f = daily[`${meal}F`] || '';
                                     const v = daily[`${meal}V`] || '';
                                     const hasCPFV = c || p || o || f || v;
+                                    const mealTime = daily[`${meal}時間`] || '';
                                     return `
                                     <div style="margin-top:6px;">
-                                        <div>${meal}: ${daily[meal] || '-'}</div>
+                                        <div>${meal}${mealTime ? ' <span style="color:#94a3b8;font-size:0.7rem;">(' + mealTime + ')</span>' : ''}: ${daily[meal] || '-'}</div>
                                         ${currentUserRole === 'assistant' ? `
                                         <div style="display:flex;gap:4px;margin-top:4px;margin-left:12px;">
                                             <div style="display:flex;align-items:center;gap:2px;">
