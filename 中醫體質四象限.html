@@ -591,37 +591,32 @@
                 const snapshot = await getDoc(constitutionConfigRef);
                 if (snapshot.exists()) {
                     const data = snapshot.data() || {};
-                    const savedVersion = Number(data.version) || 1;
                     const savedItems = data.items && typeof data.items === 'object' ? data.items : {};
-                    console.log('儲存版本:', savedVersion);
-                    if (savedVersion < 10) {
-                        constitutionQuestionConfig = buildDefaultConstitutionConfig();
-                        constitutionConfigVersion = 10;
-                        try {
-                            await setDoc(constitutionConfigRef, {
-                                items: constitutionQuestionConfig,
-                                version: 10,
-                                更新時間: new Date().toISOString()
-                            });
-                            console.log('中醫體質問卷設定已升級至版本 10');
-                        } catch (saveError) {
-                            console.warn('無法自動升級設定版本:', saveError);
-                        }
-                    } else {
-                        constitutionQuestionConfig = { ...buildDefaultConstitutionConfig(), ...savedItems };
-                        constitutionConfigVersion = savedVersion;
+                    constitutionQuestionConfig = buildDefaultConstitutionConfig();
+                    if (savedItems.q4 && savedItems.q4.axis === 'coldHot') {
+                        constitutionQuestionConfig.q4 = { axis: 'coldHot', reverse: false };
+                    }
+                    constitutionConfigVersion = 11;
+                    try {
+                        await setDoc(constitutionConfigRef, {
+                            items: constitutionQuestionConfig,
+                            version: 11,
+                            更新時間: new Date().toISOString()
+                        });
+                        console.log('中醫體質問卷設定已更新至版本 11');
+                    } catch (saveError) {
+                        console.warn('無法儲存設定:', saveError);
                     }
                     console.log('q4 config:', constitutionQuestionConfig.q4);
                 } else {
                     constitutionQuestionConfig = buildDefaultConstitutionConfig();
-                    constitutionConfigVersion = 10;
+                    constitutionConfigVersion = 11;
                     try {
                         await setDoc(constitutionConfigRef, {
                             items: constitutionQuestionConfig,
-                            version: 10,
+                            version: 11,
                             更新時間: new Date().toISOString()
                         });
-                        console.log('中醫體質問卷設定已建立版本 10');
                     } catch (saveError) {
                         console.warn(saveError);
                     }
@@ -629,7 +624,7 @@
             } catch (error) {
                 console.error('載入中醫體質問卷設定失敗:', error);
                 constitutionQuestionConfig = buildDefaultConstitutionConfig();
-                constitutionConfigVersion = 10;
+                constitutionConfigVersion = 11;
             }
         }
 
