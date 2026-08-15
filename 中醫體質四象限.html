@@ -593,18 +593,29 @@
                     const data = snapshot.data() || {};
                     const savedVersion = Number(data.version) || 1;
                     const savedItems = data.items && typeof data.items === 'object' ? data.items : {};
-                    if (savedVersion < 2) {
+                    if (savedVersion < 3) {
                         constitutionQuestionConfig = buildDefaultConstitutionConfig();
-                        constitutionConfigVersion = 2;
+                        constitutionConfigVersion = 3;
+                        try {
+                            await setDoc(constitutionConfigRef, {
+                                items: constitutionQuestionConfig,
+                                version: 3,
+                                更新時間: new Date().toISOString()
+                            });
+                            console.log('中醫體質問卷設定已升級至版本 3');
+                        } catch (saveError) {
+                            console.warn('無法自動升級設定版本:', saveError);
+                        }
                     } else {
                         constitutionQuestionConfig = { ...buildDefaultConstitutionConfig(), ...savedItems };
                         constitutionConfigVersion = savedVersion;
                     }
+                    console.log('q4 config:', constitutionQuestionConfig.q4);
                 }
             } catch (error) {
                 console.error('載入中醫體質問卷設定失敗:', error);
                 constitutionQuestionConfig = buildDefaultConstitutionConfig();
-                constitutionConfigVersion = 2;
+                constitutionConfigVersion = 3;
             }
         }
 
