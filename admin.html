@@ -1388,8 +1388,20 @@
             return constitutionQuestionConfig[`q${questionId}`] || { axis: 'wetDry', reverse: false };
         }
 
+        function getQuestionAxesForAdmin(questionId) {
+            if (Number(questionId) === 2) return ['coldHot', 'wetDry'];
+            const config = getQuestionConfig(questionId);
+            return [config.axis];
+        }
+
         function getQuestionAxisCounts() {
-            return Object.values(constitutionQuestionConfig).reduce((counts, item) => {
+            return Object.entries(constitutionQuestionConfig).reduce((counts, [key, item]) => {
+                const questionId = Number(String(key).replace(/^q/, ''));
+                if (questionId === 2) {
+                    counts.coldHot += 1;
+                    counts.wetDry += 1;
+                    return counts;
+                }
                 if (item?.axis === 'coldHot') counts.coldHot += 1;
                 else counts.wetDry += 1;
                 return counts;
@@ -1424,8 +1436,10 @@
                             ? Number(rawValue)
                             : mapLegacyConstitutionAnswer(questionId, rawValue);
                     if (!Number.isFinite(score)) return;
-                    if (getQuestionConfig(questionId).axis === 'coldHot') coldHot += score;
-                    else wetDry += score;
+                    getQuestionAxesForAdmin(questionId).forEach((axis) => {
+                        if (axis === 'coldHot') coldHot += score;
+                        else wetDry += score;
+                    });
                 });
                 return { coldHot, wetDry };
             }

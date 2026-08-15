@@ -580,6 +580,12 @@
             );
         }
 
+        function getQuestionAxes(questionId) {
+            if (Number(questionId) === 2) return ['coldHot', 'wetDry'];
+            const config = getQuestionConfig(questionId);
+            return [config.axis];
+        }
+
         async function ensureConstitutionQuestionConfig() {
             try {
                 const snapshot = await getDoc(constitutionConfigRef);
@@ -615,8 +621,9 @@
 
         function getAxisCounts() {
             return questionsData.items.reduce((counts, item) => {
-                const axis = getQuestionConfig(item.id).axis === 'coldHot' ? 'coldHot' : 'wetDry';
-                counts[axis] += 1;
+                getQuestionAxes(item.id).forEach((axis) => {
+                    counts[axis] = (counts[axis] || 0) + 1;
+                });
                 return counts;
             }, { coldHot: 0, wetDry: 0 });
         }
@@ -756,8 +763,10 @@
                 const selected = document.querySelector(`input[name="q${item.id}"]:checked`);
                 if (selected) {
                     const score = getSelectedScore(item, Number(selected.value));
-                    if (getQuestionConfig(item.id).axis === 'coldHot') coldHotScore += score;
-                    else wetDryScore += score;
+                    getQuestionAxes(item.id).forEach((axis) => {
+                        if (axis === 'coldHot') coldHotScore += score;
+                        else wetDryScore += score;
+                    });
                 }
             });
             
@@ -916,8 +925,10 @@
                 const optionIndex = Number(selected.value);
                 answers[`q${item.id}`] = optionIndex;
                 const score = getSelectedScore(item, optionIndex);
-                if (getQuestionConfig(item.id).axis === 'coldHot') coldHotScore += score;
-                else wetDryScore += score;
+                getQuestionAxes(item.id).forEach((axis) => {
+                    if (axis === 'coldHot') coldHotScore += score;
+                    else wetDryScore += score;
+                });
             }
 
             submitBtn.disabled = true;
