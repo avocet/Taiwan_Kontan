@@ -1140,7 +1140,7 @@
                                 <div></div>
                             `).join('')}
                         </div>
-                        <button onclick="saveAssistantCPFV('${docId}')" style="padding:8px 16px;background:#007AFF;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500;">儲存份數</button>
+                        <button type="button" onclick="saveAssistantCPFV('${docId}')" style="padding:8px 16px;background:#007AFF;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500;">儲存份數</button>
                     </div>
                     ` : ''}
                 </div>
@@ -1206,19 +1206,25 @@
         };
 
         window.saveAssistantCPFV = async function(docId) {
-            const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
-            const updateData = {};
-            meals.forEach((meal) => {
-                updateData[`${meal}C`] = document.getElementById(`cpfv-${docId}-${meal}C`)?.value || '';
-                updateData[`${meal}P`] = document.getElementById(`cpfv-${docId}-${meal}P`)?.value || '';
-                updateData[`${meal}O`] = document.getElementById(`cpfv-${docId}-${meal}O`)?.value || '';
-                updateData[`${meal}F`] = document.getElementById(`cpfv-${docId}-${meal}F`)?.value || '';
-                updateData[`${meal}V`] = document.getElementById(`cpfv-${docId}-${meal}V`)?.value || '';
-            });
             try {
+                if (!docId) {
+                    alert('缺少文件 ID');
+                    return;
+                }
+                const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+                const updateData = {};
+                meals.forEach((meal) => {
+                    updateData[`${meal}C`] = document.getElementById(`cpfv-${docId}-${meal}C`)?.value || '';
+                    updateData[`${meal}P`] = document.getElementById(`cpfv-${docId}-${meal}P`)?.value || '';
+                    updateData[`${meal}O`] = document.getElementById(`cpfv-${docId}-${meal}O`)?.value || '';
+                    updateData[`${meal}F`] = document.getElementById(`cpfv-${docId}-${meal}F`)?.value || '';
+                    updateData[`${meal}V`] = document.getElementById(`cpfv-${docId}-${meal}V`)?.value || '';
+                });
                 await updateDoc(doc(db, "每日體重三圍", docId), updateData);
                 alert('份數已儲存');
-                loadData(currentUser.uid);
+                if (currentUser && currentUser.uid) {
+                    loadData(currentUser.uid);
+                }
             } catch (error) {
                 console.error('儲存失敗:', error);
                 alert('儲存失敗: ' + error.message);
