@@ -656,24 +656,38 @@
                 const questionGroup = document.createElement('div');
                 questionGroup.className = 'question-group';
                 const isColdHot = item.filename && item.filename.startsWith('ch');
-                const axisTag = isColdHot
-                    ? '<span style="display:inline-block;margin-left:8px;padding:2px 8px;font-size:0.75rem;font-weight:600;color:#0284c7;background:#e0f2fe;border-radius:6px;">冷熱題</span>'
-                    : '<span style="display:inline-block;margin-left:8px;padding:2px 8px;font-size:0.75rem;font-weight:600;color:#16a34a;background:#dcfce7;border-radius:6px;">濕乾題</span>';
+                const isDualAxis = item.id === 2;
+                let axisTags = '';
+                if (isDualAxis) {
+                    axisTags = '<span style="display:inline-block;margin-left:6px;padding:2px 8px;font-size:0.75rem;font-weight:600;color:#0284c7;background:#e0f2fe;border-radius:6px;">冷熱題</span>'
+                        + '<span style="display:inline-block;margin-left:4px;padding:2px 8px;font-size:0.75rem;font-weight:600;color:#16a34a;background:#dcfce7;border-radius:6px;">濕乾題</span>';
+                } else {
+                    axisTags = isColdHot
+                        ? '<span style="display:inline-block;margin-left:8px;padding:2px 8px;font-size:0.75rem;font-weight:600;color:#0284c7;background:#e0f2fe;border-radius:6px;">冷熱題</span>'
+                        : '<span style="display:inline-block;margin-left:8px;padding:2px 8px;font-size:0.75rem;font-weight:600;color:#16a34a;background:#dcfce7;border-radius:6px;">濕乾題</span>';
+                }
                 const optionCount = item.options.length;
                 questionGroup.innerHTML = `
-                    <label class="question-label">${index + 1}. ${item.question}${axisTag}</label>
+                    <label class="question-label">${index + 1}. ${item.question}${axisTags}</label>
                     <div class="option-grid" data-question-id="${item.id}">
                         ${item.options.map((option, optIndex) => {
                             const score = getOptionScore(optionCount, optIndex, false);
-                            const sideText = isColdHot
-                                ? (score < 0 ? '冷' : (score > 0 ? '熱' : '中性'))
-                                : (score < 0 ? '濕' : (score > 0 ? '乾' : '中性'));
-                            const sideColor = isColdHot
-                                ? (score < 0 ? '#0ea5e9' : (score > 0 ? '#f97316' : '#94a3b8'))
-                                : (score < 0 ? '#16a34a' : (score > 0 ? '#a16207' : '#94a3b8'));
-                            const sideBg = isColdHot
-                                ? (score < 0 ? '#e0f2fe' : (score > 0 ? '#ffedd5' : '#f1f5f9'))
-                                : (score < 0 ? '#dcfce7' : (score > 0 ? '#fef3c7' : '#f1f5f9'));
+                            let sideText, sideColor, sideBg;
+                            if (isDualAxis) {
+                                const coldText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
+                                const dryText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
+                                sideText = `${coldText} / ${dryText}`;
+                                sideColor = '#475569';
+                                sideBg = '#f1f5f9';
+                            } else if (isColdHot) {
+                                sideText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
+                                sideColor = score < 0 ? '#0ea5e9' : (score > 0 ? '#f97316' : '#94a3b8');
+                                sideBg = score < 0 ? '#e0f2fe' : (score > 0 ? '#ffedd5' : '#f1f5f9');
+                            } else {
+                                sideText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
+                                sideColor = score < 0 ? '#16a34a' : (score > 0 ? '#a16207' : '#94a3b8');
+                                sideBg = score < 0 ? '#dcfce7' : (score > 0 ? '#fef3c7' : '#f1f5f9');
+                            }
                             return `
                             <label class="option-item" data-value="${optIndex}">
                                 <input type="radio" name="q${item.id}" value="${optIndex}">
@@ -741,13 +755,22 @@
                             const optIndex = Number(this.getAttribute('data-value'));
                             const score = getSelectedScore(item, optIndex);
                             const isColdHot = item.filename && item.filename.startsWith('ch');
-                            let sideText = '';
-                            if (isColdHot) {
-                                sideText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
+                            const isDualAxis = Number(questionId) === 2;
+                            let feedbackHtml = '';
+                            if (isDualAxis) {
+                                const coldText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
+                                const dryText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
+                                feedbackHtml = `你的選擇偏向：<span style="font-weight:700;color:#0284c7;font-size:1rem;">${coldText}</span> / <span style="font-weight:700;color:#16a34a;font-size:1rem;">${dryText}</span>`;
                             } else {
-                                sideText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
+                                let sideText = '';
+                                if (isColdHot) {
+                                    sideText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
+                                } else {
+                                    sideText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
+                                }
+                                feedbackHtml = `你的選擇偏向：<span style="font-weight:700;color:${isColdHot ? (score < 0 ? '#0284c7' : '#ea580c') : (score < 0 ? '#16a34a' : '#a16207')};font-size:1rem;">${sideText}</span>`;
                             }
-                            feedbackEl.innerHTML = `你的選擇偏向：<span style="font-weight:700;color:${isColdHot ? (score < 0 ? '#0284c7' : '#ea580c') : (score < 0 ? '#16a34a' : '#a16207')};font-size:1rem;">${sideText}</span>`;
+                            feedbackEl.innerHTML = feedbackHtml;
                         }
                     }
                     updateProgress();
