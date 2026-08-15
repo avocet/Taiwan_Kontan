@@ -581,7 +581,7 @@
         }
 
         function getQuestionAxes(questionId) {
-            if (Number(questionId) === 2) return ['coldHot', 'wetDry'];
+            if (Number(questionId) === 2 || Number(questionId) === 21) return ['coldHot', 'wetDry'];
             const config = getQuestionConfig(questionId);
             return [config.axis];
         }
@@ -682,7 +682,7 @@
                 const questionGroup = document.createElement('div');
                 questionGroup.className = 'question-group';
                 const isColdHot = item.filename && item.filename.startsWith('ch');
-                const isDualAxis = item.id === 2;
+                const isDualAxis = item.id === 2 || item.id === 21;
                 let axisTags = '';
                 if (isDualAxis) {
                     axisTags = '<span style="display:inline-block;margin-left:6px;padding:2px 8px;font-size:0.75rem;font-weight:600;color:#0284c7;background:#e0f2fe;border-radius:6px;">冷熱題</span>'
@@ -781,7 +781,7 @@
                             const optIndex = Number(this.getAttribute('data-value'));
                             const score = getSelectedScore(item, optIndex);
                             const isColdHot = item.filename && item.filename.startsWith('ch');
-                            const isDualAxis = Number(questionId) === 2;
+                            const isDualAxis = Number(questionId) === 2 || Number(questionId) === 21;
                             let feedbackHtml = '';
                             if (isDualAxis) {
                                 const coldText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');

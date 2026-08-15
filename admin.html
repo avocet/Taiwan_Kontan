@@ -1389,7 +1389,7 @@
         }
 
         function getQuestionAxesForAdmin(questionId) {
-            if (Number(questionId) === 2) return ['coldHot', 'wetDry'];
+            if (Number(questionId) === 2 || Number(questionId) === 21) return ['coldHot', 'wetDry'];
             const config = getQuestionConfig(questionId);
             return [config.axis];
         }
