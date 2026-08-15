@@ -569,8 +569,7 @@
         let currentUser = null;
         let existingDocId = null;
         let constitutionQuestionConfig = buildDefaultConstitutionConfig();
-        let constitutionConfigVersion = 1;
-        console.log('中醫體質四象限 version 2026-08-15-q4-fixed loaded');
+        let constitutionConfigVersion = 2;
 
         function buildDefaultConstitutionConfig() {
             return Object.fromEntries(
@@ -592,14 +591,20 @@
                 const snapshot = await getDoc(constitutionConfigRef);
                 if (snapshot.exists()) {
                     const data = snapshot.data() || {};
+                    const savedVersion = Number(data.version) || 1;
                     const savedItems = data.items && typeof data.items === 'object' ? data.items : {};
-                    constitutionQuestionConfig = { ...buildDefaultConstitutionConfig(), ...savedItems };
-                    constitutionConfigVersion = Number(data.version) || 1;
+                    if (savedVersion < 2) {
+                        constitutionQuestionConfig = buildDefaultConstitutionConfig();
+                        constitutionConfigVersion = 2;
+                    } else {
+                        constitutionQuestionConfig = { ...buildDefaultConstitutionConfig(), ...savedItems };
+                        constitutionConfigVersion = savedVersion;
+                    }
                 }
             } catch (error) {
                 console.error('載入中醫體質問卷設定失敗:', error);
                 constitutionQuestionConfig = buildDefaultConstitutionConfig();
-                constitutionConfigVersion = 1;
+                constitutionConfigVersion = 2;
             }
         }
 
