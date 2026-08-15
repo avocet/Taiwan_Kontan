@@ -322,7 +322,7 @@
         <div class="form-card">
             <div class="form-header">
                 <a href="customer.html" class="back-btn">← 返回</a>
-                <h1 id="formTitle">中醫體質檢測</h1>
+                <h1 id="formTitle">四象體質檢測</h1>
                 <div style="width: 60px;"></div>
             </div>
             
@@ -780,7 +780,7 @@
                 if (!querySnapshot.empty) {
                     const data = querySnapshot.docs[0].data();
                     if (data.姓名) {
-                        document.getElementById('formTitle').textContent = '中醫體質檢測';
+                        document.getElementById('formTitle').textContent = '四象體質檢測';
                     }
                 }
             } catch (error) {
@@ -817,7 +817,7 @@
                     }
                     
                     document.getElementById('submitBtn').textContent = '更新資料';
-                    document.getElementById('formTitle').textContent = '中醫體質檢測';
+                    document.getElementById('formTitle').textContent = '四象體質檢測';
                     updateProgress();
                 }
             } catch (error) {
