@@ -1095,7 +1095,7 @@
                         </div>
                         <div class="data-item">
                             <span class="data-label">睡眠狀況</span>
-                            <span class="data-value">${Array.isArray(data.睡眠狀況) ? (data.睡眠狀況[0] || '-') : (data.睡眠狀況 || '-')}</span>
+                            <span class="data-value">${Array.isArray(data.睡眠狀況) && data.睡眠狀況.length ? data.睡眠狀況.join('、') : '-'}</span>
                         </div>
                     </div>
                     <div class="records-row">

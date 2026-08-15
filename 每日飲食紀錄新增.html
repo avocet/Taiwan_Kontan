@@ -706,10 +706,10 @@
                     <div class="form-group">
                         <label>睡眠狀況</label>
                         <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="radio" name="sleepQuality" value="好入睡">好入睡</label>
-                            <label class="checkbox-item"><input type="radio" name="sleepQuality" value="難入睡">難入睡</label>
-                            <label class="checkbox-item"><input type="radio" name="sleepQuality" value="睡不飽">睡不飽</label>
-                            <label class="checkbox-item"><input type="radio" name="sleepQuality" value="睡很好">睡很好</label>
+                            <label class="checkbox-item"><input type="checkbox" id="sleepEasy" value="好入睡">好入睡</label>
+                            <label class="checkbox-item"><input type="checkbox" id="sleepHard" value="難入睡">難入睡</label>
+                            <label class="checkbox-item"><input type="checkbox" id="sleepNotEnough" value="睡不飽">睡不飽</label>
+                            <label class="checkbox-item"><input type="checkbox" id="sleepGreat" value="睡很好">睡很好</label>
                         </div>
                     </div>
                 </div>
@@ -1237,7 +1237,7 @@
                     排便狀況: getCheckedValues(['stoolDiarrhea', 'stoolNormal', 'stoolDifficult']),
                     前一晚入睡時間: document.getElementById('sleepStartTime').value,
                     睡眠時間: document.getElementById('sleepHours').value ? parseFloat(document.getElementById('sleepHours').value) : null,
-                    睡眠狀況: getRadioValue('sleepQuality'),
+                    睡眠狀況: getCheckedValues(['sleepEasy', 'sleepHard', 'sleepNotEnough', 'sleepGreat']),
                     早餐時間: getMealTimeValue('breakfast'),
                     早餐: document.getElementById('breakfast').value.trim(),
                     早點時間: getMealTimeValue('morningSnack'),
