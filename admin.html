@@ -1456,9 +1456,9 @@
             const counts = getQuestionAxisCounts();
             const coldHotAvg = coldHot / Math.max(1, counts.coldHot);
             const wetDryAvg = wetDry / Math.max(1, counts.wetDry);
-            if (coldHotAvg < 0 && wetDryAvg < 0) return '乾冷';
-            if (coldHotAvg < 0 && wetDryAvg >= 0) return '濕冷';
-            if (coldHotAvg >= 0 && wetDryAvg < 0) return '乾熱';
+            if (coldHotAvg > 0 && wetDryAvg > 0) return '乾冷';
+            if (coldHotAvg > 0 && wetDryAvg <= 0) return '濕冷';
+            if (coldHotAvg <= 0 && wetDryAvg > 0) return '乾熱';
             return '濕熱';
         }
 

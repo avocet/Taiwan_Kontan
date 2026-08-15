@@ -632,9 +632,9 @@
             const counts = getAxisCounts();
             const coldHotAvg = coldHotScore / Math.max(1, counts.coldHot);
             const wetDryAvg = wetDryScore / Math.max(1, counts.wetDry);
-            if (coldHotAvg < 0 && wetDryAvg < 0) return { quadrant: 'q1', resultText: '乾冷體質' };
-            if (coldHotAvg < 0 && wetDryAvg >= 0) return { quadrant: 'q2', resultText: '濕冷體質' };
-            if (coldHotAvg >= 0 && wetDryAvg < 0) return { quadrant: 'q3', resultText: '燥熱體質' };
+            if (coldHotAvg > 0 && wetDryAvg > 0) return { quadrant: 'q1', resultText: '乾冷體質' };
+            if (coldHotAvg > 0 && wetDryAvg <= 0) return { quadrant: 'q2', resultText: '濕冷體質' };
+            if (coldHotAvg <= 0 && wetDryAvg > 0) return { quadrant: 'q3', resultText: '燥熱體質' };
             return { quadrant: 'q4', resultText: '濕熱體質' };
         }
 
@@ -674,15 +674,15 @@
                             const score = getOptionScore(optionCount, optIndex, false);
                             let sideText, sideColor, sideBg;
                             if (isDualAxis) {
-                                const coldText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
+                                const coldText = score < 0 ? '熱' : (score > 0 ? '冷' : '中性');
                                 const dryText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
                                 sideText = `${coldText} / ${dryText}`;
                                 sideColor = '#475569';
                                 sideBg = '#f1f5f9';
                             } else if (isColdHot) {
-                                sideText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
-                                sideColor = score < 0 ? '#0ea5e9' : (score > 0 ? '#f97316' : '#94a3b8');
-                                sideBg = score < 0 ? '#e0f2fe' : (score > 0 ? '#ffedd5' : '#f1f5f9');
+                                sideText = score < 0 ? '熱' : (score > 0 ? '冷' : '中性');
+                                sideColor = score < 0 ? '#f97316' : (score > 0 ? '#0ea5e9' : '#94a3b8');
+                                sideBg = score < 0 ? '#ffedd5' : (score > 0 ? '#e0f2fe' : '#f1f5f9');
                             } else {
                                 sideText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
                                 sideColor = score < 0 ? '#16a34a' : (score > 0 ? '#a16207' : '#94a3b8');
@@ -758,17 +758,17 @@
                             const isDualAxis = Number(questionId) === 2;
                             let feedbackHtml = '';
                             if (isDualAxis) {
-                                const coldText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
+                                const coldText = score < 0 ? '熱' : (score > 0 ? '冷' : '中性');
                                 const dryText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
-                                feedbackHtml = `你的選擇偏向：<span style="font-weight:700;color:#0284c7;font-size:1rem;">${coldText}</span> / <span style="font-weight:700;color:#16a34a;font-size:1rem;">${dryText}</span>`;
+                                feedbackHtml = `你的選擇偏向：<span style="font-weight:700;color:#ea580c;font-size:1rem;">${coldText}</span> / <span style="font-weight:700;color:#16a34a;font-size:1rem;">${dryText}</span>`;
                             } else {
                                 let sideText = '';
                                 if (isColdHot) {
-                                    sideText = score < 0 ? '冷' : (score > 0 ? '熱' : '中性');
+                                    sideText = score < 0 ? '熱' : (score > 0 ? '冷' : '中性');
                                 } else {
                                     sideText = score < 0 ? '濕' : (score > 0 ? '乾' : '中性');
                                 }
-                                feedbackHtml = `你的選擇偏向：<span style="font-weight:700;color:${isColdHot ? (score < 0 ? '#0284c7' : '#ea580c') : (score < 0 ? '#16a34a' : '#a16207')};font-size:1rem;">${sideText}</span>`;
+                                feedbackHtml = `你的選擇偏向：<span style="font-weight:700;color:${isColdHot ? (score < 0 ? '#ea580c' : '#0284c7') : (score < 0 ? '#16a34a' : '#a16207')};font-size:1rem;">${sideText}</span>`;
                             }
                             feedbackEl.innerHTML = feedbackHtml;
                         }
