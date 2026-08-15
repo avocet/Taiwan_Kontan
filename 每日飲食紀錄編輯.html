@@ -706,6 +706,33 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>前一晚入睡時間</label>
+                            <div class="input-group">
+                                <input type="time" id="sleepStartTime" name="sleepStartTime">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>睡眠時間</label>
+                            <div class="input-group">
+                                <input type="number" id="sleepHours" name="sleepHours" placeholder="請輸入睡眠時數" step="0.5" min="0" max="24">
+                                <span>小時</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>睡眠狀況</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item"><input type="radio" name="sleepQuality" value="好入睡">好入睡</label>
+                            <label class="checkbox-item"><input type="radio" name="sleepQuality" value="難入睡">難入睡</label>
+                            <label class="checkbox-item"><input type="radio" name="sleepQuality" value="睡不飽">睡不飽</label>
+                            <label class="checkbox-item"><input type="radio" name="sleepQuality" value="睡很好">睡很好</label>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="form-section">
@@ -1028,6 +1055,9 @@
                 setRadioValue('bowelMovement', Array.isArray(data.排便與否) ? (data.排便與否[0] || '') : (data.排便與否 || ''));
                 updateStoolConditionVisibility();
                 setCheckedValues(['stoolDiarrhea', 'stoolNormal', 'stoolDifficult'], data.排便狀況 || []);
+                document.getElementById('sleepStartTime').value = data.前一晚入睡時間 || '';
+                document.getElementById('sleepHours').value = data.睡眠時間 || '';
+                setRadioValue('sleepQuality', Array.isArray(data.睡眠狀況) ? (data.睡眠狀況[0] || '') : (data.睡眠狀況 || ''));
                 setMealTimeValue('breakfast', data.早餐時間 || '');
                 document.getElementById('breakfast').value = data.早餐 || '';
                 setMealTimeValue('morningSnack', data.早點時間 || '');
@@ -1308,6 +1338,9 @@
                     喝水量: document.getElementById('waterIntake').value ? parseFloat(document.getElementById('waterIntake').value) : null,
                     排便與否: getRadioValue('bowelMovement'),
                     排便狀況: getCheckedValues(['stoolDiarrhea', 'stoolNormal', 'stoolDifficult']),
+                    前一晚入睡時間: document.getElementById('sleepStartTime').value,
+                    睡眠時間: document.getElementById('sleepHours').value ? parseFloat(document.getElementById('sleepHours').value) : null,
+                    睡眠狀況: getRadioValue('sleepQuality'),
                     早餐時間: getMealTimeValue('breakfast'),
                     早餐: document.getElementById('breakfast').value.trim(),
                     早點時間: getMealTimeValue('morningSnack'),

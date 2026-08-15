@@ -1085,6 +1085,18 @@
                             <span class="data-label">排便狀況</span>
                             <span class="data-value">${Array.isArray(data.排便狀況) && data.排便狀況.length ? data.排便狀況.join('、') : '-'}</span>
                         </div>
+                        <div class="data-item">
+                            <span class="data-label">前一晚入睡時間</span>
+                            <span class="data-value">${data.前一晚入睡時間 || '-'}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">睡眠時間</span>
+                            <span class="data-value">${data.睡眠時間 ? data.睡眠時間 + ' 小時' : '-'}</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">睡眠狀況</span>
+                            <span class="data-value">${Array.isArray(data.睡眠狀況) ? (data.睡眠狀況[0] || '-') : (data.睡眠狀況 || '-')}</span>
+                        </div>
                     </div>
                     <div class="records-row">
                         <div class="diet-records">
