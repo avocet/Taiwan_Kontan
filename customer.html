@@ -2963,21 +2963,35 @@
         window.saveStudentCPFV = async function(docId) {
             const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
             const updateData = {};
+            const debugInfo = [];
             meals.forEach((meal) => {
                 const cEl = document.getElementById(`cpfv-${docId}-${meal}C`) || document.getElementById(`cpfv-m-${docId}-${meal}C`);
                 const pEl = document.getElementById(`cpfv-${docId}-${meal}P`) || document.getElementById(`cpfv-m-${docId}-${meal}P`);
                 const oEl = document.getElementById(`cpfv-${docId}-${meal}O`) || document.getElementById(`cpfv-m-${docId}-${meal}O`);
                 const fEl = document.getElementById(`cpfv-${docId}-${meal}F`) || document.getElementById(`cpfv-m-${docId}-${meal}F`);
                 const vEl = document.getElementById(`cpfv-${docId}-${meal}V`) || document.getElementById(`cpfv-m-${docId}-${meal}V`);
-                updateData[`${meal}C`] = cEl?.value || '';
-                updateData[`${meal}P`] = pEl?.value || '';
-                updateData[`${meal}O`] = oEl?.value || '';
-                updateData[`${meal}F`] = fEl?.value || '';
-                updateData[`${meal}V`] = vEl?.value || '';
+                const cVal = cEl?.value || '';
+                const pVal = pEl?.value || '';
+                const oVal = oEl?.value || '';
+                const fVal = fEl?.value || '';
+                const vVal = vEl?.value || '';
+                debugInfo.push(`${meal}: C=${cVal} P=${pVal} O=${oVal} F=${fVal} V=${vVal}`);
+                updateData[`${meal}C`] = cVal !== '' ? Number(cVal) : '';
+                updateData[`${meal}P`] = pVal !== '' ? Number(pVal) : '';
+                updateData[`${meal}O`] = oVal !== '' ? Number(oVal) : '';
+                updateData[`${meal}F`] = fVal !== '' ? Number(fVal) : '';
+                updateData[`${meal}V`] = vVal !== '' ? Number(vVal) : '';
             });
+            console.log('saveStudentCPFV docId:', docId);
+            console.log('輸入值:', debugInfo.join(' | '));
+            console.log('updateData:', updateData);
             try {
                 await updateDoc(doc(db, "每日體重三圍", docId), updateData);
+                console.log('份數已儲存到:', docId);
                 alert('份數已儲存');
+                if (typeof currentStudentUsername !== 'undefined' && currentStudentUsername) {
+                    await viewStudentRecords(currentStudentUsername, currentStudentName);
+                }
             } catch (error) {
                 console.error('儲存失敗:', error);
                 alert('儲存失敗: ' + error.message);
