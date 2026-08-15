@@ -648,8 +648,12 @@
             questionsData.items.forEach((item, index) => {
                 const questionGroup = document.createElement('div');
                 questionGroup.className = 'question-group';
+                const isColdHot = item.filename && item.filename.startsWith('ch');
+                const axisTag = isColdHot
+                    ? '<span style="display:inline-block;margin-left:8px;padding:2px 8px;font-size:0.75rem;font-weight:600;color:#0284c7;background:#e0f2fe;border-radius:6px;">冷熱題</span>'
+                    : '<span style="display:inline-block;margin-left:8px;padding:2px 8px;font-size:0.75rem;font-weight:600;color:#16a34a;background:#dcfce7;border-radius:6px;">濕乾題</span>';
                 questionGroup.innerHTML = `
-                    <label class="question-label">${index + 1}. ${item.question}</label>
+                    <label class="question-label">${index + 1}. ${item.question}${axisTag}</label>
                     <div class="option-grid" data-question-id="${item.id}">
                         ${item.options.map((option, optIndex) => {
                             return `
