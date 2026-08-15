@@ -2964,12 +2964,22 @@
             const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
             const updateData = {};
             const debugInfo = [];
+            const isMobileView = window.matchMedia('(max-width: 768px)').matches;
             meals.forEach((meal) => {
-                const cEl = document.getElementById(`cpfv-${docId}-${meal}C`) || document.getElementById(`cpfv-m-${docId}-${meal}C`);
-                const pEl = document.getElementById(`cpfv-${docId}-${meal}P`) || document.getElementById(`cpfv-m-${docId}-${meal}P`);
-                const oEl = document.getElementById(`cpfv-${docId}-${meal}O`) || document.getElementById(`cpfv-m-${docId}-${meal}O`);
-                const fEl = document.getElementById(`cpfv-${docId}-${meal}F`) || document.getElementById(`cpfv-m-${docId}-${meal}F`);
-                const vEl = document.getElementById(`cpfv-${docId}-${meal}V`) || document.getElementById(`cpfv-m-${docId}-${meal}V`);
+                let cEl, pEl, oEl, fEl, vEl;
+                if (isMobileView) {
+                    cEl = document.getElementById(`cpfv-m-${docId}-${meal}C`) || document.getElementById(`cpfv-${docId}-${meal}C`);
+                    pEl = document.getElementById(`cpfv-m-${docId}-${meal}P`) || document.getElementById(`cpfv-${docId}-${meal}P`);
+                    oEl = document.getElementById(`cpfv-m-${docId}-${meal}O`) || document.getElementById(`cpfv-${docId}-${meal}O`);
+                    fEl = document.getElementById(`cpfv-m-${docId}-${meal}F`) || document.getElementById(`cpfv-${docId}-${meal}F`);
+                    vEl = document.getElementById(`cpfv-m-${docId}-${meal}V`) || document.getElementById(`cpfv-${docId}-${meal}V`);
+                } else {
+                    cEl = document.getElementById(`cpfv-${docId}-${meal}C`) || document.getElementById(`cpfv-m-${docId}-${meal}C`);
+                    pEl = document.getElementById(`cpfv-${docId}-${meal}P`) || document.getElementById(`cpfv-m-${docId}-${meal}P`);
+                    oEl = document.getElementById(`cpfv-${docId}-${meal}O`) || document.getElementById(`cpfv-m-${docId}-${meal}O`);
+                    fEl = document.getElementById(`cpfv-${docId}-${meal}F`) || document.getElementById(`cpfv-m-${docId}-${meal}F`);
+                    vEl = document.getElementById(`cpfv-${docId}-${meal}V`) || document.getElementById(`cpfv-m-${docId}-${meal}V`);
+                }
                 const cVal = cEl?.value || '';
                 const pVal = pEl?.value || '';
                 const oVal = oEl?.value || '';
@@ -2982,7 +2992,7 @@
                 updateData[`${meal}F`] = fVal !== '' ? Number(fVal) : '';
                 updateData[`${meal}V`] = vVal !== '' ? Number(vVal) : '';
             });
-            console.log('saveStudentCPFV docId:', docId);
+            console.log('saveStudentCPFV docId:', docId, 'isMobile:', isMobileView);
             console.log('輸入值:', debugInfo.join(' | '));
             console.log('updateData:', updateData);
             try {
