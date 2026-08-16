@@ -186,11 +186,26 @@
         }
 
         .data-photo {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             border-radius: 8px;
             object-fit: cover;
             cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .photo-carousel {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 4px 0;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .photo-carousel .data-photo {
+            scroll-snap-align: start;
         }
 
         .data-info {
@@ -984,11 +999,13 @@
             let photoHtml = '';
             if (data.照片) {
                 if (Array.isArray(data.照片)) {
+                    photoHtml = '<div class="photo-carousel">';
                     data.照片.forEach(photoUrl => {
                         photoHtml += `<img class="data-photo" src="${photoUrl}" onclick="showPhoto('${photoUrl}')" alt="照片">`;
                     });
+                    photoHtml += '</div>';
                 } else {
-                    photoHtml = `<img class="data-photo" src="${data.照片}" onclick="showPhoto('${data.照片}')" alt="照片">`;
+                    photoHtml = `<img class="data-photo" src="${data.照片}" onclick="showPhoto('${data.照片}')" alt="照片" style="display:block;">`;
                 }
             }
 
