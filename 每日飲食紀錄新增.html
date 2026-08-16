@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -258,7 +258,7 @@
         select {
             width: 100%;
             padding: 14px 16px;
-            font-size: 1rem;
+            font-size: 16px;
             border: 1px solid var(--border-color);
             border-radius: 10px;
             background: var(--card-background);
@@ -313,6 +313,7 @@
             justify-content: space-between;
             gap: 12px;
             margin-bottom: 10px;
+            flex-wrap: wrap;
         }
 
         .meal-entry-header label {
@@ -320,15 +321,18 @@
         }
 
         .meal-time-input {
-            width: 190px;
-            flex-shrink: 0;
             display: flex;
             align-items: center;
             gap: 6px;
+            flex-shrink: 0;
         }
 
         .meal-time-input select {
-            padding: 10px 12px;
+            padding: 10px 8px;
+            font-size: 16px;
+            min-width: 0;
+            flex: 1;
+            min-width: 70px;
         }
 
         .meal-time-separator {
