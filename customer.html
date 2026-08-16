@@ -2066,9 +2066,12 @@
             const constitutionType = resolveConstitutionType(scores.coldHot, scores.wetDry);
             const bodyHtml = `
                 <div>客戶姓名：${escapeHtml(data.客戶姓名 || '-')}</div>
-                <div>冷熱分數：${escapeHtml(scores.coldHot)} 分</div>
-                <div>濕乾分數：${escapeHtml(scores.wetDry)} 分</div>
+                <div>冷熱分數：${escapeHtml(scores.coldHot)} 分 <span style="font-size:0.75rem;color:#64748b;">（負=熱、正=冷）</span></div>
+                <div>濕乾分數：${escapeHtml(scores.wetDry)} 分 <span style="font-size:0.75rem;color:#64748b;">（負=濕、正=乾）</span></div>
                 <div>結果：${escapeHtml(constitutionType)}</div>
+                <div style="font-size:0.75rem;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;line-height:1.5;">
+                    <strong>分數說明：</strong>分數為各題選項計分的加總平均值。負分偏向「熱/濕」，正分偏向「冷/乾」。絕對值越大表示該傾向越明顯。
+                </div>
             `;
             card.innerHTML = `
                 <div style="font-weight:600;margin-bottom:6px;">中醫體質檢測</div>
@@ -2336,9 +2339,12 @@
             const constitutionType = resolveConstitutionType(scores.coldHot, scores.wetDry);
             return `
                 <div>客戶姓名：${escapeHtml(data.客戶姓名 || '-')}</div>
-                <div>冷熱分數：${escapeHtml(scores.coldHot)} 分</div>
-                <div>濕乾分數：${escapeHtml(scores.wetDry)} 分</div>
+                <div>冷熱分數：${escapeHtml(scores.coldHot)} 分 <span style="font-size:0.75rem;color:#64748b;">（負=熱、正=冷）</span></div>
+                <div>濕乾分數：${escapeHtml(scores.wetDry)} 分 <span style="font-size:0.75rem;color:#64748b;">（負=濕、正=乾）</span></div>
                 <div>結果：${escapeHtml(constitutionType)}</div>
+                <div style="font-size:0.75rem;color:#64748b;margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;line-height:1.5;">
+                    <strong>分數說明：</strong>分數為各題選項計分的加總平均值。負分偏向「熱/濕」，正分偏向「冷/乾」。絕對值越大表示該傾向越明顯。
+                </div>
             `;
         }
 

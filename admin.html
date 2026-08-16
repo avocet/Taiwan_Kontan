@@ -1587,8 +1587,11 @@
                         <button class="btn btn-delete" onclick="deleteData('中醫體質四象限', '${id}')">刪除</button>
                     </div>
                     <div class="data-info">
-                        <div class="data-item"><span class="data-label">冷熱體質分數：</span><span class="data-value">${coldHotScore} 分</span></div>
-                        <div class="data-item"><span class="data-label">濕乾體質分數：</span><span class="data-value">${wetDryScore} 分</span></div>
+                        <div class="data-item"><span class="data-label">冷熱體質分數：</span><span class="data-value">${coldHotScore} 分 <span style="font-size:0.75rem;color:#64748b;">（負=熱、正=冷）</span></span></div>
+                        <div class="data-item"><span class="data-label">濕乾體質分數：</span><span class="data-value">${wetDryScore} 分 <span style="font-size:0.75rem;color:#64748b;">（負=濕、正=乾）</span></span></div>
+                    </div>
+                    <div style="font-size:0.8rem;color:#64748b;background:#f1f5f9;padding:10px;border-radius:8px;margin-top:12px;line-height:1.6;">
+                        <strong>分數說明：</strong>分數為各題選項計分的加總平均值。負分偏向「熱/濕」，正分偏向「冷/乾」。絕對值越大表示該傾向越明顯。
                     </div>
                     <div style="margin-top:12px;padding:12px;background:var(--background-color);border-radius:8px;text-align:center;">
                         <div style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:8px;">體質分類</div>
