@@ -59,7 +59,8 @@
 
         .form-layout {
             display: flex;
-            align-items: flex-start;
+            flex-direction: column;
+            align-items: stretch;
             gap: 16px;
         }
 
@@ -496,7 +497,7 @@
         }
 
         .desktop-portion-panel {
-            display: block;
+            display: none;
         }
 
         .portion-modal {
@@ -611,7 +612,7 @@
             .desktop-portion-panel { display: none; }
         }
 
-        @media screen and (min-width: 429px) and (max-width: 1024px) {
+        @media screen and (min-width: 681px) and (max-width: 1024px) {
             .container { padding: 24px; max-width: 1040px; }
             .form-card { border-radius: 20px; }
             .form-header { padding: 28px 24px; }
@@ -622,6 +623,7 @@
             .btn { padding: 16px 28px; }
             .portion-popup-btn { top: 14px; right: 14px; display: none; }
             .desktop-portion-panel { display: block; }
+            .form-layout { flex-direction: row; }
         }
 
         @media screen and (min-width: 1025px) {
@@ -634,6 +636,7 @@
             .btn { max-width: 200px; margin: 0 auto; }
             .portion-popup-btn { top: 16px; right: 16px; display: none; }
             .desktop-portion-panel { display: block; }
+            .form-layout { flex-direction: row; }
         }
     </style>
 </head>
