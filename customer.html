@@ -2524,11 +2524,12 @@
                         let photosHtml = '';
                         if (record.照片) {
                             const photos = Array.isArray(record.照片) ? record.照片 : [record.照片];
-                            photosHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">';
+                            photosHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee;"><div style="font-weight:600;margin-bottom:8px;font-size:0.8rem;color:#475569;">上傳照片</div>';
+                            photosHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;">';
                             photos.forEach(photoUrl => {
-                                photosHtml += `<img src="${photoUrl}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="showPhoto('${photoUrl}')">`;
+                                photosHtml += `<img src="${photoUrl}" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;" onclick="showPhoto('${photoUrl}')">`;
                             });
-                            photosHtml += '</div>';
+                            photosHtml += '</div></div>';
                         }
 
                         let portionSectionHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee;">';
@@ -2753,11 +2754,12 @@
                     let desktopPhotosHtml = '';
                     if (daily.照片) {
                         const photos = Array.isArray(daily.照片) ? daily.照片 : [daily.照片];
-                        desktopPhotosHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">';
+                        desktopPhotosHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee;"><div style="font-weight:600;margin-bottom:8px;font-size:0.8rem;color:#475569;">上傳照片</div>';
+                        desktopPhotosHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;">';
                         photos.forEach(photoUrl => {
-                            desktopPhotosHtml += `<img src="${photoUrl}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;cursor:pointer;" onclick="showPhoto('${photoUrl}')">`;
+                            desktopPhotosHtml += `<img src="${photoUrl}" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;" onclick="showPhoto('${photoUrl}')">`;
                         });
-                        desktopPhotosHtml += '</div>';
+                        desktopPhotosHtml += '</div></div>';
                     }
                     leftHtml += `
                         <div style="background:white;padding:16px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.1);position:relative;">
