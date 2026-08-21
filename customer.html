@@ -4214,8 +4214,10 @@
                     }
                     
                     const headerTitle = document.getElementById('pageTitle');
-                    if (userRole === 'admin') {
-                        headerTitle.textContent = '體重管理資深營養師 ' + userName;
+                    if (userRole === 'coach') {
+                        headerTitle.textContent = '資深營養師 ' + userName;
+                    } else if (userRole === 'assistant') {
+                        headerTitle.textContent = '助教營養師 ' + userName;
                     } else {
                         headerTitle.textContent = '體重管理班學員 ' + userName;
                     }
