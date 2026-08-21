@@ -3433,6 +3433,38 @@
             });
         }
 
+        window.editPortionRecordById = async function(portionId) {
+            if (!portionId) return;
+            try {
+                const portionSnap = await getDoc(doc(db, "飲食份數表", portionId));
+                if (!portionSnap.exists()) {
+                    alert('找不到此份數表');
+                    return;
+                }
+                const data = portionSnap.data();
+                const form = document.getElementById('portionTableForm');
+                if (!form) return;
+                document.getElementById('portionStartDate').value = data.紀錄日期 || '';
+                document.getElementById('portionEndDate').value = data.結束日期 || data.紀錄日期 || '';
+                const meals = ['早餐', '早點', '午餐', '午茶', '晚餐', '宵夜'];
+                const nutrients = ['C', 'P', 'O', 'F', 'V'];
+                meals.forEach(meal => {
+                    const timeInput = form.querySelector(`[name="${meal}時間"]`);
+                    if (timeInput) timeInput.value = data[`${meal}時間`] || '';
+                    nutrients.forEach(nutrient => {
+                        const input = form.querySelector(`[name="${meal}${nutrient}"]`);
+                        if (input) input.value = data[`${meal}${nutrient}`] !== undefined ? data[`${meal}${nutrient}`] : 0;
+                    });
+                });
+                editingPortionDocId = portionId;
+                if (typeof updatePortionSummary === 'function') updatePortionSummary();
+                portionTableModal.style.display = 'flex';
+            } catch (error) {
+                console.error('載入份數表失敗:', error);
+                alert('載入份數表失敗: ' + error.message);
+            }
+        };
+
         // 新增學員功能
         const addStudentBtn = document.getElementById('addStudentBtn');
         const addStudentModal = document.getElementById('addStudentModal');
