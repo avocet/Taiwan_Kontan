@@ -569,6 +569,11 @@
                     </div>
 
                     <div class="form-group half-width">
+                        <label>體脂 (%)</label>
+                        <input type="number" id="bodyFat" name="bodyFat" placeholder="例如：25" step="0.1" min="0" max="100">
+                    </div>
+
+                    <div class="form-group half-width">
                         <label>BMI</label>
                         <input type="number" id="bmi" name="bmi" placeholder="自動計算" step="0.1" readonly>
                     </div>
@@ -861,6 +866,7 @@
                     if (data.填寫日期) document.getElementById('fillDate').value = data.填寫日期;
                     if (data.身高) document.getElementById('height').value = data.身高;
                     if (data.體重) document.getElementById('weight').value = data.體重;
+                    if (data.體脂) document.getElementById('bodyFat').value = data.體脂;
                     if (data.BMI) document.getElementById('bmi').value = data.BMI;
                     if (data.疾病 && Array.isArray(data.疾病)) {
                         data.疾病.forEach(val => {
@@ -1254,6 +1260,7 @@
                 填寫日期: document.getElementById('fillDate').value,
                 身高: document.getElementById('height').value,
                 體重: document.getElementById('weight').value,
+                體脂: document.getElementById('bodyFat').value.trim(),
                 BMI: document.getElementById('bmi').value,
                 疾病: Array.from(document.querySelectorAll('input[name="disease"]:checked')).map(cb => cb.value),
                 健康檢查: Array.from(document.querySelectorAll('input[name="healthCheck"]:checked')).map(cb => cb.value),
