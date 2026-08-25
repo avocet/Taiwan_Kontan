@@ -394,7 +394,10 @@
                 <h2 id="studentListTitle" style="font-size:1.25rem;">學員列表</h2>
                 <div id="studentListSubtitle" style="font-size:0.9rem;color:#64748b;margin-top:4px;">可查看學員資料、課程狀態與每日飲食紀錄。</div>
             </div>
-            <button id="addStudentBtn" style="background:#007AFF;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;">+ 新增學員</button>
+            <div style="display:flex;gap:8px;">
+                <button id="classTrendChartBtn" style="background:#5856D6;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;display:none;">📈 體重紀錄曲線圖</button>
+                <button id="addStudentBtn" style="background:#007AFF;color:white;border:none;padding:10px 20px;border-radius:8px;font-size:0.875rem;cursor:pointer;">+ 新增學員</button>
+            </div>
         </div>
         <div style="margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
             <div id="classFilterWrap" style="display:flex;align-items:center;gap:8px;">
@@ -491,6 +494,19 @@
             </div>
             <div id="trendChartEmpty" style="display:none;font-size:0.8125rem;color:#9ca3af;margin-top:8px;">尚無可繪製資料</div>
             <button type="button" class="mobile-info-modal-close" id="trendChartModalClose">關閉</button>
+        </div>
+    </div>
+
+    <!-- 全班體重紀錄曲線圖 Modal -->
+    <div class="mobile-info-modal" id="classTrendChartModal">
+        <div class="mobile-info-modal-card" style="width:min(960px,100%);">
+            <div class="mobile-info-modal-title" id="classTrendChartModalTitle">全班體重紀錄曲線圖</div>
+            <div style="font-size:0.8125rem;color:#6b7280;margin-bottom:8px;">顯示全班學員的體重(kg)變化趨勢</div>
+            <div style="position:relative;height:min(58vh,420px);">
+                <canvas id="classTrendChartCanvas"></canvas>
+            </div>
+            <div id="classTrendChartEmpty" style="display:none;font-size:0.8125rem;color:#9ca3af;margin-top:8px;">尚無可繪製資料</div>
+            <button type="button" class="mobile-info-modal-close" id="classTrendChartModalClose">關閉</button>
         </div>
     </div>
 
@@ -926,6 +942,9 @@
                 }
                 if (addStudentBtn) {
                     addStudentBtn.textContent = (userRole === 'coach' || userRole === 'assistant') ? '+ 新增本班學員' : '+ 新增學員';
+                }
+                if (classTrendChartBtn) {
+                    classTrendChartBtn.style.display = (userRole === 'coach' || userRole === 'assistant') ? 'inline-block' : 'none';
                 }
                 if (reportIssueBtn) reportIssueBtn.style.display = 'inline-flex';
                 await refreshClassOptions();
@@ -2304,6 +2323,98 @@
             document.getElementById('trendChartModal').classList.remove('show');
         }
 
+        let classTrendChart = null;
+        async function openClassTrendChartModal() {
+            const modal = document.getElementById('classTrendChartModal');
+            const emptyEl = document.getElementById('classTrendChartEmpty');
+            const canvas = document.getElementById('classTrendChartCanvas');
+            if (!modal || !canvas) return;
+            try {
+                const students = allStudents.filter((s) => !s.customerDocId || s.customerDocId).map((s) => ({
+                    uid: s.uid,
+                    name: s.studentName || s.username,
+                    classId: s.classId || DEFAULT_CLASS_ID
+                }));
+                if (!students.length) {
+                    emptyEl.style.display = 'block';
+                    modal.classList.add('show');
+                    return;
+                }
+                const classFilterEl = document.getElementById('classFilter');
+                const selectedClass = classFilterEl ? classFilterEl.value : '';
+                const filteredStudents = selectedClass
+                    ? students.filter((s) => s.classId === selectedClass)
+                    : students;
+                const recordsByStudent = await Promise.all(filteredStudents.map(async (s) => {
+                    const uidsToTry = [s.uid].filter(Boolean);
+                    if (!uidsToTry.length) return { name: s.name, points: [] };
+                    try {
+                        const q = query(collection(db, '每日體重三圍'), where('userId', '==', uidsToTry[0]));
+                        const snap = await getDocs(q);
+                        const docs = snap.docs.map((d) => d.data());
+                        return { name: s.name, points: buildTrendPoints(docs) };
+                    } catch (e) {
+                        return { name: s.name, points: [] };
+                    }
+                }));
+                const allDates = new Set();
+                recordsByStudent.forEach((r) => r.points.forEach((p) => allDates.add(p.date)));
+                const labels = Array.from(allDates).sort();
+                const datasets = recordsByStudent
+                    .filter((r) => r.points.some((p) => p.weight !== null))
+                    .map((r, idx) => {
+                        const colorPalette = ['#007AFF', '#FF2D55', '#34C759', '#FF9500', '#5856D6', '#AF52DE', '#FF3B30', '#00C7BE', '#FFCC00', '#8E8E93'];
+                        const color = colorPalette[idx % colorPalette.length];
+                        const dataMap = new Map(r.points.map((p) => [p.date, p.weight]));
+                        const data = labels.map((d) => (dataMap.has(d) ? dataMap.get(d) : null));
+                        return {
+                            label: r.name,
+                            data,
+                            borderColor: color,
+                            backgroundColor: color + '30',
+                            borderWidth: 2,
+                            pointRadius: 2,
+                            tension: 0.25,
+                            spanGaps: true
+                        };
+                    });
+                if (classTrendChart) {
+                    classTrendChart.destroy();
+                    classTrendChart = null;
+                }
+                if (!datasets.length) {
+                    emptyEl.style.display = 'block';
+                    modal.classList.add('show');
+                    return;
+                }
+                emptyEl.style.display = 'none';
+                const ctx = canvas.getContext('2d');
+                classTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'nearest', intersect: false },
+                        plugins: { legend: { position: 'top' } },
+                        scales: {
+                            x: { ticks: { autoSkip: true, maxTicksLimit: 10 } },
+                            y: { beginAtZero: false, title: { display: true, text: '體重 (kg)' } }
+                        }
+                    }
+                });
+                modal.classList.add('show');
+            } catch (error) {
+                console.error('載入全班體重曲線圖失敗:', error);
+                alert('載入全班體重曲線圖失敗: ' + error.message);
+            }
+        }
+
+        function closeClassTrendChartModal() {
+            const modal = document.getElementById('classTrendChartModal');
+            if (modal) modal.classList.remove('show');
+        }
+
         function getMobilePanelHtml(panel) {
             if (panel === 'basic') {
                 const data = currentStudentSideData.basicInfo;
@@ -3118,6 +3229,23 @@
             if (!btn) return;
             openTrendChartModal();
         });
+
+        const classTrendChartBtn = document.getElementById('classTrendChartBtn');
+        if (classTrendChartBtn) {
+            classTrendChartBtn.addEventListener('click', openClassTrendChartModal);
+        }
+        const classTrendChartModalClose = document.getElementById('classTrendChartModalClose');
+        if (classTrendChartModalClose) {
+            classTrendChartModalClose.addEventListener('click', closeClassTrendChartModal);
+        }
+        const classTrendChartModalEl = document.getElementById('classTrendChartModal');
+        if (classTrendChartModalEl) {
+            classTrendChartModalEl.addEventListener('click', (e) => {
+                if (e.target === classTrendChartModalEl) {
+                    closeClassTrendChartModal();
+                }
+            });
+        }
 
         const rightAlignedDisplay = document.getElementById('rightAlignedDisplay');
         if (rightAlignedDisplay) {
