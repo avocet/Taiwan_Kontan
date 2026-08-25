@@ -484,7 +484,7 @@
 
     <div class="mobile-info-modal" id="trendChartModal">
         <div class="mobile-info-modal-card" style="width:min(860px,100%);">
-            <div class="mobile-info-modal-title">體重紀錄曲線圖</div>
+            <div class="mobile-info-modal-title" id="trendChartModalTitle">體重紀錄曲線圖</div>
             <div style="font-size:0.8125rem;color:#6b7280;margin-bottom:8px;">依日期顯示體重(kg)與體脂(%)</div>
             <div style="position:relative;height:min(58vh,420px);">
                 <canvas id="studentTrendChartCanvas"></canvas>
@@ -2205,9 +2205,10 @@
             const card = document.getElementById('studentTrendCard');
             if (!card) return;
             const points = buildTrendPoints(records);
+            const studentName = currentStudentName || '';
             if (!points.length) {
                 card.innerHTML = `
-                    <div style="font-weight:600;margin-bottom:6px;">體重紀錄曲線圖</div>
+                    <div style="font-weight:600;margin-bottom:6px;">體重紀錄曲線圖${studentName ? '：' + escapeHtml(studentName) : ''}</div>
                     <div style="font-size:0.8125rem;color:#9ca3af;">尚無可繪製資料</div>
                 `;
                 return;
@@ -2217,7 +2218,7 @@
             const weightCount = points.filter((p) => p.weight !== null).length;
             const fatCount = points.filter((p) => p.fat !== null).length;
             card.innerHTML = `
-                <div style="font-weight:600;margin-bottom:6px;">體重紀錄曲線圖</div>
+                <div style="font-weight:600;margin-bottom:6px;">體重紀錄曲線圖${studentName ? '：' + escapeHtml(studentName) : ''}</div>
                 <div style="font-size:0.8125rem;line-height:1.6;">
                     <div>期間：${escapeHtml(firstDate)} ~ ${escapeHtml(lastDate)}</div>
                     <div>體重點數：${weightCount}</div>
@@ -2291,6 +2292,11 @@
         function openTrendChartModal() {
             const records = currentStudentSideData.trendRecords || [];
             renderTrendChart(records);
+            const titleEl = document.getElementById('trendChartModalTitle');
+            if (titleEl) {
+                const studentName = currentStudentName || '';
+                titleEl.textContent = studentName ? `體重紀錄曲線圖：${studentName}` : '體重紀錄曲線圖';
+            }
             document.getElementById('trendChartModal').classList.add('show');
         }
 
@@ -2361,7 +2367,11 @@
                 constitution: '中醫體質檢測',
                 trend: '體重紀錄曲線圖'
             };
-            document.getElementById('mobileInfoModalTitle').textContent = titleMap[panel] || '資料';
+            let title = titleMap[panel] || '資料';
+            if (panel === 'trend' && currentStudentName) {
+                title = `${title}：${currentStudentName}`;
+            }
+            document.getElementById('mobileInfoModalTitle').textContent = title;
             document.getElementById('mobileInfoModalBody').innerHTML = getMobilePanelHtml(panel);
             document.getElementById('mobileInfoModal').classList.add('show');
         }
