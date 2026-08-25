@@ -1170,35 +1170,36 @@
 
         photoInput.addEventListener('change', (e) => {
             const files = Array.from(e.target.files);
-            let currentIndex = uploadedPhotos.length;
-            
+            const currentIndex = uploadedPhotos.length;
+
             files.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const imgContainer = document.createElement('div');
                     imgContainer.style.cssText = 'position:relative;width:80px;height:80px;';
-                    
+
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:8px;';
-                    
+
                     const removeBtn = document.createElement('button');
                     removeBtn.innerHTML = '✕';
                     removeBtn.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;';
                     removeBtn.onclick = () => {
-                        uploadedPhotos.splice(currentIndex + index, 1);
-                        imgContainer.remove();
+                        const removeIdx = uploadedPhotos.findIndex(p => p === file);
+                        if (removeIdx !== -1) {
+                            uploadedPhotos.splice(removeIdx, 1);
+                            imgContainer.remove();
+                        }
                     };
-                    
+
                     imgContainer.appendChild(img);
                     imgContainer.appendChild(removeBtn);
                     photoPreviewContainer.appendChild(imgContainer);
-                    uploadedPhotos.push(e.target.result);
+                    uploadedPhotos.push(file);
                 };
                 reader.readAsDataURL(file);
             });
-            
-            photoInput.value = '';
         });
 
         function showMessage(element, duration = 3000) {
@@ -1240,9 +1241,9 @@
                     customerName = querySnapshot.docs[0].data().姓名 || '';
                 }
 
-                const photoFiles = Array.from(photoInput.files);
+                const photoFiles = uploadedPhotos.slice();
                 const photoUrls = [];
-                
+
                 for (let i = 0; i < photoFiles.length; i++) {
                     const photoFile = photoFiles[i];
                     const photoRef = ref(storage, `photos/${currentUser.uid}/${Date.now()}_${i}_${photoFile.name}`);
