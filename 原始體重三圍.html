@@ -375,6 +375,11 @@
         <div id="recordsList"></div>
     </div>
 
+    <div class="photo-modal" id="photoModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:3000;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;">
+        <button type="button" id="photoModalClose" style="position:absolute;top:16px;right:16px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;z-index:3001;line-height:1;padding:8px;">✕</button>
+        <img id="photoModalImg" src="" alt="照片" style="max-width:90%;max-height:80vh;object-fit:contain;border-radius:8px;">
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
@@ -516,7 +521,7 @@
                             photosHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee;"><div style="font-weight:600;margin-bottom:8px;font-size:0.8rem;color:#475569;">上傳照片</div>';
                             photosHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;">';
                             photos.forEach(photoUrl => {
-                                photosHtml += `<img src="${photoUrl}" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;" onclick="window.open('${photoUrl}', '_blank')">`;
+                                photosHtml += `<img src="${photoUrl}" data-photo-url="${photoUrl}" class="record-photo-thumb" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;">`;
                             });
                             photosHtml += '</div></div>';
                         }
@@ -871,6 +876,40 @@
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.textContent = '儲存資料';
+            }
+        });
+
+        window.openPhotoModal = function(photoUrl) {
+            const modal = document.getElementById('photoModal');
+            const img = document.getElementById('photoModalImg');
+            if (modal && img) {
+                img.src = photoUrl;
+                modal.style.display = 'flex';
+            }
+        };
+
+        window.closePhotoModal = function() {
+            const modal = document.getElementById('photoModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        };
+
+        document.addEventListener('click', (e) => {
+            const photoThumb = e.target.closest && e.target.closest('.record-photo-thumb');
+            if (photoThumb) {
+                e.preventDefault();
+                e.stopPropagation();
+                const photoUrl = photoThumb.getAttribute('data-photo-url');
+                if (photoUrl && typeof window.openPhotoModal === 'function') {
+                    window.openPhotoModal(photoUrl);
+                }
+            }
+            if (e.target && e.target.id === 'photoModalClose') {
+                window.closePhotoModal();
+            }
+            if (e.target && e.target.id === 'photoModal') {
+                window.closePhotoModal();
             }
         });
     </script>
