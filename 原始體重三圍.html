@@ -421,7 +421,10 @@
             });
         };
 
+        let isLoadingData = false;
         async function loadData(userId) {
+            if (isLoadingData) return;
+            isLoadingData = true;
             try {
                 const q = query(
                     collection(db, "原始體重三圍"),
@@ -438,6 +441,7 @@
                 records.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
 
                 const recordsList = document.getElementById('recordsList');
+                if (!recordsList) return;
 
                 if (records.length === 0) {
                     recordsList.innerHTML = `
@@ -447,7 +451,6 @@
                         </div>
                         <div style="text-align:center;color:#8E8E93;padding:40px;">尚無紀錄</div>
                     `;
-                    showForm();
                 } else {
                     renderRecords(records);
                 }
@@ -455,6 +458,18 @@
             } catch (error) {
                 console.error('載入資料失敗:', error);
                 document.getElementById('loading').style.display = 'none';
+                const recordsList = document.getElementById('recordsList');
+                if (recordsList && !recordsList.innerHTML.trim()) {
+                    recordsList.innerHTML = `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div style="font-weight:600;color:#333;">紀錄列表</div>
+                            <button onclick="showForm()" style="padding:6px 14px;background:#34C759;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500;">+ 新增</button>
+                        </div>
+                        <div style="text-align:center;color:#ef4444;padding:40px;">載入失敗，請重新整理頁面</div>
+                    `;
+                }
+            } finally {
+                isLoadingData = false;
             }
         }
 
@@ -538,6 +553,10 @@
             document.getElementById('formCard').style.display = 'none';
             existingDocId = null;
             document.getElementById('dataForm').reset();
+            const recordsList = document.getElementById('recordsList');
+            if (recordsList) {
+                recordsList.innerHTML = '<div style="text-align:center;color:#8E8E93;padding:40px;">載入中...</div>';
+            }
             loadData(currentUser.uid);
         }
 
