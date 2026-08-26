@@ -512,9 +512,13 @@
                     document.getElementById('formCard').style.display = 'block';
                     document.getElementById('recordsList').innerHTML = '';
                     document.querySelector('.form-title').textContent = '📝 編輯9圍紀錄';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    alert('找不到此紀錄，可能已被刪除');
                 }
             } catch (error) {
                 console.error('載入失敗:', error);
+                alert('載入紀錄失敗：' + error.message + '\n（可能權限不足或網路問題）');
             }
         };
 
