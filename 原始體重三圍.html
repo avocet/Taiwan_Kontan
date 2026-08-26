@@ -507,7 +507,20 @@
                     <div style="font-weight:600;color:#333;">紀錄列表</div>
                     <button onclick="showForm()" style="padding:6px 14px;background:#34C759;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500;">+ 新增</button>
                 </div>
-                ${records.map((r) => `
+                ${records.map((r) => {
+                    let photosHtml = '';
+                    if (r.照片) {
+                        const photos = Array.isArray(r.照片) ? r.照片 : [r.照片];
+                        if (photos.length > 0) {
+                            photosHtml = '<div style="margin-top:12px;padding-top:12px;border-top:1px solid #eee;"><div style="font-weight:600;margin-bottom:8px;font-size:0.8rem;color:#475569;">上傳照片</div>';
+                            photosHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;">';
+                            photos.forEach(photoUrl => {
+                                photosHtml += `<img src="${photoUrl}" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid #e5e7eb;" onclick="window.open('${photoUrl}', '_blank')">`;
+                            });
+                            photosHtml += '</div></div>';
+                        }
+                    }
+                    return `
                 <div class="form-card" data-record-id="${r.id}" style="margin-bottom:12px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                         <div style="font-weight:600;">${r.紀錄日期 || '-'}</div>
@@ -526,8 +539,9 @@
                         <div>左小腿：${r.左小腿圍 || '-'}</div>
                         <div>右小腿：${r.右小腿圍 || '-'}</div>
                     </div>
-                </div>
-            `).join('')}
+                    ${photosHtml}
+                </div>`;
+                }).join('')}
             `;
         }
 
