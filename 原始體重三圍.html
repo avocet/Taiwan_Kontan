@@ -470,11 +470,11 @@
                     <button onclick="showForm()" style="padding:6px 14px;background:#34C759;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.85rem;font-weight:500;">+ 新增</button>
                 </div>
                 ${records.map((r) => `
-                <div class="form-card" style="margin-bottom:12px;">
+                <div class="form-card" data-record-id="${r.id}" style="margin-bottom:12px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                         <div style="font-weight:600;">${r.紀錄日期 || '-'}</div>
                         <div style="display:flex;gap:8px;">
-                            <button onclick="editRecord('${r.id}')" style="padding:6px 12px;background:#007AFF;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem;">編輯</button>
+                            <button data-record-id="${r.id}" class="edit-record-btn" style="padding:6px 12px;background:#007AFF;color:white;border:none;border-radius:6px;cursor:pointer;font-size:0.8rem;">編輯</button>
                         </div>
                     </div>
                     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:0.85rem;">
@@ -548,6 +548,15 @@
         document.addEventListener('click', (e) => {
             if (e.target && e.target.id === 'cancelBtn') {
                 handleCancelBtn();
+            }
+            const editBtn = e.target.closest && e.target.closest('.edit-record-btn');
+            if (editBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                const recordId = editBtn.getAttribute('data-record-id');
+                if (recordId && typeof window.editRecord === 'function') {
+                    window.editRecord(recordId);
+                }
             }
         });
 
