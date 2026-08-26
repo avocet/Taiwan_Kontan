@@ -534,12 +534,20 @@
             document.querySelector('.form-title').textContent = '📝 新增9圍紀錄';
         }
 
-        document.getElementById('cancelBtn').addEventListener('click', () => {
-            if (existingDocId) {
-                loadData(currentUser.uid);
-            } else {
-                document.getElementById('formCard').style.display = 'none';
-                loadData(currentUser.uid);
+        function handleCancelBtn() {
+            document.getElementById('formCard').style.display = 'none';
+            existingDocId = null;
+            document.getElementById('dataForm').reset();
+            loadData(currentUser.uid);
+        }
+
+        const cancelBtnEl = document.getElementById('cancelBtn');
+        if (cancelBtnEl) {
+            cancelBtnEl.addEventListener('click', handleCancelBtn);
+        }
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'cancelBtn') {
+                handleCancelBtn();
             }
         });
 
