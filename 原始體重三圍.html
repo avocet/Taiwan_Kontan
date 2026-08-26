@@ -547,10 +547,14 @@
         }
 
         window.editRecord = async function(docId) {
+            console.log('editRecord 開始, docId:', docId);
             try {
+                console.log('editRecord: 開始 getDoc');
                 const docSnap = await getDoc(doc(db, "原始體重三圍", docId));
+                console.log('editRecord: getDoc 完成, exists:', docSnap.exists());
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+                    console.log('editRecord: 資料讀取成功, 欄位:', Object.keys(data));
                     existingDocId = docId;
                     document.getElementById('紀錄日期').value = data.紀錄日期 || '';
                     document.getElementById('胸圍').value = data.胸圍 || '';
@@ -562,6 +566,7 @@
                     document.getElementById('右大腿圍').value = data.右大腿圍 || '';
                     document.getElementById('左小腿圍').value = data.左小腿圍 || '';
                     document.getElementById('右小腿圍').value = data.右小腿圍 || '';
+                    console.log('editRecord: 表單欄位已填入');
 
                     const photoPreviewContainerEl = document.getElementById('photoPreviewContainer');
                     if (photoPreviewContainerEl) {
@@ -572,6 +577,7 @@
                     }
 
                     if (data.照片 && Array.isArray(data.照片) && data.照片.length > 0) {
+                        console.log('editRecord: 顯示', data.照片.length, '張現有照片');
                         data.照片.forEach((photoUrl) => {
                             const imgContainer = document.createElement('div');
                             imgContainer.style.cssText = 'position:relative;width:80px;height:80px;';
@@ -604,11 +610,12 @@
                     const deleteBtn = document.getElementById('deleteRecordBtn');
                     if (deleteBtn) deleteBtn.style.display = 'block';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                    console.log('editRecord: 編輯畫面顯示完成');
                 } else {
                     alert('找不到此紀錄，可能已被刪除');
                 }
             } catch (error) {
-                console.error('載入失敗:', error);
+                console.error('editRecord 載入失敗:', error);
                 alert('載入紀錄失敗：' + error.message + '\n（可能權限不足或網路問題）');
             }
         };
