@@ -424,16 +424,25 @@
         let currentLoadToken = 0;
         async function loadData(userId) {
             const token = ++currentLoadToken;
+            console.log('loadData 開始, token:', token, 'userId:', userId);
             try {
+                if (!userId) {
+                    console.warn('userId 為空，無法載入資料');
+                    return;
+                }
                 const q = query(
                     collection(db, "原始體重三圍"),
                     where("userId", "==", userId)
                 );
                 const querySnapshot = await getDocs(q);
+                console.log('getDocs 完成, token:', token, '文件數:', querySnapshot.size);
 
                 document.getElementById('loading').style.display = 'none';
 
-                if (token !== currentLoadToken) return;
+                if (token !== currentLoadToken) {
+                    console.log('token 不匹配，跳過更新');
+                    return;
+                }
 
                 const records = [];
                 querySnapshot.forEach((doc) => {
@@ -442,7 +451,10 @@
                 records.sort((a, b) => new Date(b.紀錄日期) - new Date(a.紀錄日期));
 
                 const recordsList = document.getElementById('recordsList');
-                if (!recordsList) return;
+                if (!recordsList) {
+                    console.warn('recordsList 元素不存在');
+                    return;
+                }
 
                 if (records.length === 0) {
                     recordsList.innerHTML = `
@@ -454,6 +466,7 @@
                     `;
                 } else {
                     renderRecords(records);
+                    console.log('renderRecords 完成');
                 }
 
             } catch (error) {
