@@ -649,12 +649,22 @@
                 handleCancelBtn();
             }
             const editBtn = e.target.closest && e.target.closest('.edit-record-btn');
+            console.log('click event - editBtn:', editBtn, 'target:', e.target);
             if (editBtn) {
                 e.preventDefault();
                 e.stopPropagation();
                 const recordId = editBtn.getAttribute('data-record-id');
+                console.log('editBtn clicked, recordId:', recordId, 'editRecord type:', typeof window.editRecord);
                 if (recordId && typeof window.editRecord === 'function') {
                     window.editRecord(recordId);
+                } else {
+                    console.warn('editRecord function not available, trying direct call');
+                    if (recordId) {
+                        const editFunc = window.editRecord || editRecord;
+                        if (typeof editFunc === 'function') {
+                            editFunc(recordId);
+                        }
+                    }
                 }
             }
         });
