@@ -421,10 +421,9 @@
             });
         };
 
-        let isLoadingData = false;
+        let currentLoadToken = 0;
         async function loadData(userId) {
-            if (isLoadingData) return;
-            isLoadingData = true;
+            const token = ++currentLoadToken;
             try {
                 const q = query(
                     collection(db, "原始體重三圍"),
@@ -433,6 +432,8 @@
                 const querySnapshot = await getDocs(q);
 
                 document.getElementById('loading').style.display = 'none';
+
+                if (token !== currentLoadToken) return;
 
                 const records = [];
                 querySnapshot.forEach((doc) => {
@@ -458,6 +459,7 @@
             } catch (error) {
                 console.error('載入資料失敗:', error);
                 document.getElementById('loading').style.display = 'none';
+                if (token !== currentLoadToken) return;
                 const recordsList = document.getElementById('recordsList');
                 if (recordsList && !recordsList.innerHTML.trim()) {
                     recordsList.innerHTML = `
@@ -468,8 +470,6 @@
                         <div style="text-align:center;color:#ef4444;padding:40px;">載入失敗，請重新整理頁面</div>
                     `;
                 }
-            } finally {
-                isLoadingData = false;
             }
         }
 
