@@ -547,14 +547,20 @@
         }
 
         window.editRecord = async function(docId) {
-            console.log('editRecord 開始, docId:', docId);
+            const editBtn = document.querySelector(`button[data-record-id="${docId}"]`);
+            if (editBtn) {
+                editBtn.disabled = true;
+                editBtn.textContent = '載入中...';
+            }
+            const loadingEl = document.createElement('div');
+            loadingEl.id = 'editLoadingIndicator';
+            loadingEl.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);color:white;padding:16px 24px;border-radius:8px;z-index:9999;font-size:0.9rem;';
+            loadingEl.textContent = '載入中...';
+            document.body.appendChild(loadingEl);
             try {
-                console.log('editRecord: 開始 getDoc');
                 const docSnap = await getDoc(doc(db, "原始體重三圍", docId));
-                console.log('editRecord: getDoc 完成, exists:', docSnap.exists());
                 if (docSnap.exists()) {
                     const data = docSnap.data();
-                    console.log('editRecord: 資料讀取成功, 欄位:', Object.keys(data));
                     existingDocId = docId;
                     document.getElementById('紀錄日期').value = data.紀錄日期 || '';
                     document.getElementById('胸圍').value = data.胸圍 || '';
@@ -566,7 +572,6 @@
                     document.getElementById('右大腿圍').value = data.右大腿圍 || '';
                     document.getElementById('左小腿圍').value = data.左小腿圍 || '';
                     document.getElementById('右小腿圍').value = data.右小腿圍 || '';
-                    console.log('editRecord: 表單欄位已填入');
 
                     const photoPreviewContainerEl = document.getElementById('photoPreviewContainer');
                     if (photoPreviewContainerEl) {
@@ -577,7 +582,6 @@
                     }
 
                     if (data.照片 && Array.isArray(data.照片) && data.照片.length > 0) {
-                        console.log('editRecord: 顯示', data.照片.length, '張現有照片');
                         data.照片.forEach((photoUrl) => {
                             const imgContainer = document.createElement('div');
                             imgContainer.style.cssText = 'position:relative;width:80px;height:80px;';
@@ -609,14 +613,20 @@
                     document.querySelector('.form-title').textContent = '📝 編輯9圍紀錄';
                     const deleteBtn = document.getElementById('deleteRecordBtn');
                     if (deleteBtn) deleteBtn.style.display = 'block';
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    console.log('editRecord: 編輯畫面顯示完成');
+                    window.scrollTo({ top: 0, behavior: 'auto' });
                 } else {
                     alert('找不到此紀錄，可能已被刪除');
                 }
             } catch (error) {
                 console.error('editRecord 載入失敗:', error);
                 alert('載入紀錄失敗：' + error.message + '\n（可能權限不足或網路問題）');
+            } finally {
+                const loadingElFinal = document.getElementById('editLoadingIndicator');
+                if (loadingElFinal) loadingElFinal.remove();
+                if (editBtn) {
+                    editBtn.disabled = false;
+                    editBtn.textContent = '編輯';
+                }
             }
         };
 
