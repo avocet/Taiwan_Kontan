@@ -356,6 +356,16 @@
                     </div>
                 </div>
 
+                <div class="section-title" style="margin-top:20px;">照片上傳</div>
+                <div class="form-group">
+                    <label>上傳照片（可多張）</label>
+                    <div class="photo-upload" id="photoUpload">
+                        <input type="file" id="photo" name="photo" accept="image/*" multiple capture="environment">
+                        <div class="upload-text">點擊上傳照片（可多張）</div>
+                    </div>
+                    <div id="photoPreviewContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
+                </div>
+
                 <button type="submit" class="save-btn" id="saveBtn">儲存資料</button>
                 <button type="button" class="save-btn" id="cancelBtn" style="background:#8E8E93;margin-top:10px;">取消</button>
             </form>
@@ -566,6 +576,13 @@
             document.getElementById('formCard').style.display = 'none';
             existingDocId = null;
             document.getElementById('dataForm').reset();
+            if (typeof uploadedPhotos !== 'undefined') {
+                uploadedPhotos = [];
+            }
+            const photoPreviewContainerEl = document.getElementById('photoPreviewContainer');
+            if (photoPreviewContainerEl) {
+                photoPreviewContainerEl.innerHTML = '';
+            }
             const recordsList = document.getElementById('recordsList');
             if (recordsList) {
                 recordsList.innerHTML = '<div style="text-align:center;color:#8E8E93;padding:40px;">載入中...</div>';
@@ -592,6 +609,50 @@
             }
         });
 
+        let uploadedPhotos = [];
+        const photoUpload = document.getElementById('photoUpload');
+        const photoInput = document.getElementById('photo');
+        const photoPreviewContainer = document.getElementById('photoPreviewContainer');
+
+        if (photoUpload && photoInput) {
+            photoUpload.addEventListener('click', (e) => {
+                if (e.target.tagName !== 'INPUT') {
+                    photoInput.click();
+                }
+            });
+            photoInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                files.forEach((file) => {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const imgContainer = document.createElement('div');
+                        imgContainer.style.cssText = 'position:relative;width:80px;height:80px;';
+
+                        const img = document.createElement('img');
+                        img.src = event.target.result;
+                        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:8px;';
+
+                        const removeBtn = document.createElement('button');
+                        removeBtn.innerHTML = '✕';
+                        removeBtn.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;';
+                        removeBtn.onclick = () => {
+                            const idx = uploadedPhotos.findIndex(p => p === file);
+                            if (idx !== -1) {
+                                uploadedPhotos.splice(idx, 1);
+                                imgContainer.remove();
+                            }
+                        };
+
+                        imgContainer.appendChild(img);
+                        imgContainer.appendChild(removeBtn);
+                        photoPreviewContainer.appendChild(imgContainer);
+                        uploadedPhotos.push(file);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
         document.getElementById('dataForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -599,22 +660,35 @@
             saveBtn.disabled = true;
             saveBtn.textContent = '儲存中...';
 
-            const data = withOrgContext({
-                userId: currentUser.uid,
-                紀錄日期: document.getElementById('紀錄日期').value,
-                胸圍: parseFloat(document.getElementById('胸圍').value) || 0,
-                腰圍: parseFloat(document.getElementById('腰圍').value) || 0,
-                臀圍: parseFloat(document.getElementById('臀圍').value) || 0,
-                左大腿圍: parseFloat(document.getElementById('左大腿圍').value) || 0,
-                右大腿圍: parseFloat(document.getElementById('右大腿圍').value) || 0,
-                左手臂圍: parseFloat(document.getElementById('左手臂圍').value) || 0,
-                右手臂圍: parseFloat(document.getElementById('右手臂圍').value) || 0,
-                左小腿圍: parseFloat(document.getElementById('左小腿圍').value) || 0,
-                右小腿圍: parseFloat(document.getElementById('右小腿圍').value) || 0,
-                更新時間: new Date().toISOString()
-            }, currentOrgContext || { companyId: 'akso-company', primaryClassId: 'akso-default-class', classIds: ['akso-default-class'] });
-
             try {
+                const photoFiles = uploadedPhotos.slice();
+                const photoUrls = [];
+                if (photoFiles.length > 0) {
+                    for (let i = 0; i < photoFiles.length; i++) {
+                        const photoFile = photoFiles[i];
+                        const photoRef = ref(storage, `原始體重三圍/${currentUser.uid}/${Date.now()}_${i}_${photoFile.name}`);
+                        await uploadBytes(photoRef, photoFile);
+                        const url = await getDownloadURL(photoRef);
+                        photoUrls.push(url);
+                    }
+                }
+
+                const data = withOrgContext({
+                    userId: currentUser.uid,
+                    紀錄日期: document.getElementById('紀錄日期').value,
+                    胸圍: parseFloat(document.getElementById('胸圍').value) || 0,
+                    腰圍: parseFloat(document.getElementById('腰圍').value) || 0,
+                    臀圍: parseFloat(document.getElementById('臀圍').value) || 0,
+                    左大腿圍: parseFloat(document.getElementById('左大腿圍').value) || 0,
+                    右大腿圍: parseFloat(document.getElementById('右大腿圍').value) || 0,
+                    左手臂圍: parseFloat(document.getElementById('左手臂圍').value) || 0,
+                    右手臂圍: parseFloat(document.getElementById('右手臂圍').value) || 0,
+                    左小腿圍: parseFloat(document.getElementById('左小腿圍').value) || 0,
+                    右小腿圍: parseFloat(document.getElementById('右小腿圍').value) || 0,
+                    照片: photoUrls,
+                    更新時間: new Date().toISOString()
+                }, currentOrgContext || { companyId: 'akso-company', primaryClassId: 'akso-default-class', classIds: ['akso-default-class'] });
+
                 if (existingDocId) {
                     await setDoc(doc(db, "原始體重三圍", existingDocId), data, { merge: true });
                 } else {
@@ -624,6 +698,8 @@
                 const successMsg = document.getElementById('successMessage');
                 successMsg.textContent = '✓ 資料已儲存！';
                 successMsg.classList.add('show');
+                uploadedPhotos = [];
+                if (photoPreviewContainer) photoPreviewContainer.innerHTML = '';
                 setTimeout(() => {
                     successMsg.classList.remove('show');
                     loadData(currentUser.uid);
