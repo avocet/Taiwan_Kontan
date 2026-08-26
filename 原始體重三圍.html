@@ -360,7 +360,7 @@
                 <div class="form-group">
                     <label>上傳照片（可多張）</label>
                     <div class="photo-upload" id="photoUpload">
-                        <input type="file" id="photo" name="photo" accept="image/*" multiple capture="environment">
+                        <input type="file" id="photo" name="photo" accept="image/*" multiple>
                         <div class="upload-text">點擊上傳照片（可多張）</div>
                     </div>
                     <div id="photoPreviewContainer" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;"></div>
@@ -762,9 +762,14 @@
 
         if (photoUpload && photoInput) {
             photoUpload.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (e.target.tagName !== 'INPUT') {
                     photoInput.click();
                 }
+            });
+            photoInput.addEventListener('click', (e) => {
+                e.stopPropagation();
             });
             photoInput.addEventListener('change', (e) => {
                 const files = Array.from(e.target.files);
