@@ -375,9 +375,11 @@
         <div id="recordsList"></div>
     </div>
 
-    <div class="photo-modal" id="photoModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:3000;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;">
-        <button type="button" id="photoModalClose" style="position:absolute;top:16px;right:16px;background:none;border:none;color:white;font-size:2rem;cursor:pointer;z-index:3001;line-height:1;padding:8px;">✕</button>
-        <img id="photoModalImg" src="" alt="照片" style="max-width:90%;max-height:80vh;object-fit:contain;border-radius:8px;">
+    <div class="photo-modal-backdrop" id="photoModalBackdrop" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:2999;"></div>
+    <div class="photo-modal" id="photoModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:white;border-radius:12px;padding:12px;z-index:3000;box-shadow:0 10px 40px rgba(0,0,0,0.3);max-width:90vw;max-height:90vh;display:none;flex-direction:column;">
+        <button type="button" id="photoModalClose" style="position:absolute;top:8px;right:8px;background:#f0f0f0;border:none;color:#333;width:32px;height:32px;border-radius:50%;cursor:pointer;z-index:3001;font-size:1.1rem;line-height:1;display:flex;align-items:center;justify-content:center;">✕</button>
+        <img id="photoModalImg" src="" alt="照片" style="max-width:calc(90vw - 24px);max-height:calc(90vh - 60px);object-fit:contain;border-radius:8px;display:block;">
+        <div style="text-align:center;margin-top:8px;font-size:0.8rem;color:#666;">點擊外部或 ✕ 關閉</div>
     </div>
 
     <script type="module">
@@ -881,18 +883,20 @@
 
         window.openPhotoModal = function(photoUrl) {
             const modal = document.getElementById('photoModal');
+            const backdrop = document.getElementById('photoModalBackdrop');
             const img = document.getElementById('photoModalImg');
-            if (modal && img) {
+            if (modal && img && backdrop) {
                 img.src = photoUrl;
+                backdrop.style.display = 'block';
                 modal.style.display = 'flex';
             }
         };
 
         window.closePhotoModal = function() {
             const modal = document.getElementById('photoModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            const backdrop = document.getElementById('photoModalBackdrop');
+            if (modal) modal.style.display = 'none';
+            if (backdrop) backdrop.style.display = 'none';
         };
 
         document.addEventListener('click', (e) => {
@@ -908,7 +912,7 @@
             if (e.target && e.target.id === 'photoModalClose') {
                 window.closePhotoModal();
             }
-            if (e.target && e.target.id === 'photoModal') {
+            if (e.target && e.target.id === 'photoModalBackdrop') {
                 window.closePhotoModal();
             }
         });
