@@ -561,6 +561,42 @@
                     document.getElementById('右大腿圍').value = data.右大腿圍 || '';
                     document.getElementById('左小腿圍').value = data.左小腿圍 || '';
                     document.getElementById('右小腿圍').value = data.右小腿圍 || '';
+
+                    const photoPreviewContainerEl = document.getElementById('photoPreviewContainer');
+                    if (photoPreviewContainerEl) {
+                        photoPreviewContainerEl.innerHTML = '';
+                    }
+                    if (typeof uploadedPhotos !== 'undefined') {
+                        uploadedPhotos = [];
+                    }
+
+                    if (data.照片 && Array.isArray(data.照片) && data.照片.length > 0) {
+                        data.照片.forEach((photoUrl) => {
+                            const imgContainer = document.createElement('div');
+                            imgContainer.style.cssText = 'position:relative;width:80px;height:80px;';
+
+                            const img = document.createElement('img');
+                            img.src = photoUrl;
+                            img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:8px;';
+
+                            const removeBtn = document.createElement('button');
+                            removeBtn.innerHTML = '✕';
+                            removeBtn.style.cssText = 'position:absolute;top:-5px;right:-5px;background:red;color:white;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:12px;';
+                            removeBtn.dataset.photoUrl = photoUrl;
+                            removeBtn.dataset.existing = 'true';
+                            removeBtn.onclick = () => {
+                                imgContainer.remove();
+                                removeBtn.dataset.toDelete = 'true';
+                            };
+
+                            imgContainer.appendChild(img);
+                            imgContainer.appendChild(removeBtn);
+                            if (photoPreviewContainerEl) {
+                                photoPreviewContainerEl.appendChild(imgContainer);
+                            }
+                        });
+                    }
+
                     document.getElementById('formCard').style.display = 'block';
                     document.getElementById('recordsList').innerHTML = '';
                     document.querySelector('.form-title').textContent = '📝 編輯9圍紀錄';
@@ -685,6 +721,15 @@
                         const url = await getDownloadURL(photoRef);
                         photoUrls.push(url);
                     }
+                }
+
+                if (existingDocId) {
+                    const existingPhotoButtons = document.querySelectorAll('#photoPreviewContainer button[data-existing="true"]');
+                    existingPhotoButtons.forEach((btn) => {
+                        if (btn.dataset.toDelete !== 'true') {
+                            photoUrls.push(btn.dataset.photoUrl);
+                        }
+                    });
                 }
 
                 const data = withOrgContext({
