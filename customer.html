@@ -419,10 +419,13 @@
 
     <!-- 學員每日飲食紀錄（管理員用） -->
     <div id="studentRecords" style="display:none;padding:20px;max-width:1200px;margin:0 auto;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
             <button id="backToListBtn" style="background:none;border:none;font-size:1rem;cursor:pointer;padding:8px;">← 返回</button>
             <h2 id="studentNameTitle" style="font-size:1.25rem;flex:1;text-align:center;margin-right:60px;">學員飲食紀錄</h2>
-            <button id="showPortionTableBtn" style="background:#34C759;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:0.875rem;cursor:pointer;white-space:nowrap;">新增飲食份數表</button>
+            <div style="display:flex;gap:8px;">
+                <button id="showInitialBodyBtn" style="background:#5856D6;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:0.875rem;cursor:pointer;white-space:nowrap;">查看9圍紀錄</button>
+                <button id="showPortionTableBtn" style="background:#34C759;color:white;border:none;padding:8px 16px;border-radius:8px;font-size:0.875rem;cursor:pointer;white-space:nowrap;">新增飲食份數表</button>
+            </div>
         </div>
         <div id="studentRecordsMeta" style="text-align:center;color:#6b7280;font-size:0.8125rem;margin:-6px 0 12px;">目標體重：-｜距離目標：-｜已進行：- 週｜剩餘：- 週</div>
 
@@ -618,6 +621,19 @@
                     <button type="submit" style="background:#007AFF;color:white;padding:10px 24px;border:none;border-radius:8px;font-size:0.875rem;cursor:pointer;">儲存</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- 查看9圍紀錄 Modal -->
+    <div id="initialBodyModal" class="portion-table-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+        <div class="portion-table-modal-content" style="max-width:600px;max-height:90vh;overflow:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="font-size:1.125rem;">學員9圍紀錄</h3>
+                <button id="closeInitialBodyBtn" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">✕</button>
+            </div>
+            <div id="initialBodyList" style="display:flex;flex-direction:column;gap:12px;">
+                <div style="text-align:center;color:#8E8E93;padding:20px;">載入中...</div>
+            </div>
         </div>
     </div>
 
@@ -3479,6 +3495,98 @@
                 portionTableModal.style.display = 'none';
             });
         }
+
+        // 查看9圍紀錄
+        const showInitialBodyBtn = document.getElementById('showInitialBodyBtn');
+        const initialBodyModal = document.getElementById('initialBodyModal');
+        const closeInitialBodyBtn = document.getElementById('closeInitialBodyBtn');
+        const initialBodyList = document.getElementById('initialBodyList');
+
+        async function openInitialBodyModal() {
+            if (!initialBodyModal) return;
+            initialBodyModal.style.display = 'flex';
+            if (initialBodyList) initialBodyList.innerHTML = '<div style="text-align:center;color:#8E8E93;padding:20px;">載入中...</div>';
+            if (!currentStudentUid) {
+                if (initialBodyList) initialBodyList.innerHTML = '<div style="text-align:center;color:#8E8E93;padding:20px;">請先選擇學員</div>';
+                return;
+            }
+            try {
+                const q = query(collection(db, '原始體重三圍'), where('userId', '==', currentStudentUid));
+                const snap = await getDocs(q);
+                if (!initialBodyList) return;
+                if (snap.empty) {
+                    initialBodyList.innerHTML = '<div style="text-align:center;color:#8E8E93;padding:20px;">尚無9圍紀錄</div>';
+                    return;
+                }
+                const records = [];
+                snap.forEach((d) => {
+                    records.push({ id: d.id, ...d.data() });
+                });
+                records.sort((a, b) => new Date(b.紀錄日期 || 0) - new Date(a.紀錄日期 || 0));
+                initialBodyList.innerHTML = records.map((r) => {
+                    let photosHtml = '';
+                    if (r.照片) {
+                        const photos = Array.isArray(r.照片) ? r.照片 : [r.照片];
+                        if (photos.length > 0) {
+                            photosHtml = '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb;"><div style="font-weight:600;margin-bottom:6px;font-size:0.8rem;">上傳照片</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;">';
+                            photos.forEach((photoUrl) => {
+                                photosHtml += `<img src="${photoUrl}" data-photo-url="${photoUrl}" class="record-photo-thumb" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid #e5e7eb;">`;
+                            });
+                            photosHtml += '</div></div>';
+                        }
+                    }
+                    return `
+                        <div style="background:#f9fafb;padding:12px;border-radius:8px;border:1px solid #e5e7eb;">
+                            <div style="font-weight:600;margin-bottom:8px;color:#1d4ed8;">${escapeHtml(r.紀錄日期 || '-')}</div>
+                            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:0.8125rem;color:#374151;">
+                                <div>胸圍：${escapeHtml(r.胸圍 || '-')} cm</div>
+                                <div>腰圍：${escapeHtml(r.腰圍 || '-')} cm</div>
+                                <div>臀圍：${escapeHtml(r.臀圍 || '-')} cm</div>
+                                <div>左手臂：${escapeHtml(r.左手臂圍 || '-')} cm</div>
+                                <div>右手臂：${escapeHtml(r.右手臂圍 || '-')} cm</div>
+                                <div>左大腿：${escapeHtml(r.左大腿圍 || '-')} cm</div>
+                                <div>右大腿：${escapeHtml(r.右大腿圍 || '-')} cm</div>
+                                <div>左小腿：${escapeHtml(r.左小腿圍 || '-')} cm</div>
+                                <div>右小腿：${escapeHtml(r.右小腿圍 || '-')} cm</div>
+                            </div>
+                            ${photosHtml}
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('載入9圍紀錄失敗:', error);
+                if (initialBodyList) initialBodyList.innerHTML = '<div style="text-align:center;color:#ef4444;padding:20px;">載入失敗，請重試</div>';
+            }
+        }
+
+        if (showInitialBodyBtn) {
+            showInitialBodyBtn.addEventListener('click', openInitialBodyModal);
+        }
+        if (closeInitialBodyBtn) {
+            closeInitialBodyBtn.addEventListener('click', () => {
+                if (initialBodyModal) initialBodyModal.style.display = 'none';
+            });
+        }
+        if (initialBodyModal) {
+            initialBodyModal.addEventListener('click', (e) => {
+                if (e.target === initialBodyModal) {
+                    initialBodyModal.style.display = 'none';
+                }
+            });
+        }
+
+        // 點擊照片開啟modal
+        document.addEventListener('click', (e) => {
+            const photoThumb = e.target.closest && e.target.closest('.record-photo-thumb');
+            if (photoThumb) {
+                e.preventDefault();
+                e.stopPropagation();
+                const photoUrl = photoThumb.getAttribute('data-photo-url');
+                if (photoUrl && typeof window.showPhoto === 'function') {
+                    window.showPhoto(photoUrl);
+                }
+            }
+        });
 
         // 儲存飲食份數表
         document.getElementById('portionTableForm').addEventListener('submit', async (e) => {
