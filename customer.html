@@ -3460,21 +3460,21 @@
         if (showPortionTableBtn) {
             showPortionTableBtn.addEventListener('click', () => {
                 editingPortionDocId = null;
-                // 設定今天日期為預設
-                const today = new Date().toISOString().split('T')[0];
-                const startDate = new Date();
-                startDate.setDate(startDate.getDate() - 7);
-                document.getElementById('portionStartDate').value = startDate.toISOString().split('T')[0];
-                document.getElementById('portionEndDate').value = today;
-                
+                // 設定今天到七日後為預設日期範圍
+                const today = new Date();
+                const endDate = new Date(today);
+                endDate.setDate(endDate.getDate() + 7);
+                document.getElementById('portionStartDate').value = today.toISOString().split('T')[0];
+                document.getElementById('portionEndDate').value = endDate.toISOString().split('T')[0];
+
                 // 清空表單
                 document.getElementById('portionTableForm').reset();
                 updatePortionSummary();
-                
+
                 // 恢復預設值
-                document.getElementById('portionStartDate').value = startDate.toISOString().split('T')[0];
-                document.getElementById('portionEndDate').value = today;
-                
+                document.getElementById('portionStartDate').value = today.toISOString().split('T')[0];
+                document.getElementById('portionEndDate').value = endDate.toISOString().split('T')[0];
+
                 portionTableModal.style.display = 'flex';
             });
             
