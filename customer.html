@@ -2296,7 +2296,8 @@
                             borderWidth: 2,
                             pointRadius: 2.5,
                             tension: 0.28,
-                            spanGaps: true
+                            spanGaps: true,
+                            yAxisID: 'y'
                         },
                         {
                             label: '體脂 (%)',
@@ -2306,7 +2307,8 @@
                             borderWidth: 2,
                             pointRadius: 2.5,
                             tension: 0.28,
-                            spanGaps: true
+                            spanGaps: true,
+                            yAxisID: 'y1'
                         }
                     ]
                 },
@@ -2317,7 +2319,21 @@
                     plugins: { legend: { position: 'top' } },
                     scales: {
                         x: { ticks: { autoSkip: true, maxTicksLimit: 8 } },
-                        y: { beginAtZero: false }
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: '體重 (kg)' },
+                            border: { color: '#007AFF' },
+                            beginAtZero: false
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: '體脂 (%)' },
+                            border: { color: '#FF2D55' },
+                            grid: { drawOnChartArea: false },
+                            beginAtZero: false
+                        }
                     }
                 },
                 plugins: [pointValueLabelPlugin]
